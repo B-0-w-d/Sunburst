@@ -2,28 +2,27 @@
 
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 
-$requestUri = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
-$method = $_SERVER["REQUEST_METHOD"];
+$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$method = $_SERVER['REQUEST_METHOD'];
 
-if ($requestUri === "/api/members") {
+// 3. Simple routing match
+if ($requestUri === '/' || $requestUri === '/index.php') {
     echo json_encode([
-        "status" => "success",
-        "endpoint" => "Members List",
-        "method" => $method,
-        "message" => "Successfully hit the members endpoint!",
+        "status" => "online",
+        "message" => "Sunburst Server Run Succesfully",
+        "version" => "1.0.0"
     ]);
-} elseif ($requestUri === "/api/shows") {
+} elseif ($requestUri === '/api/health') {
     echo json_encode([
-        "status" => "success",
-        "endpoint" => "Shows List",
-        "method" => $method,
+        "status" => "healthy",
+        "timestamp" => time()
     ]);
 } else {
     http_response_code(404);
     echo json_encode([
         "error" => "Endpoint not found",
-        "your_requested_path" => $requestUri,
+        "requested_path" => $requestUri
     ]);
 }
