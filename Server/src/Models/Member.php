@@ -8,7 +8,7 @@ class Member {
         $this->db = $databaseInstance;
     }
 
-    // Get members from DB safely
+    // Get members from DB
     public function getAll() {
         $manager = $this->db->connect();
         $namespace = $this->db->getNamespace($this->collection);

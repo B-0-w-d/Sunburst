@@ -1,13 +1,11 @@
 <?php
-// Server/public/index.php
 
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 
-// Ensure paths accurately drop out of public/ and look inside config/ and src/
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../src/Controllers/memberController.php'; // Matched lowercase 'm'
+require_once __DIR__ . '/../src/Controllers/memberController.php';
 
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $method = $_SERVER['REQUEST_METHOD'];
