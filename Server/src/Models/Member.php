@@ -59,6 +59,7 @@ class Member {
             "instrument"  => $data['instrument'] ?? '',
             "birthday"    => $data['birthday'] ?? null,
             "joined_in"   => $data['joined_in'] ?? null,
+        ];
 
         $bulkWrite = new MongoDB\Driver\BulkWrite;
         $bulkWrite->insert($documentPayload);
