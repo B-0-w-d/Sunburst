@@ -24,8 +24,21 @@ class MemberController {
         }
     }
 
+    // Get Members list
     private function listMembers() {
-        $membersList = $this->memberModel->getAll();
+        // Sorting filter
+        $filters = [
+            'role'       => $_GET['role'] ?? null,
+            'instrument' => $_GET['instrument'] ?? null
+        ];
+
+        // Remove null filters
+        $filters = array_filter($filters, function($value) {
+            return $value !== null && $value !== '';
+        });
+
+        // Call Model to execute filter
+        $membersList = $this->memberModel->getWithFilters($filters);
 
         echo json_encode([
             "status" => "success",
@@ -49,12 +62,7 @@ class MemberController {
             return;
         }
 
-        // Cryptographically password
-        if (!empty($data['password'])) {
-            $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT);
-        }
-
-        // Add member
+        // Write in Database through Model
         $success = $this->memberModel->create($data);
 
         if ($success) {
