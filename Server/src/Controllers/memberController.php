@@ -1,82 +1,72 @@
 <?php
 
-require_once __DIR__ . '/../Models/Member.php';
+require_once __DIR__ . '/../Models/memberModel.php';
 
 class MemberController {
     private $memberModel;
 
+    // Constructor: Initializes Database Model connection
     public function __construct($db) {
         $this->memberModel = new Member($db);
     }
 
+    // API Standard Helper: Centralizes JSON formatting & HTTP status codes
+    private function jsonResponse($status, $payload, $code = 200) {
+        http_response_code($code);
+        header('Content-Type: application/json');
+        echo json_encode(array_merge(["status" => $status], $payload));
+        return;
+    }
+
+    // Central Request Router:
     public function handleRequest($method) {
+        $id = $_GET['id'] ?? null;
+
         switch ($method) {
-            case 'GET':
-                $this->listMembers();
-                break;
-            case 'POST':
-                $this->createMember();
-                break;
-            default:
-                http_response_code(405); // Method Not Allowed
-                echo json_encode(["error" => "HTTP Method dynamic match failed"]);
-                break;
+            case 'GET':    $this->listMembers(); break;
+            case 'POST':   $this->createMember(); break;
+            case 'PUT':    $id ? $this->updateMember($id) : $this->jsonResponse("error", ["message" => "Missing ID"], 400); break;
+            case 'DELETE': $id ? $this->deleteMember($id) : $this->jsonResponse("error", ["message" => "Missing ID"], 400); break;
+            default:       $this->jsonResponse("error", ["message" => "Method not allowed"], 405); break;
         }
     }
 
-    // Get Members list
+    // Query Operation: Handles reading data with optional filtering & sorting
     private function listMembers() {
-        // Sorting filter
-        $filters = [
-            'role'       => $_GET['role'] ?? null,
-            'instrument' => $_GET['instrument'] ?? null
-        ];
+        $filters = array_filter(['role' => $_GET['role'] ?? null, 'instrument' => $_GET['instrument'] ?? null]);
+        $sort = ['sortBy' => $_GET['sortBy'] ?? null, 'sortOrder' => $_GET['sortOrder'] ?? 'asc'];
 
-        // Remove null filters
-        $filters = array_filter($filters, function($value) {
-            return $value !== null && $value !== '';
-        });
-
-        // Call Model to execute filter
-        $membersList = $this->memberModel->getWithFilters($filters);
-
-        echo json_encode([
-            "status" => "success",
-            "count" => count($membersList),
-            "data" => $membersList
-        ]);
+        $list = $this->memberModel->getWithFilters($filters, $sort);
+        $this->jsonResponse("success", ["count" => count($list), "data" => $list]);
     }
 
+    // Mutate Operation: Validates and inserts raw JSON payload into database
     private function createMember() {
-        // Read input from frontend
-        $jsonPayload = file_get_contents('php://input');
-        $data = json_decode($jsonPayload, true) ?? [];
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
-        // Structural checking
         if (empty($data['name']) || empty($data['email'])) {
-            http_response_code(400);
-            echo json_encode([
-                "status" => "error",
-                "message" => "Name and Email are strictly required fields."
-            ]);
-            return;
+            return $this->jsonResponse("error", ["message" => "Name and Email are strictly required."], 400);
         }
 
-        // Write in Database through Model
-        $success = $this->memberModel->create($data);
-
-        if ($success) {
-            http_response_code(201);
-            echo json_encode([
-                "status" => "success",
-                "message" => "New band member document added successfully!"
-            ]);
-        } else {
-            http_response_code(500);
-            echo json_encode([
-                "status" => "error",
-                "message" => "Failed to write document into collection"
-            ]);
-        }
+        $this->memberModel->create($data)
+            ? $this->jsonResponse("success", ["message" => "Added successfully!"], 201)
+            : $this->jsonResponse("error", ["message" => "Database write failed."], 500);
     }
+    private function updateMember($id) {
+            $data = json_decode(file_get_contents('php://input'), true) ?? [];
+
+            if (empty($data)) {
+                return $this->jsonResponse("error", ["message" => "No data provided for update."], 400);
+            }
+
+            $this->memberModel->update($id, $data)
+                ? $this->jsonResponse("success", ["message" => "Member updated successfully."])
+                : $this->jsonResponse("error", ["message" => "Failed to update member or data unchanged."], 500);
+        }
+
+        private function deleteMember($id) {
+            $this->memberModel->delete($id)
+                ? $this->jsonResponse("success", ["message" => "Member deleted successfully."])
+                : $this->jsonResponse("error", ["message" => "Member not found or already deleted."], 404);
+        }
 }

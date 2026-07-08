@@ -5,7 +5,7 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../src/Controllers/memberController.php';
+require_once __DIR__ . '/../src/Controllers/MemberController.php';
 
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $method = $_SERVER['REQUEST_METHOD'];
