@@ -18,7 +18,7 @@ class MemberController {
         return;
     }
 
-    // Central Request Router:
+    // Central Request Router: Dispatches operations based on HTTP verbs
     public function handleRequest($method) {
         $id = $_GET['id'] ?? null;
 
@@ -40,7 +40,7 @@ class MemberController {
         $this->jsonResponse("success", ["count" => count($list), "data" => $list]);
     }
 
-    // Mutate Operation: Validates and inserts raw JSON payload into database
+    // Create Operation: Validates and inserts raw JSON payload into database
     private function createMember() {
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
@@ -52,21 +52,24 @@ class MemberController {
             ? $this->jsonResponse("success", ["message" => "Added successfully!"], 201)
             : $this->jsonResponse("error", ["message" => "Database write failed."], 500);
     }
+
+    // Update Operation: Modifies an existing document matching by URL query ID
     private function updateMember($id) {
-            $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
-            if (empty($data)) {
-                return $this->jsonResponse("error", ["message" => "No data provided for update."], 400);
-            }
-
-            $this->memberModel->update($id, $data)
-                ? $this->jsonResponse("success", ["message" => "Member updated successfully."])
-                : $this->jsonResponse("error", ["message" => "Failed to update member or data unchanged."], 500);
+        if (empty($data)) {
+            return $this->jsonResponse("error", ["message" => "No data provided for update."], 400);
         }
 
-        private function deleteMember($id) {
-            $this->memberModel->delete($id)
-                ? $this->jsonResponse("success", ["message" => "Member deleted successfully."])
-                : $this->jsonResponse("error", ["message" => "Member not found or already deleted."], 404);
-        }
+        $this->memberModel->update($id, $data)
+            ? $this->jsonResponse("success", ["message" => "Member updated successfully."])
+            : $this->jsonResponse("error", ["message" => "Failed to update member or data unchanged."], 500);
+    }
+
+    // Delete Operation: Removes a specific member matching by URL query ID
+    private function deleteMember($id) {
+        $this->memberModel->delete($id)
+            ? $this->jsonResponse("success", ["message" => "Member deleted successfully."])
+            : $this->jsonResponse("error", ["message" => "Member not found or already deleted."], 404);
+    }
 }
