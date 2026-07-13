@@ -1,21 +1,17 @@
 <?php
 
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+use Illuminate\Http\Request;
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../src/Controllers/MemberController.php';
+define('LARAVEL_START', microtime(true));
 
-$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$method = $_SERVER['REQUEST_METHOD'];
-
-$db = new Database();
-
-if ($requestUri === '/members') {
-    $controller = new MemberController($db);
-    $controller->handleRequest($method);
-} else {
-    http_response_code(404);
-    echo json_encode(["error" => "Endpoint not found", "path" => $requestUri]);
+// Determine if the application is in maintenance mode...
+if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
+    require $maintenance;
 }
+
+// Register the Composer autoloader...
+require __DIR__.'/../vendor/autoload.php';
+
+// Bootstrap Laravel and handle the request...
+(require_once __DIR__.'/../bootstrap/app.php')
+    ->handleRequest(Request::capture());
