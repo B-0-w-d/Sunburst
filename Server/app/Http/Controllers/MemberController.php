@@ -7,10 +7,6 @@ use Illuminate\Http\Request;
 
 class MemberController
 {
-    /**
-     * Handles reading data with optional filtering, sorting,
-     * and alphabetizing the internal instrument arrays on the fly.
-     */
     public function index(Request $request)
     {
         $filters = array_filter([
@@ -24,15 +20,14 @@ class MemberController
             'sortOrder' => $request->query('sortOrder', 'asc'),
         ];
 
-        // Fetch filtered and ordered documents from MongoDB
         $list = Member::withFilters($filters, $sort)->get();
 
-        // Dynamically sort each individual member's instrument array alphabetically
+        // Dynamically alphabetize internal instrument array values for the API response
         $list->transform(function ($member) {
             if (isset($member->instrument) && is_array($member->instrument)) {
                 $instruments = $member->instrument;
-                sort($instruments); // Sort items alphabetically
-                $member->instrument = array_values($instruments); // Clean up array indices
+                sort($instruments);
+                $member->instrument = array_values($instruments);
             }
             return $member;
         });
@@ -44,9 +39,6 @@ class MemberController
         ], 200);
     }
 
-    /**
-     * Validates and inserts the request body into the collection.
-     */
     public function store(Request $request)
     {
         if (!$request->has(['name', 'email']) || empty($request->name) || empty($request->email)) {
@@ -71,9 +63,6 @@ class MemberController
         ], 500);
     }
 
-    /**
-     * Modifies an existing document matching by route parameter ID.
-     */
     public function update(Request $request, $id)
     {
         $data = $request->all();
@@ -105,9 +94,6 @@ class MemberController
         ], 500);
     }
 
-    /**
-     * Removes a specific member document matching by route parameter ID.
-     */
     public function destroy($id)
     {
         $member = Member::find($id);

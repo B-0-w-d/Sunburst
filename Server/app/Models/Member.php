@@ -22,33 +22,22 @@ class Member extends Model
         'status'
     ];
 
-
     protected static function booted()
     {
         static::creating(function (Member $member) {
-                if (empty($member->role)) {
-                    $member->role = 'member';
-                }
-                if (isset($member->instrument)) {
-                    $instruments = is_array($member->instrument)
-                        ? $member->instrument
-                        : array_filter(explode(',', $member->instrument));
+            if (empty($member->role)) {
+                $member->role = 'member';
+            }
+            if (isset($member->instrument) && !is_array($member->instrument)) {
+                $member->instrument = array_filter(explode(',', $member->instrument));
+            }
+            $member->password = Hash::make($member->password ?? '12345678');
+        });
 
-                    sort($instruments); // <-- Alphabetize array items
-                    $member->instrument = array_values($instruments); // Reset array keys cleanly
-                }
-                $member->password = Hash::make($member->password ?? '12345678');
-            });
-
-            static::updating(function (Member $member) {
-                    if ($member->isDirty('instrument') && isset($member->instrument)) {
-                        $instruments = is_array($member->instrument)
-                            ? $member->instrument
-                            : array_filter(explode(',', $member->instrument));
-
-                        sort($instruments); // <-- Alphabetize array items
-                        $member->instrument = array_values($instruments);
-                    }
+        static::updating(function (Member $member) {
+            if ($member->isDirty('instrument') && !is_array($member->instrument)) {
+                $member->instrument = array_filter(explode(',', $member->instrument));
+            }
             if ($member->isDirty('password') && !empty($member->password)) {
                 $member->password = Hash::make($member->password);
             } elseif (empty($member->password)) {
