@@ -3,7 +3,7 @@
 @section('title', 'Sunburst Server')
 
 @push('styles')
-    @vite(['resources/css/home.css'])
+    @vite(['resources/css/app.css'])
 @endpush
 
 @section('content')

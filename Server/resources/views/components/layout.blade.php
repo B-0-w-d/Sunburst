@@ -24,7 +24,7 @@
             </div>
 
             <nav class="icon-nav">
-                <a href="#" class="icon-link">
+                <a href="/api/members" class="icon-link">
                     <x-icons.house />
                 </a>
                 <a href="#" class="icon-link">
@@ -84,7 +84,7 @@
 
             <div class="promo-card">
                 <span class="promo-tag">Unobvious Tips</span>
-                <h4 class="promo-title">Laravel Hot Reloading</h4>
+                <h4 class="promo-title">DEO BIET NEN LAM GI O DAY</h4>
                 <p class="promo-meta">3 min read</p>
                 <a href="#" class="promo-btn">
                     Read post <span class="arrow">→</span>

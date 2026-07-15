@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 
 class MemberController
 {
+    // Query Operation: Serves the Blade view to browsers, or JSON to API clients
     public function index(Request $request)
     {
         $filters = array_filter([
@@ -22,7 +23,7 @@ class MemberController
 
         $list = Member::withFilters($filters, $sort)->get();
 
-        // Dynamically alphabetize internal instrument array values for the API response
+        // Dynamically alphabetize internal instrument array values for the response
         $list->transform(function ($member) {
             if (isset($member->instrument) && is_array($member->instrument)) {
                 $instruments = $member->instrument;
@@ -32,13 +33,19 @@ class MemberController
             return $member;
         });
 
-        return response()->json([
-            'status' => 'success',
-            'count'  => $list->count(),
-            'data'   => $list
-        ], 200);
+        // SMART ROUTING: Return JSON if requested by API client, otherwise render the Blade template
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'count'  => $list->count(),
+                'data'   => $list
+            ], 200);
+        }
+
+        return view('members', ['members' => $list]);
     }
 
+    // Create Operation
     public function store(Request $request)
     {
         if (!$request->has(['name', 'email']) || empty($request->name) || empty($request->email)) {
@@ -63,6 +70,7 @@ class MemberController
         ], 500);
     }
 
+    // Update Operation
     public function update(Request $request, $id)
     {
         $data = $request->all();
@@ -94,6 +102,7 @@ class MemberController
         ], 500);
     }
 
+    // Delete Operation: Now perfectly formatted for our Blade JavaScript fetch requests
     public function destroy($id)
     {
         $member = Member::find($id);
