@@ -1,0 +1,130 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #0f172a; /* Slate 900 */
+    color: #f8fafc; /* Slate 100 */
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+/* Card styling */
+.card {
+    background-color: #1e293b; /* Slate 800 */
+    border: 1px solid #334155; /* Slate 700 */
+    border-radius: 1rem; /* 16px */
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+    max-width: 448px; /* max-w-md */
+    width: 100%;
+    margin: 1rem;
+    padding: 2rem;
+    text-align: center;
+}
+
+/* Status Indicator & Animations */
+.status-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.pulse-wrapper {
+    position: relative;
+    display: flex;
+    height: 0.75rem; /* 12px */
+    width: 0.75rem;
+}
+
+.pulse-ping {
+    position: absolute;
+    display: inline-flex;
+    height: 100%;
+    width: 100%;
+    border-radius: 50%;
+    background-color: #34d399; /* Emerald 400 */
+    opacity: 0.75;
+    animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.pulse-dot {
+    position: relative;
+    display: inline-flex;
+    border-radius: 50%;
+    height: 0.75rem;
+    width: 0.75rem;
+    background-color: #10b981; /* Emerald 500 */
+}
+
+.status-text {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #34d399; /* Emerald 400 */
+}
+
+@keyframes ping {
+    75%, 100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+/* Typography */
+.title {
+    font-size: 1.875rem; /* 30px */
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+}
+
+.description {
+    font-size: 0.875rem; /* 14px */
+    color: #94a3b8; /* Slate 400 */
+    margin-bottom: 1.5rem;
+}
+
+/* Dynamic Tech Specs Grid */
+.specs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    text-align: left;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.75rem;
+    color: #64748b; /* Slate 500 */
+    border-top: 1px solid rgba(51, 65, 85, 0.5); /* border-slate-700/50 */
+    padding-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.text-right {
+    text-align: right;
+}
+
+/* Footer */
+.footer {
+    border-top: 1px solid rgba(51, 65, 85, 0.5);
+    padding-top: 1rem;
+    font-size: 0.75rem;
+    color: #94a3b8; /* Slate 400 */
+}
+
+.footer-link {
+    font-weight: 500;
+    color: #f59e0b; /* Amber 400 */
+    text-decoration: none;
+}
+
+.footer-link:hover {
+    text-decoration: underline;
+}
