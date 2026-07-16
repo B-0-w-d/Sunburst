@@ -25,12 +25,25 @@ class Member extends Model
     protected static function booted()
     {
         static::creating(function (Member $member) {
+            // Fallback default setups
             if (empty($member->role)) {
                 $member->role = 'member';
             }
+
+            // Auto-assign operational status for UI filtering if not provided
+            if (empty($member->status)) {
+                $member->status = 'active';
+            }
+
+            // Set the joining timestamp automatically
+            if (empty($member->joined_in)) {
+                $member->joined_in = now()->toDateTimeString();
+            }
+
             if (isset($member->instrument) && !is_array($member->instrument)) {
                 $member->instrument = array_filter(explode(',', $member->instrument));
             }
+
             $member->password = Hash::make($member->password ?? '12345678');
         });
 
