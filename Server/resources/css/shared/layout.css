@@ -1,9 +1,3 @@
-.dashboard-container {
-    display: flex;
-    width: 100vw;
-    height: 100vh;
-}
-
 /* Column 1: Core Navigation Icon Deck (Leftmost bar) */
 .icon-strip {
     width: 72px;
@@ -126,7 +120,7 @@
 .header-left {
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: 30px;
 }
 
 .page-title {
@@ -138,5 +132,4 @@
 .canvas-content {
     flex-grow: 1;
     overflow-y: auto;
-    padding: 40px;
 }

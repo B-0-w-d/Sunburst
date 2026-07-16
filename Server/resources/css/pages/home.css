@@ -7,6 +7,12 @@
     }
 }
 
+.dashboard-container {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+}
+
 .home-view-wrapper {
     display: flex;
     width: 100%;

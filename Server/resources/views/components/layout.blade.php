@@ -57,7 +57,7 @@
                 </div>
             </header>
 
-            <main class="canvas-content" style="display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start;">
+            <main class="canvas-content">
                 {{ $slot }}
             </main>
         </div>

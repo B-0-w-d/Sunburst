@@ -50,27 +50,28 @@
             </div>
         </aside>
 
-        <div class="roster-container" style="flex-grow: 1; width: 100%; margin: 0; padding: 0;">
-            <div class="roster-header">
+        <div class="content-container" style="flex-grow: 1; width: 100%; margin: 0; padding: 0; max-width: 1200px;">
+            <div class="content-header">
                 <div>
-                    <h3 class="roster-title">Active Roster</h3>
-                    <p class="roster-subtitle">Manage and view performing band members inside MongoDB.</p>
+                    <h3 class="content-title">Active Roster</h3>
+                    <p class="content-subtitle">Manage and view performing band members inside MongoDB.</p>
                 </div>
-                <span class="roster-badge-count">
+                <span class="content-badge-count">
                     {{ count($members) }} Members Active
                 </span>
             </div>
 
-            <div class="roster-card">
-                <div class="roster-table-wrapper">
-                    <table class="roster-table">
+            <div class="content-card">
+                <div class="content-table-wrapper">
+                    <table class="content-table">
                         <thead>
                             <tr>
-                                <th>Name & Email</th>
-                                <th>Role</th>
-                                <th>Instruments</th>
-                                <th>Joined Date</th>
-                                <th style="text-align: right;">Actions</th>
+                                <th style="width: 25%;">Name & Email</th>
+                                <th style="width: 12%;">Role</th>
+                                <th style="width: 23%;">Instruments</th>
+                                <th style="width: 15%;">Birthday</th>
+                                <th style="width: 15%;">Joined Date</th>
+                                <th style="width: 10%; text-align: right;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -84,9 +85,9 @@
                                     </td>
                                     <td>
                                         @if(strtolower($member->role ?? 'member') === 'admin')
-                                            <span class="roster-badge roster-badge-admin" data-role="admin">Admin</span>
+                                            <span class="content-badge content-badge-admin" data-role="admin">Admin</span>
                                         @else
-                                            <span class="roster-badge roster-badge-member" data-role="member">Member</span>
+                                            <span class="content-badge content-badge-member" data-role="member">Member</span>
                                         @endif
                                     </td>
                                     <td>
@@ -101,16 +102,21 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="roster-date">
+                                        <span class="content-date" data-birthday-raw="{{ $member->birthday ?? '' }}">
+                                            {{ !empty($member->birthday) ? date('M d, Y', strtotime($member->birthday)) : 'N/A' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="content-date">
                                             {{ !empty($member->joined_in) ? date('M d, Y', strtotime($member->joined_in)) : 'N/A' }}
                                         </span>
                                     </td>
                                     <td>
-                                        <div class="roster-actions">
-                                            <button onclick="prepareAndOpenEditModal('{{ $member->_id }}')" class="action-edit" style="background:none; border:none; cursor:pointer;">
+                                        <div class="content-actions">
+                                            <button onclick="prepareAndOpenEditModal('{{ $member->_id }}')" class="action-edit" style="background:none; border:none; cursor:pointer; padding:0;">
                                                 <x-icons.edit/>
                                             </button>
-                                            <button onclick="deleteMember('{{ $member->_id }}')" class="action-delete">
+                                            <button onclick="deleteMember('{{ $member->_id }}')" class="action-delete" style="padding:0;">
                                                 <x-icons.delete/>
                                             </button>
                                         </div>
@@ -118,7 +124,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" style="text-align: center; padding: 40px 0; color: #64748b;">
+                                    <td colspan="6" style="text-align: center; padding: 40px 0; color: #64748b;">
                                         No members found.
                                     </td>
                                 </tr>
@@ -129,7 +135,7 @@
             </div>
         </div>
     </div>
-
+        {{--1. ADD NEW MEMBER MODAL--}}
     <x-modal id="addMemberModal" title="Add New Band Member" submitFn="submitAddForm(event)">
         <div class="form-group">
             <label class="form-label" for="add-name">Display Name</label>
@@ -139,6 +145,11 @@
         <div class="form-group">
             <label class="form-label" for="add-email">Email Address</label>
             <input type="email" id="add-email" class="form-input" required placeholder="e.g. Rendarapper@gmail.com">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="add-birthday">Birthday</label>
+            <input type="date" id="add-birthday" class="form-input">
         </div>
 
         <div class="form-group">
@@ -159,6 +170,8 @@
         </x-slot>
     </x-modal>
 
+         {{--2. EDIT EXISTING MEMBER MODAL--}}
+
     <x-modal id="editMemberModal" title="Edit Band Member" submitFn="submitEditForm(event)">
         <input type="hidden" id="edit-member-id">
 
@@ -173,7 +186,12 @@
         </div>
 
         <div class="form-group">
-            <label class="form-label" for="edit-role">Role Hierarchy</label>
+            <label class="form-label" for="edit-birthday">Birthday</label>
+            <input type="date" id="edit-birthday" name='birthday' class="form-input">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="edit-role">Chuc vu</label>
             <select id="edit-role" class="form-input" style="height: 42px;">
                 <option value="member">Member</option>
                 <option value="admin">Admin</option>
@@ -190,7 +208,6 @@
         </x-slot>
     </x-modal>
 
-    {{-- Inject cleaner segmented scripts via partial include mapping flags --}}
     @push('scripts')
         @include('scripts.membersScript')
     @endpush
