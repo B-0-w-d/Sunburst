@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
-use MongoDB\Laravel\Eloquent\Model;
+// 1. CHANGE THIS IMPORT: Swap the standard Model for the MongoDB Authenticatable User class
+use MongoDB\Laravel\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Eloquent\Builder;
 
-class Member extends Model
+// 2. CHANGE THIS: Make Member extend Authenticatable
+class Member extends Authenticatable
 {
     protected $connection = 'mongodb';
     protected $collection = 'members';
@@ -83,5 +85,12 @@ class Member extends Model
         }
 
         return $query;
+    }
+
+    // Define the administrative tiers
+    public function isManagementTier(): bool
+    {
+        $highRoles = ['admin', 'president', 'vice-president', 'manager'];
+        return in_array(strtolower($this->role ?? ''), $highRoles);
     }
 }
