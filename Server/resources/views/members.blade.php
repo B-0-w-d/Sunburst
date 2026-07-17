@@ -6,7 +6,7 @@
         <aside class="nav-sidebar" style="width: 260px; flex-shrink: 0;">
             <div class="sidebar-section">
                 <div class="section-header">
-                    <span class="section-title">Projects</span>
+                    <span class="section-title">Upcomming shows</span>
                 </div>
                 <div class="project-list">
                     <a href="#" class="project-item">
