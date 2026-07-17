@@ -6,7 +6,7 @@ use App\Http\Controllers\MemberController;
 // 1. Guest Routes: Accessible only when NOT logged in
 Route::middleware(['guest'])->group(function () {
     Route::get('/login', function () {
-        return view('components.login');
+        return view('login');
     })->name('login');
 
     // Only define this once!

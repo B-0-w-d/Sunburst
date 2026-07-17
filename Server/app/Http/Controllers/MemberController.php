@@ -174,9 +174,10 @@ class MemberController
 
     public function updateProfile(Request $request)
     {
+        /** @var \App\Models\Member $member */
         $member = Auth::user();
 
-        // Validate the request
+        // 1. Validate
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:members,email,' . $member->_id . ',_id',
@@ -187,15 +188,24 @@ class MemberController
             'password' => 'nullable|min:8|confirmed',
         ]);
 
-        // Update basic info
+        // 2. Update all fields
         $member->name = $request->name;
         $member->email = $request->email;
+        $member->birthday = $request->birthday;
+        $member->instrument = $request->instrument;
 
-        // Update password only if provided
-        if ($request->filled('password')) {
-            $member->password = $request->password;
+        // Only update role if user has management tier
+        if ($member->isManagementTier()) {
+            $member->role = $request->role;
         }
 
+        // 3. Update password only if provided
+        if ($request->filled('password')) {
+            $member->password = $request->password; // Ensure your Model handles hashing in a mutator
+        }
+
+        // 4. CRITICAL: Save to database
+        $member->save();
 
         return back()->with('success', 'Profile updated successfully.');
     }

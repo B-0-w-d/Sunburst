@@ -12,11 +12,8 @@
     <!-- New wrapper for the background -->
     <div class="login-page-wrapper" style="background-image: url('{{ asset('images/login-background.jpg') }}'); background-repeat: no-repeat; background-position: center; background-size: cover;">
         <div class="login-modal">
-            <div class="modal-header">
-                <h4 class="modal-title">Welcome to Sunburst</h4>
-                <p style="color: #64748b; font-size: 14px; margin-top: 8px;">This is the management site, so only Sunburst members can sign in.</p>
-            </div>
-
+                <h4 class="welcome-title" style="text-align:center;">Welcome to Sunburst</h4>
+                            <p style="color: #64748b; font-size: 14px; padding: 8px; text-align: center;">This is the management site, so only Sunburst members can sign in.</p>
             <form id="authLoginModalForm" onsubmit="handleFormLogin(event)">
                 @csrf
                 <div id="login-error-alert" style="display:none; background:#fef2f2; color:#b91c1c; padding:10px; border-radius:8px; margin-bottom:20px; font-size:13px; text-align:center;"></div>

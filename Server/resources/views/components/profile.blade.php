@@ -1,7 +1,7 @@
 <div class="modal-window">
     <!-- Header stays at the top -->
     <div class="modal-header">
-        <h2 class="modal-title">Edit Band Member</h2>
+        <h2 class="modal-title">Edit Your Profile</h2>
         <button type="button" class="modal-close-btn" onclick="closeModal()">&times;</button>
     </div>
 

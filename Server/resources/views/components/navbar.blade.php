@@ -62,7 +62,7 @@
                         <button type="button"
                                 onclick="openModal('editProfileModal')"
                                 class="dropdown-item"
-                                style="background: none; border: none; width: 100%; text-align: left; cursor: pointer;">
+                                style="background: none; border: none; width: 100%; text-align: center; cursor: pointer;">
                             Edit Profile
                         </button>
 
