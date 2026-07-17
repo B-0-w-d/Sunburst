@@ -106,3 +106,40 @@ body {
     transform: translateY(0);
     /* Slide up into place */
 }
+
+.modal-header {
+    position: relative;
+    /* Essential for absolute positioning of the close button */
+    display: flex;
+    justify-content: center;
+    /* Keeps the title in the middle */
+    align-items: center;
+    margin-bottom: 20px;
+    padding-right: 30px;
+    /* Prevents long titles from hitting the button */
+}
+
+.modal-close-btn {
+    position: absolute;
+    /* Pins the button to the header */
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    /* Keeps it vertically centered */
+
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #64748b;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    line-height: 1;
+}
+
+.modal-close-btn:hover {
+    background-color: #f1f5f9;
+    color: #1e293b;
+}

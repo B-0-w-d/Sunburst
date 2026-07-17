@@ -35,7 +35,9 @@ Route::post('/login', function (Request $request) {
     ]);
 });
 
-Route::get('/members', [MemberController::class, 'index']);
-Route::post('/members', [MemberController::class, 'store']);
-Route::put('/members/{id}', [MemberController::class, 'update']);
-Route::delete('/members/{id}', [MemberController::class, 'destroy']);
+Route::middleware(['auth:web'])->group(function () {
+    Route::get('/members', [MemberController::class, 'index']);
+    Route::post('/members', [MemberController::class, 'store']);
+    Route::put('/members/{id}', [MemberController::class, 'update']);
+    Route::delete('/members/{id}', [MemberController::class, 'destroy']);
+});

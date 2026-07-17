@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Member;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+
 
 class MemberController
 {
-    // Query Operation: Serves the Blade view to browsers, or JSON to API clients
+    // Query Operation
     public function index(Request $request)
     {
         $filters = array_filter([
@@ -24,7 +26,6 @@ class MemberController
 
         $list = Member::withFilters($filters, $sort)->get();
 
-        // Dynamically alphabetize internal instrument array values for the response
         $list->transform(function ($member) {
             if (isset($member->instrument) && is_array($member->instrument)) {
                 $instruments = $member->instrument;
@@ -34,7 +35,6 @@ class MemberController
             return $member;
         });
 
-        // SMART ROUTING: Return JSON if requested by API client, otherwise render the Blade template
         if ($request->expectsJson()) {
             return response()->json([
                 'status' => 'success',
@@ -73,56 +73,74 @@ class MemberController
 
     // Update Operation
     public function update(Request $request, $id)
+
     {
-        $data = $request->all();
-        if (empty($data)) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'No data provided for update.'
-            ], 400);
+        \Log::info("Is User Logged In?: " . \Auth::check());
+        \Log::info("User ID: " . \Auth::id());
+
+        if (!\Auth::check()) {
+            return response()->json(['status' => 'error', 'message' => 'User is not logged in'], 401);
+        }
+        // 1. Attempt to find the member
+        $member = Member::find($id);
+
+        if (!$member) {
+            return response()->json(['status' => 'error', 'message' => 'Member not found.'], 404);
         }
 
-        $member = Member::find($id);
-        if (!$member) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Member not found.'
-            ], 404);
+        /** @var \App\Models\Member $currentUser */
+        $currentUser = Auth::user();
+
+        if (!$currentUser) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthenticated.'], 401);
+        }
+
+        if ($currentUser->_id !== $member->_id && !$currentUser->isManagementTier()) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
+        // ... proceed with update
+        $data = $request->only(['name', 'email', 'birthday', 'role', 'instrument']);
+
+        if (!$currentUser->isManagementTier()) {
+            unset($data['role']);
         }
 
         if ($member->update($data)) {
-            return response()->json([
-                'status'  => 'success',
-                'message' => 'Member updated successfully.'
-            ]);
+            return response()->json(['status' => 'success', 'message' => 'Updated successfully.']);
         }
 
-        return response()->json([
-            'status'  => 'error',
-            'message' => 'Failed to update member.'
-        ], 500);
+        return response()->json(['status' => 'error', 'message' => 'Failed to save changes.'], 500);
     }
 
     // Delete Operation
     public function destroy($id)
     {
+        /** @var \App\Models\Member $currentUser */
+        $currentUser = Auth::user();
+
+        if (!$currentUser || !$currentUser->isManagementTier()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized action.'
+            ], 403);
+        }
+
         $member = Member::find($id);
         if (!$member || !$member->delete()) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Member not found or already deleted.'
             ], 404);
         }
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Member deleted successfully.'
         ]);
     }
 
-    /**
-     * Handle an authentication attempt.
-     */
+    // Login Operation
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -156,9 +174,7 @@ class MemberController
         ]);
     }
 
-    /**
-     * Log the member out of the application.
-     */
+    // Logout Operation
     public function logout(Request $request)
     {
         Auth::logout();

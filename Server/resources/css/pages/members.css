@@ -231,3 +231,28 @@
 .btn-save:hover {
     background-color: #e04848;
 }
+
+.content-badge-admin {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.content-badge-president {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.content-badge-vice-president {
+    background: #e0f2fe;
+    color: #075985;
+}
+
+.content-badge-manager {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.content-badge-member {
+    background: #f1f5f9;
+    color: #475569;
+}

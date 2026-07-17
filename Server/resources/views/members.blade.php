@@ -84,11 +84,13 @@
                                         </div>
                                     </td>
                                     <td>
-                                        @if(strtolower($member->role ?? 'member') === 'admin')
-                                            <span class="content-badge content-badge-admin" data-role="admin">Admin</span>
-                                        @else
-                                            <span class="content-badge content-badge-member" data-role="member">Member</span>
-                                        @endif
+                                        @php
+                                            $role = strtolower($member->role ?? 'member');
+                                            $badgeClass = 'content-badge-' . $role; // e.g., content-badge-president
+                                        @endphp
+                                        <span class="content-badge {{ $badgeClass }}" data-role="{{ $role }}">
+                                            {{ ucfirst(str_replace('-', ' ', $role)) }}
+                                        </span>
                                     </td>
                                     <td>
                                         <div class="instrument-tags" data-instruments-raw="{{ implode(', ', (array)($member->instrument ?? [])) }}">
@@ -112,13 +114,18 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <div class="content-actions">
-                                            <button onclick="prepareAndOpenEditModal('{{ $member->_id }}')" class="action-edit" style="background:none; border:none; cursor:pointer; padding:0;">
-                                                <x-icons.edit/>
-                                            </button>
-                                            <button onclick="deleteMember('{{ $member->_id }}')" class="action-delete" style="padding:0;">
-                                                <x-icons.delete/>
-                                            </button>
+                                        <div class="actions">
+                                            {{-- Always show edit for own profile, otherwise show only if management --}}
+                                            @if(Auth::id() === $member->_id || Auth::user()->isManagementTier())
+                                                <button onclick="prepareAndOpenEditModal('{{ $member->_id }}')" class="btn-edit">                                                    <x-icons.edit/>
+                                                </button>
+                                            @endif
+
+                                            {{-- Only show delete for management tier --}}
+                                            @if(Auth::user()->isManagementTier())
+                                                <button type="button" onclick="prepareAndOpenEditModal('{{ $member->_id }}')" class="btn-edit">                                                    <x-icons.delete/>
+                                                </button>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -156,6 +163,9 @@
             <label class="form-label" for="add-role">Role Hierarchy</label>
             <select id="add-role" class="form-input" style="height: 42px;">
                 <option value="member" selected>Member</option>
+                <option value="manager">Manager</option>
+                <option value="vice-president">Vice President</option>
+                <option value="president">President</option>
                 <option value="admin">Admin</option>
             </select>
         </div>
@@ -173,6 +183,7 @@
          {{--2. EDIT EXISTING MEMBER MODAL--}}
 
     <x-modal id="editMemberModal" title="Edit Band Member" submitFn="submitEditForm(event)">
+        <form id="editMemberModalForm" onsubmit="submitEditForm(event)">
         <input type="hidden" id="edit-member-id">
 
         <div class="form-group">
@@ -191,21 +202,24 @@
         </div>
 
         <div class="form-group">
-            <label class="form-label" for="edit-role">Chuc vu</label>
+            <label class="form-label" for="edit-role">Role</label>
             <select id="edit-role" class="form-input" style="height: 42px;">
                 <option value="member">Member</option>
+                <option value="manager">Manager</option>
+                <option value="vice-president">Vice President</option>
+                <option value="president">President</option>
                 <option value="admin">Admin</option>
             </select>
         </div>
 
         <div class="form-group">
-            <label class="form-label" for="edit-instruments">Instruments (Comma separated)</label>
+            <label class="form-label" for="edit-instruments">Instruments)</label>
             <input type="text" id="edit-instruments" class="form-input" placeholder="e.g. Vocal, Bass Guitar, Synth">
         </div>
 
         <x-slot name="footer">
-            <button type="submit" class="btn-save">Save Changes</button>
-        </x-slot>
+                    <button type="submit" class="btn-save">Save Changes</button>
+                </x-slot>
     </x-modal>
 
     @push('scripts')
