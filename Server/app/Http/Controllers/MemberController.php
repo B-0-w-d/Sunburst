@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Member;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class MemberController
 {
@@ -102,7 +103,7 @@ class MemberController
         ], 500);
     }
 
-    // Delete Operation: Now perfectly formatted for our Blade JavaScript fetch requests
+    // Delete Operation
     public function destroy($id)
     {
         $member = Member::find($id);
@@ -117,5 +118,61 @@ class MemberController
             'status'  => 'success',
             'message' => 'Member deleted successfully.'
         ]);
+    }
+
+    /**
+     * Handle an authentication attempt.
+     */
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
+
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Logged in successfully.',
+                    'member' => Auth::user()
+                ]);
+            }
+
+            return redirect()->intended('/');
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'The provided credentials do not match our records.'
+            ], 401);
+        }
+
+        return back()->withErrors([
+            'email' => 'The provided credentials do not match our records.',
+        ]);
+    }
+
+    /**
+     * Log the member out of the application.
+     */
+    public function logout(Request $request)
+    {
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Logged out successfully.'
+            ]);
+        }
+
+        return redirect('/');
     }
 }

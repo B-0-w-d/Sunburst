@@ -14,6 +14,13 @@ class Member extends Authenticatable
     protected $connection = 'mongodb';
     protected $collection = 'members';
 
+    /**
+     * Core Session Fixes for MongoDB Identifier Serialization
+     * ----------------------------------------------------------------------
+     */
+    protected $primaryKey = '_id';
+    protected $keyType = 'string';
+
     protected $fillable = [
         'name',
         'email',
@@ -24,6 +31,14 @@ class Member extends Authenticatable
         'joined_in',
         'status'
     ];
+
+    /**
+     * Map the primary authentication key correctly for Laravel Auth guards.
+     */
+    public function getAuthIdentifierName()
+    {
+        return '_id';
+    }
 
     protected static function booted()
     {
@@ -53,7 +68,7 @@ class Member extends Authenticatable
                 $member->instrument = array_filter(explode(',', $member->instrument));
             }
 
-            // 3. FIXED: Safe password mutation logic to avoid accidental unsets in MongoDB
+            // Safe password mutation logic to avoid accidental unsets in MongoDB
             if ($member->isDirty('password')) {
                 if (!empty($member->password)) {
                     $member->password = Hash::make($member->password);
@@ -95,5 +110,10 @@ class Member extends Authenticatable
     {
         $highRoles = ['admin', 'president', 'vice-president', 'manager'];
         return in_array(strtolower($this->role ?? ''), $highRoles);
+    }
+    public function getAuthIdentifier()
+    {
+        // Ensure the MongoDB _id is returned as a plain string
+        return (string) $this->_id;
     }
 }

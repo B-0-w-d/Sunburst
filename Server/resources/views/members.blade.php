@@ -1,4 +1,4 @@
-<x-naxbar>
+<x-navbar>
     <x-slot name="title">Members Roster | Sunburst</x-slot>
 
     <div class="dashboard-layout-wrapper" style="display: flex; gap: 32px; max-width: 100%; max-height: 100%; align-items: flex-start;">

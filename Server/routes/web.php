@@ -1,43 +1,33 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\MemberController;
 
-// 1. The Root Page
-Route::get('/', function () {
-    return view('home');
-});
-
-// 2. GET Login Route
+// 1. Public route for the login page
 Route::get('/login', function () {
-    // If already signed in, bypass the login
-    if (Auth::check()) {
-        return redirect('/');
-    }
-    // or return the home view
-    return view('home');
+    return view('components.login');
 })->name('login');
 
-// 3. The POST Login Route
-Route::post('/login', function (Request $request) {
-    $credentials = $request->validate([
-        'email' => ['required', 'email'],
-        'password' => ['required'],
-    ]);
+// 2. POST route for login processing (stays public)
+Route::post('/login', [MemberController::class, 'login']);
 
-    if (Auth::attempt($credentials)) {
-        $request->session()->regenerate();
+// 3. Protected routes: Only accessible if authenticated
+Route::middleware(['auth'])->group(function () {
 
+    Route::get('/', function () {
+        return view('home');
+    });
+
+    Route::get('/members', [MemberController::class, 'index'])->name('members.index');
+
+    Route::post('/logout', [MemberController::class, 'logout']);
+
+    // Debug routes (Keep protected for security)
+    Route::get('/debug-auth', function () {
         return response()->json([
-            'status' => 'success',
-            'message' => 'Authenticated successfully.',
-            'redirect' => '/'
+            'check' => Auth::check(),
+            'user' => Auth::user(),
         ]);
-    }
-
-    return response()->json([
-        'status' => 'error',
-        'message' => 'The provided credentials do not match our records.'
-    ], 401);
+    });
 });

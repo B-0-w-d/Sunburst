@@ -14,15 +14,17 @@
 .logo-container {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     color: #ffffff;
     font-weight: 800;
     font-size: 20px;
 }
 
 .icon-nav {
+    padding-top: 50%;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     gap: 20px;
     align-items: center;
 }
@@ -50,14 +52,105 @@
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
-.user-profile {
+/* ==========================================================================
+   User Profile Badge & Dropdown System (Pure CSS Hover)
+   ========================================================================== */
+.user-profile-container {
+    position: relative;
+    cursor: pointer;
+    padding-bottom: 12px;
     margin-top: auto;
 }
 
+.user-profile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background-color: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    font-weight: 700;
+    color: #0f172a;
+    font-family: 'Inter', sans-serif;
+    text-transform: uppercase;
+    font-size: 16px;
+    user-select: none;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+/* Inherit standard icon scaling inside the dynamic avatar circle */
 .user-profile svg {
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
     color: #1e293b;
+}
+
+.user-profile-container:hover .user-profile {
+    background-color: #e2e8f0;
+    border-color: #b09956;
+    /* Uses your layout's core border color on hover */
+}
+
+.profile-dropdown {
+    display: none;
+    position: absolute;
+    bottom: 50px;
+    /* Positions dropdown cleanly right above the icon deck boundary */
+    left: 10px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    min-width: 180px;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+/* Hover Deployment Mechanic Trigger */
+.user-profile-container:hover .profile-dropdown {
+    display: block;
+}
+
+.dropdown-info {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 13px;
+    text-align: left;
+}
+
+.dropdown-info .user-name {
+    font-weight: 600;
+    color: #0f172a;
+    display: block;
+}
+
+.dropdown-info .user-email {
+    font-size: 11px;
+    color: #64748b;
+    display: block;
+    margin-top: 2px;
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 10px 16px;
+    text-align: left;
+    background: none;
+    border: none;
+    font-size: 14px;
+    color: #334155;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.dropdown-item:hover {
+    background: #f8fafc;
+    color: #ef4444;
+    /* Highlights logout text variant cleanly */
 }
 
 /* Column 2: Control Deck Sidebar Panel (Middle Context Panel) */
