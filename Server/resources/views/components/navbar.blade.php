@@ -42,10 +42,8 @@
             <div class="user-profile-container">
                 <div class="user-profile">
                     @auth
-                        <!-- Displays the first letter of the logged-in Member's name dynamically -->
                         {{ substr(auth()->user()->name, 0, 1) }}
                     @else
-                        <!-- Fallback SVG icon if they are a guest -->
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
                         </svg>
@@ -60,16 +58,18 @@
                             <span class="user-email">{{ auth()->user()->email }}</span>
                         </div>
 
-                        <!-- Standard form trigger handling the POST logout endpoint securely -->
+                        <!-- Added Edit Profile Link -->
+                        <button type="button"
+                                onclick="openModal('editProfileModal')"
+                                class="dropdown-item"
+                                style="background: none; border: none; width: 100%; text-align: left; cursor: pointer;">
+                            Edit Profile
+                        </button>
+
                         <form action="/logout" method="POST" style="margin: 0;">
                             @csrf
                             <button type="submit" class="dropdown-item">Log Out</button>
                         </form>
-                    @else
-                        <div class="dropdown-info">
-                            <span class="user-name" style="color: #64748b;">Guest Mode</span>
-                        </div>
-                        <a href="/login" class="dropdown-item">Sign In</a>
                     @endauth
                 </div>
             </div>
@@ -97,6 +97,9 @@
         </div>
     </div>
 
+    <div id="editProfileModal" class="modal">
+            @include('components.profile')
+    </div>
     @stack('scripts')
 </body>
 

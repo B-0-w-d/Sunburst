@@ -73,14 +73,7 @@ class MemberController
 
     // Update Operation
     public function update(Request $request, $id)
-
     {
-        \Log::info("Is User Logged In?: " . \Auth::check());
-        \Log::info("User ID: " . \Auth::id());
-
-        if (!\Auth::check()) {
-            return response()->json(['status' => 'error', 'message' => 'User is not logged in'], 401);
-        }
         // 1. Attempt to find the member
         $member = Member::find($id);
 
@@ -172,6 +165,39 @@ class MemberController
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
         ]);
+    }
+
+    public function editProfile()
+    {
+        return view('components.profile', ['member' => Auth::user()]);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $member = Auth::user();
+
+        // Validate the request
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:members,email,' . $member->_id . ',_id',
+            'role' => 'nullable|string',
+            'status' => 'nullable|string',
+            'birthday' => 'nullable|date',
+            'instrument' => 'nullable',
+            'password' => 'nullable|min:8|confirmed',
+        ]);
+
+        // Update basic info
+        $member->name = $request->name;
+        $member->email = $request->email;
+
+        // Update password only if provided
+        if ($request->filled('password')) {
+            $member->password = $request->password;
+        }
+
+
+        return back()->with('success', 'Profile updated successfully.');
     }
 
     // Logout Operation
