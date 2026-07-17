@@ -1,5 +1,5 @@
 {{-- resources/views/home.blade.php --}}
-<x-layout title="Welcome to Sunburst">
+<x-navbar title="Welcome to Sunburst">
     <div class="welcome-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; text-align: center; font-family: 'Inter', sans-serif; padding: 20px; background-color: #fcfcfd;">
 
         <!-- Welcome Hero Branding Block -->
@@ -26,4 +26,4 @@
         </div>
 
     </div>
-</x-layout>
+</x-navbar>

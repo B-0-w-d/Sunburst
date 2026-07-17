@@ -172,64 +172,7 @@
     font-weight: 600;
 }
 
-/* --- Interactive Action Modal Component (`modal.blade.php`) --- */
-.modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(15, 23, 42, 0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 999;
 
-    /* These core rules hide it safely without breaking styles */
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease-in-out;
-}
-
-.modal-backdrop.open {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.modal-window {
-    background-color: #ffffff;
-    border-radius: 20px;
-    width: 100%;
-    max-width: 460px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-}
-
-.modal-header {
-    padding: 24px 24px 16px;
-    border-bottom: 1px solid #f1f5f9;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.modal-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: #0f172a;
-}
-
-.modal-close-btn {
-    background: none;
-    border: none;
-    color: #94a3b8;
-    font-size: 20px;
-    cursor: pointer;
-}
-
-.modal-body {
-    padding: 24px;
-}
 
 .form-group {
     display: flex;

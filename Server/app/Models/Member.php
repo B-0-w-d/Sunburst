@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
-// 1. CHANGE THIS IMPORT: Swap the standard Model for the MongoDB Authenticatable User class
 use MongoDB\Laravel\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Eloquent\Builder;
+use Laravel\Sanctum\HasApiTokens;
 
-// 2. CHANGE THIS: Make Member extend Authenticatable
 class Member extends Authenticatable
 {
+    use HasApiTokens;
+
     protected $connection = 'mongodb';
     protected $collection = 'members';
 
@@ -32,12 +33,10 @@ class Member extends Authenticatable
                 $member->role = 'member';
             }
 
-            // Auto-assign operational status for UI filtering if not provided
             if (empty($member->status)) {
                 $member->status = 'active';
             }
 
-            // Set the joining timestamp automatically
             if (empty($member->joined_in)) {
                 $member->joined_in = now()->toDateTimeString();
             }
@@ -53,10 +52,15 @@ class Member extends Authenticatable
             if ($member->isDirty('instrument') && !is_array($member->instrument)) {
                 $member->instrument = array_filter(explode(',', $member->instrument));
             }
-            if ($member->isDirty('password') && !empty($member->password)) {
-                $member->password = Hash::make($member->password);
-            } elseif (empty($member->password)) {
-                unset($member->password);
+
+            // 3. FIXED: Safe password mutation logic to avoid accidental unsets in MongoDB
+            if ($member->isDirty('password')) {
+                if (!empty($member->password)) {
+                    $member->password = Hash::make($member->password);
+                } else {
+                    // Fallback to the original value if it was passed empty in an update payload
+                    $member->password = $member->getOriginal('password');
+                }
             }
         });
     }
@@ -87,7 +91,6 @@ class Member extends Authenticatable
         return $query;
     }
 
-    // Define the administrative tiers
     public function isManagementTier(): bool
     {
         $highRoles = ['admin', 'president', 'vice-president', 'manager'];
