@@ -1,3 +1,4 @@
+/* --- Navigation & Member List --- */
 .member-list {
     display: flex;
     flex-direction: column;
@@ -23,7 +24,7 @@
     color: #334155;
 }
 
-/* --- Main Active content Workspace Canvas --- */
+/* --- Main Workspace Canvas --- */
 .content-container {
     flex-grow: 1;
     width: 100%;
@@ -60,17 +61,13 @@
     font-weight: 600;
 }
 
+/* --- Table & Card Styles --- */
 .content-card {
     background-color: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 16px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
     overflow: hidden;
-}
-
-.content-table-wrapper {
-    width: 100%;
-    overflow-x: auto;
 }
 
 .content-table {
@@ -102,6 +99,7 @@
     background-color: #f8fafc;
 }
 
+/* --- User Identity & Badges --- */
 .user-identity {
     display: flex;
     flex-direction: column;
@@ -147,11 +145,7 @@
     border-radius: 6px;
 }
 
-.content-date {
-    font-size: 13px;
-    color: #475569;
-}
-
+/* --- Actions & Inputs --- */
 .content-actions {
     display: flex;
     gap: 12px;
@@ -162,6 +156,11 @@
     color: #3b82f6;
     text-decoration: none;
     font-weight: 600;
+    transition: opacity 0.2s;
+}
+
+.action-edit:hover {
+    opacity: 0.8;
 }
 
 .action-delete {
@@ -170,10 +169,14 @@
     color: #ef4444;
     cursor: pointer;
     font-weight: 600;
+    transition: opacity 0.2s;
 }
 
+.action-delete:hover {
+    opacity: 0.8;
+}
 
-
+/* --- Modal & Forms --- */
 .form-group {
     display: flex;
     flex-direction: column;
@@ -188,21 +191,7 @@
     color: #64748b;
 }
 
-.form-input {
-    background-color: #f8fafc;
-    border: 1px solid #e2e8f0;
-    padding: 10px 14px;
-    font-size: 14px;
-    color: #1e293b;
-    border-radius: 10px;
-    outline: none;
-}
-
-.form-input:focus {
-    border-color: #6366f1;
-    background-color: #ffffff;
-}
-
+/* Modal Footer Buttons */
 .modal-footer {
     padding: 16px 24px 24px;
     border-top: 1px solid #f1f5f9;
@@ -220,6 +209,11 @@
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-cancel:hover {
+    background-color: #e2e8f0;
 }
 
 .btn-save {
@@ -231,4 +225,9 @@
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-save:hover {
+    background-color: #e04848;
 }

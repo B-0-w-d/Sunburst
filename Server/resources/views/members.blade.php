@@ -1,5 +1,5 @@
 <x-navbar>
-    <x-slot name="title">Members Roster | Sunburst</x-slot>
+    <x-slot name="title">Members | Sunburst</x-slot>
 
     <div class="dashboard-layout-wrapper" style="display: flex; gap: 32px; max-width: 100%; max-height: 100%; align-items: flex-start;">
 
@@ -50,7 +50,7 @@
             </div>
         </aside>
 
-        <div class="content-container" style="flex-grow: 1; width: 100%; margin: 0; padding: 0; max-width: 1200px;">
+        <div class="content-container" style="flex-grow: 1; width: 100%; max-width: 1200px;">
             <div class="content-header">
                 <div>
                     <h3 class="content-title">Active Roster</h3>

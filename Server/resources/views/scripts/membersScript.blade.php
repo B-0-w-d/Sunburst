@@ -1,160 +1,100 @@
-{{-- resources/views/scripts/membersScript.blade.php --}}
 <script>
-    let activeClickOutsideHandler = null;
-
-    function openModal(id) {
-        const modal = document.getElementById(id);
-        if (!modal) return;
-
-        modal.classList.add('open');
-
-        if (activeClickOutsideHandler) {
-            modal.removeEventListener('click', activeClickOutsideHandler);
-        }
-
-        activeClickOutsideHandler = function clickOutside(e) {
-            if (e.target === modal) {
-                closeModal(id);
-            }
-        };
-        modal.addEventListener('click', activeClickOutsideHandler);
-    }
-
-    function closeModal(id) {
-        const modal = document.getElementById(id);
-        if (!modal) return;
-
-        modal.classList.remove('open');
-
-        const form = document.getElementById(`${id}Form`);
-        if (form && id === 'addMemberModal') {
-            form.reset();
-        }
-
-        if (activeClickOutsideHandler) {
-            modal.removeEventListener('click', activeClickOutsideHandler);
-            activeClickOutsideHandler = null;
-        }
-    }
-
     /* ==========================================
-       CREATE MEMBER FUNCTION
+       API & UTILS
        ========================================== */
-    function submitAddForm(event) {
-        event.preventDefault();
-
-        const instrumentsRaw = document.getElementById('add-instruments').value;
-        const instrumentsArray = instrumentsRaw
-            ? instrumentsRaw.split(',').map(item => item.trim()).filter(item => item !== '')
-            : [];
-
-        const payload = {
-            name: document.getElementById('add-name').value,
-            email: document.getElementById('add-email').value,
-            birthday: document.getElementById('add-birthday').value || null,
-            role: document.getElementById('add-role').value,
-            instrument: instrumentsArray
-        };
-
-        fetch('/api/members', {
-            method: 'POST',
+    async function sendRequest(url, method, body = null) {
+        const response = await fetch(url, {
+            method,
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
-            body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === 'success') {
-                closeModal('addMemberModal');
-                window.location.reload();
-            } else {
-                alert(data.message || 'Error creating a new record.');
-            }
-        })
-        .catch(err => console.error('Add Operations Error:', err));
+            body: body ? JSON.stringify(body) : null
+        });
+        return response.json();
     }
 
     /* ==========================================
-       EDIT MEMBER FUNCTIONS
+       MODAL LOGIC
+       ========================================== */
+       function openModal(id) {
+               const modal = document.getElementById(id);
+               if (modal) {
+                   modal.classList.add('is-open');
+               }
+           }
+
+           function closeModal(id) {
+               const modal = document.getElementById(id);
+               if (!modal) return;
+
+               modal.classList.remove('is-open');
+
+               // Reset form if it exists
+               const form = document.getElementById(`${id}Form`);
+               if (form) form.reset();
+           }
+
+           // Close when clicking the dark background (the .modal div itself)
+           window.addEventListener('click', (e) => {
+               if (e.target.classList.contains('modal')) {
+                   closeModal(e.target.id);
+               }
+           });
+
+    /* ==========================================
+       FORM ACTIONS
+       ========================================== */
+    function getInstrumentArray(id) {
+        const val = document.getElementById(id).value;
+        return val ? val.split(',').map(i => i.trim()).filter(i => i !== '') : [];
+    }
+
+    async function handleMemberSubmit(event, method, url, modalId) {
+        event.preventDefault();
+        const prefix = modalId === 'addMemberModal' ? 'add' : 'edit';
+
+        const payload = {
+            name: document.getElementById(`${prefix}-name`).value,
+            email: document.getElementById(`${prefix}-email`).value,
+            birthday: document.getElementById(`${prefix}-birthday`).value || null,
+            role: document.getElementById(`${prefix}-role`).value,
+            instrument: getInstrumentArray(`${prefix}-instruments`)
+        };
+
+        try {
+            const data = await sendRequest(url, method, payload);
+            if (data.status === 'success') {
+                window.location.reload();
+            } else {
+                alert(data.message || 'Operation failed.');
+            }
+        } catch (err) {
+            console.error('Request Error:', err);
+        }
+    }
+
+    /* ==========================================
+       UI HELPERS
        ========================================== */
     function prepareAndOpenEditModal(id) {
         const row = document.getElementById(`member-row-${id}`);
-        const name = row.querySelector('[data-name]').textContent.trim();
-        const email = row.querySelector('[data-email]').textContent.trim();
-        const role = row.querySelector('[data-role]').getAttribute('data-role');
-        const instruments = row.querySelector('[data-instruments-raw]').getAttribute('data-instruments-raw');
-        const birthday = row.querySelector('[data-birthday-raw]').getAttribute('data-birthday-raw');
-
         document.getElementById('edit-member-id').value = id;
-        document.getElementById('edit-name').value = name === 'N/A' ? '' : name;
-        document.getElementById('edit-email').value = email === 'N/A' ? '' : email;
-        document.getElementById('edit-birthday').value = birthday || '';
-        document.getElementById('edit-role').value = role;
-        document.getElementById('edit-instruments').value = instruments;
+        document.getElementById('edit-name').value = row.querySelector('[data-name]').textContent.trim();
+        document.getElementById('edit-email').value = row.querySelector('[data-email]').textContent.trim();
+        document.getElementById('edit-birthday').value = row.querySelector('[data-birthday-raw]').getAttribute('data-birthday-raw') || '';
+        document.getElementById('edit-role').value = row.querySelector('[data-role]').getAttribute('data-role');
+        document.getElementById('edit-instruments').value = row.querySelector('[data-instruments-raw]').getAttribute('data-instruments-raw');
 
         openModal('editMemberModal');
     }
 
-    function submitEditForm(event) {
-        event.preventDefault();
-        const id = document.getElementById('edit-member-id').value;
-        const instrumentsRaw = document.getElementById('edit-instruments').value;
-        const instrumentsArray = instrumentsRaw ? instrumentsRaw.split(',').map(item => item.trim()).filter(item => item !== '') : [];
+    async function deleteMember(id) {
+        if (!confirm('Are you absolutely sure you want to delete this member?')) return;
 
-        const payload = {
-            name: document.getElementById('edit-name').value,
-            email: document.getElementById('edit-email').value,
-            birthday: document.getElementById('edit-birthday').value || null,
-            role: document.getElementById('edit-role').value,
-            instrument: instrumentsArray
-        };
-
-        fetch(`/api/members/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === 'success') {
-                closeModal('editMemberModal');
-                window.location.reload();
-            } else {
-                alert(data.message || 'Error updating member details.');
-            }
-        })
-        .catch(err => console.error('Update Request Error:', err));
-    }
-
-    /* ==========================================
-       DELETE MEMBER FUNCTION
-       ========================================== */
-    function deleteMember(id) {
-        if (confirm('Are you absolutely sure you want to delete this member?')) {
-            fetch(`/api/members/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    window.location.reload();
-                } else {
-                    alert(data.message || 'An error occurred while deleting the member.');
-                }
-            })
-            .catch(err => console.error('Delete Request Error:', err));
-        }
+        const data = await sendRequest(`/api/members/${id}`, 'DELETE');
+        if (data.status === 'success') window.location.reload();
+        else alert(data.message || 'Deletion failed.');
     }
 </script>

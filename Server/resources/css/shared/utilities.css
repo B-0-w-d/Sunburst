@@ -1,3 +1,4 @@
+/* --- 1. Project Navigation List --- */
 .project-list {
     display: flex;
     flex-direction: column;
@@ -27,6 +28,7 @@
     font-weight: 600;
 }
 
+/* Dot Variants */
 .dot {
     width: 8px;
     height: 8px;
@@ -45,6 +47,7 @@
     background-color: #34d399;
 }
 
+/* --- 2. Filter Tabs --- */
 .filter-tabs {
     display: flex;
     background-color: #f1f5f9;
@@ -71,6 +74,7 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
+/* --- 3. Status Indicators --- */
 .status-indicator {
     display: flex;
     align-items: center;
@@ -91,7 +95,7 @@
     animation: pulse-animation 2s infinite;
 }
 
-/* Sidebar Info Card Widget */
+/* --- 4. Promo Card Widget --- */
 .promo-card {
     background: linear-gradient(135deg, #f05252, #ec4899, #db2777);
     border-radius: 20px;

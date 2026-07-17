@@ -1,11 +1,12 @@
 @props([
-    'id',           // Unique HTML ID for the modal (e.g. 'editMemberModal')
+    'id',           // Unique HTML ID for the modal
     'title',        // Modal Title header text
-    'maxWidth' => '460px', // Default width, customizable per instance
-    'submitFn' => '' // Optional inline submit function (e.g. 'submitEditForm(event)')
+    'maxWidth' => '460px',
+    'submitFn' => ''
 ])
 
-<div class="modal-backdrop" id="{{ $id }}">
+{{-- Changed class from modal-backdrop to modal --}}
+<div class="modal" id="{{ $id }}">
     <div class="modal-window" style="max-width: {{ $maxWidth }};">
         <div class="modal-header">
             <h4 class="modal-title">{{ $title }}</h4>
@@ -17,12 +18,12 @@
         @endif
 
             <div class="modal-body">
-                {{ $slot }} {{-- This is where your custom form fields will render dynamically --}}
+                {{ $slot }}
             </div>
 
             <div class="modal-footer">
                 <button type="button" class="btn-cancel" onclick="closeModal('{{ $id }}')">Cancel</button>
-                {{ $footer ?? '' }} {{-- Dynamic spot for custom actions/buttons --}}
+                {{ $footer ?? '' }}
             </div>
 
         @if($submitFn)
