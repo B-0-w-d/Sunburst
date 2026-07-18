@@ -2,8 +2,7 @@
     <!-- Header stays at the top -->
     <div class="modal-header">
         <h2 class="modal-title">Edit Your Profile</h2>
-        <button type="button" class="modal-close-btn" onclick="closeModal()">&times;</button>
-    </div>
+        <button type="button" class="modal-close-btn" onclick="closeModal('editProfileModal')">&times;</button>    </div>
 
     <!-- Form wraps the scrollable body -->
     <form action="{{ route('profile.update') }}" method="POST" style="display: flex; flex-direction: column; flex: 1; min-height: 0;">
@@ -35,14 +34,6 @@
             </div>
 
             <div class="form-group">
-                <label>ROLE</label>
-                <select name="role" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-                    <option value="admin" {{ auth()->user()->role == 'admin' ? 'selected' : '' }}>Admin</option>
-                    <option value="member" {{ auth()->user()->role == 'member' ? 'selected' : '' }}>Member</option>
-                </select>
-            </div>
-
-            <div class="form-group">
                 <label>INSTRUMENTS</label>
                 <input type="text" name="instrument" value="{{ is_array(auth()->user()->instrument) ? implode(', ', auth()->user()->instrument) : auth()->user()->instrument }}">
             </div>
@@ -61,9 +52,6 @@
         </div>
 
         <!-- Footer stays at the bottom -->
-        <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; flex-shrink: 0;">
-            <button type="button" onclick="closeModal()" style="padding: 10px 20px; border: 1px solid #e2e8f0; background: #f8fafc; border-radius: 6px; cursor: pointer;">Cancel</button>
             <button type="submit" style="padding: 10px 40px; background: #cc0000; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Save Changes</button>
-        </div>
     </form>
 </div>

@@ -3,14 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Member;
+use App\Models\ActivationKey;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Validator;
 
 class MemberController
 {
-    // Query Operation
+    /**
+     * Lấy danh sách thành viên với bộ lọc và sắp xếp.
+     */
     public function index(Request $request)
     {
         $filters = array_filter([
@@ -36,135 +39,93 @@ class MemberController
         });
 
         if ($request->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'count'  => $list->count(),
-                'data'   => $list
-            ], 200);
+            return response()->json(['status' => 'success', 'count' => $list->count(), 'data' => $list], 200);
         }
 
         return view('members', ['members' => $list]);
     }
 
-    // Create Operation
+    /**
+     * Đăng ký thành viên mới (Đã sửa để lưu birthday và instrument).
+     */
+    public function register(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:members,email',
+            'password' => 'required|min:8|confirmed',
+            'activation_key' => 'required|string',
+            'birthday' => 'nullable|date',
+            'instrument' => 'nullable',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => 'error', 'message' => $validator->errors()->first()], 422);
+        }
+
+        $key = ActivationKey::where('key_value', $request->activation_key)
+            ->where('starts_at', '<=', now())
+            ->where('expires_at', '>=', now())
+            ->first();
+
+        if (!$key) {
+            return response()->json(['status' => 'error', 'message' => 'Key invalid or expired'], 400);
+        }
+
+        // Đảm bảo dữ liệu được truyền từ request vào Model
+        $member = Member::create([
+            'name'       => $request->name,
+            'email'      => $request->email,
+            'password'   => $request->password,
+            'birthday'   => $request->birthday,
+            'instrument' => $request->instrument, // Đã thêm
+            'role'       => 'member',
+            'status'     => 'active'
+        ]);
+
+        Auth::login($member);
+
+        return response()->json(['status' => 'success', 'message' => 'Account created successfully!']);
+    }
+
+    /**
+     * Thêm mới thành viên (Dành cho Admin/Management).
+     */
     public function store(Request $request)
     {
         if (!$request->has(['name', 'email']) || empty($request->name) || empty($request->email)) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Name and Email are strictly required.'
-            ], 400);
+            return response()->json(['status' => 'error', 'message' => 'Name and Email are required.'], 400);
         }
 
         $member = Member::create($request->all());
 
-        if ($member) {
-            return response()->json([
-                'status'  => 'success',
-                'message' => 'Added successfully!'
-            ], 201);
-        }
-
-        return response()->json([
-            'status'  => 'error',
-            'message' => 'Database write failed.'
-        ], 500);
+        return $member
+            ? response()->json(['status' => 'success', 'message' => 'Added successfully!'], 201)
+            : response()->json(['status' => 'error', 'message' => 'Database write failed.'], 500);
     }
 
-    // Update Operation
+    /**
+     * Cập nhật thông tin thành viên.
+     */
     public function update(Request $request, $id)
     {
-        // 1. Attempt to find the member
         $member = Member::find($id);
-
-        if (!$member) {
-            return response()->json(['status' => 'error', 'message' => 'Member not found.'], 404);
-        }
+        if (!$member) return response()->json(['status' => 'error', 'message' => 'Member not found.'], 404);
 
         /** @var \App\Models\Member $currentUser */
         $currentUser = Auth::user();
 
-        if (!$currentUser) {
-            return response()->json(['status' => 'error', 'message' => 'Unauthenticated.'], 401);
-        }
-
-        if ($currentUser->_id !== $member->_id && !$currentUser->isManagementTier()) {
+        if (!$currentUser || ($currentUser->_id !== $member->_id && !$currentUser->isManagementTier())) {
             return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
         }
 
-        // ... proceed with update
-        $data = $request->only(['name', 'email', 'birthday', 'role', 'instrument']);
+        $data = $request->only(['name', 'email', 'birthday', 'role', 'instrument', 'phone_number', 'background_image']);
 
-        if (!$currentUser->isManagementTier()) {
-            unset($data['role']);
-        }
+        if (!$currentUser->isManagementTier()) unset($data['role']);
 
-        if ($member->update($data)) {
-            return response()->json(['status' => 'success', 'message' => 'Updated successfully.']);
-        }
-
-        return response()->json(['status' => 'error', 'message' => 'Failed to save changes.'], 500);
-    }
-
-    // Delete Operation
-    public function destroy($id)
-    {
-        /** @var \App\Models\Member $currentUser */
-        $currentUser = Auth::user();
-
-        if (!$currentUser || !$currentUser->isManagementTier()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Unauthorized action.'
-            ], 403);
-        }
-
-        $member = Member::find($id);
-        if (!$member || !$member->delete()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Member not found or already deleted.'
-            ], 404);
-        }
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Member deleted successfully.'
-        ]);
-    }
-
-    // Login Operation
-    public function login(Request $request)
-    {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
-
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
-
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'Logged in successfully.',
-                    'member' => Auth::user()
-                ]);
-            }
-
-            return redirect()->intended('/');
-        }
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'The provided credentials do not match our records.'
-            ], 401);
-        }
-
-        return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ]);
+        return $member->update($data)
+            ? response()->json(['status' => 'success', 'message' => 'Updated successfully.'])
+            : response()->json(['status' => 'error', 'message' => 'Failed to save.'], 500);
     }
 
     public function editProfile()
@@ -177,54 +138,99 @@ class MemberController
         /** @var \App\Models\Member $member */
         $member = Auth::user();
 
-        // 1. Validate
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:members,email,' . $member->_id . ',_id',
-            'role' => 'nullable|string',
-            'status' => 'nullable|string',
             'birthday' => 'nullable|date',
             'instrument' => 'nullable',
+            'role' => 'nullable|string',
             'password' => 'nullable|min:8|confirmed',
         ]);
 
-        // 2. Update all fields
         $member->name = $request->name;
         $member->email = $request->email;
         $member->birthday = $request->birthday;
         $member->instrument = $request->instrument;
 
-        // Only update role if user has management tier
         if ($member->isManagementTier()) {
             $member->role = $request->role;
         }
 
-        // 3. Update password only if provided
         if ($request->filled('password')) {
-            $member->password = $request->password; // Ensure your Model handles hashing in a mutator
+            $member->password = $request->password;
         }
 
-        // 4. CRITICAL: Save to database
         $member->save();
-
         return back()->with('success', 'Profile updated successfully.');
     }
 
-    // Logout Operation
+    public function destroy($id)
+    {
+        /** @var \App\Models\Member $currentUser */
+        $currentUser = Auth::user();
+
+        if (!$currentUser || !$currentUser->isManagementTier()) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized action.'], 403);
+        }
+
+        $member = Member::find($id);
+        if (!$member || !$member->delete()) {
+            return response()->json(['status' => 'error', 'message' => 'Member not found or already deleted.'], 404);
+        }
+
+        return response()->json(['status' => 'success', 'message' => 'Member deleted successfully.']);
+    }
+
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
+
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+
+            if ($request->expectsJson()) {
+                return response()->json(['status' => 'success', 'message' => 'Logged in successfully.', 'member' => Auth::user()]);
+            }
+
+            return redirect()->intended('/');
+        }
+
+        return back()->withErrors(['email' => 'The provided credentials do not match our records.']);
+    }
+
     public function logout(Request $request)
     {
         Auth::logout();
-
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        if ($request->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Logged out successfully.'
-            ]);
+        return redirect('/');
+    }
+
+    public function generateKey(Request $request)
+    {
+        /** @var \App\Models\Member $currentUser */
+        $currentUser = Auth::user();
+
+        if (!$currentUser || !$currentUser->isManagementTier()) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
         }
 
-        return redirect('/');
+        $newKey = strtoupper(bin2hex(random_bytes(4)));
+
+        $keyModel = \App\Models\ActivationKey::create([
+            'key_value'  => $newKey,
+            'starts_at'  => now(),
+            'expires_at' => now()->addDays(1)
+        ]);
+
+        return response()->json([
+            'status'     => 'success',
+            'key'        => $keyModel->key_value,
+            'expires_at' => $keyModel->expires_at
+        ]);
     }
 }

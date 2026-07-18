@@ -78,7 +78,7 @@
         <div class="main-canvas">
             <header class="canvas-header">
                 <div class="header-left">
-                    <h2 class="page-title">Dashboard Console</h2>
+                    <h2 class="page-title">Sunburst Dashboard</h2>
                     <div class="filter-tabs">
                         <button class="tab-btn active">Server</button>
                         <button class="tab-btn">Overview</button>

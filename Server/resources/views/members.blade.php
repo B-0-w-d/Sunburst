@@ -1,9 +1,11 @@
 <x-navbar>
+    @vite(['resources/js/app.js'])
     <x-slot name="title">Members | Sunburst</x-slot>
 
     <div class="dashboard-layout-wrapper" style="display: flex; gap: 32px; max-width: 100%; max-height: 100%; align-items: flex-start;">
 
         <aside class="nav-sidebar" style="width: 260px; flex-shrink: 0;">
+            {{-- Danh sách các dự án sắp tới --}}
             <div class="sidebar-section">
                 <div class="section-header">
                     <span class="section-title">Upcomming shows</span>
@@ -21,11 +23,13 @@
                 </div>
             </div>
 
+            {{-- Danh sách thành viên và các chức năng quản lý --}}
             <div class="sidebar-section">
                 <div class="section-header">
                     <span class="section-title">Members</span>
                     <button class="add-btn" onclick="openModal('addMemberModal')">+</button>
                 </div>
+
                 <div class="member-list">
                     @forelse ($members as $member)
                         <div class="member-item">
@@ -38,8 +42,34 @@
                         </div>
                     @endforelse
                 </div>
+
+                {{-- Chức năng chỉ hiển thị cho Management Tier (Admin, President, v.v.) --}}
+                @if(auth()->user()->isManagementTier())
+                    <div class="management-controls" style="padding: 15px 0 0 0; border-top: 1px solid #e2e8f0; margin-top: 10px;">
+                        <button type="button"
+                                onclick="generateActivationKey()"
+                                class="btn-primary"
+                                style="width: 100%; padding: 8px; font-size: 0.8rem; background: #cc0000; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                    Xuất Key Đăng ký
+                        </button>
+
+                        {{-- Ô input hiển thị mã và nút Copy --}}
+                        <div style="margin-top: 10px; display: flex; gap: 5px;">
+                            <input type="text" id="key-display" readonly
+                                   style="flex-grow: 1; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-family: monospace; font-size: 0.9rem;"
+                                   placeholder="">
+                            <button type="button" onclick="copyToClipboard()"
+                                    style="padding: 5px 10px; background: #edf2f7; border: 1px solid #cbd5e0; border-radius: 4px; cursor: pointer;">
+                                <x-icons.copy/>
+                            </button>
+                        </div>
+
+                        <small id="key-expiry" style="display: block; margin-top: 5px; color: #64748b; font-size: 0.75rem;"></small>
+                    </div>
+                @endif
             </div>
 
+            {{-- Thẻ khuyến mãi --}}
             <div class="promo-card">
                 <span class="promo-tag">Unobvious Tips</span>
                 <h4 class="promo-title">DEO BIET NEN LAM GI O DAY</h4>
@@ -118,12 +148,6 @@
                                             {{-- Always show edit for own profile, otherwise show only if management --}}
                                             @if(Auth::id() === $member->_id || Auth::user()->isManagementTier())
                                                 <button onclick="prepareAndOpenEditModal('{{ $member->_id }}')" class="btn-edit">                                                    <x-icons.edit/>
-                                                </button>
-                                            @endif
-
-                                            {{-- Only show delete for management tier --}}
-                                            @if(Auth::user()->isManagementTier())
-                                                <button type="button" onclick="prepareAndOpenEditModal('{{ $member->_id }}')" class="btn-edit">                                                    <x-icons.delete/>
                                                 </button>
                                             @endif
                                         </div>
@@ -213,16 +237,14 @@
         </div>
 
         <div class="form-group">
-            <label class="form-label" for="edit-instruments">Instruments)</label>
+            <label class="form-label" for="edit-instruments">Instruments</label>
             <input type="text" id="edit-instruments" class="form-input" placeholder="e.g. Vocal, Bass Guitar, Synth">
         </div>
 
         <x-slot name="footer">
+            <button type="submit" onclick="deleteMember('{{ $member->_id }}')" class="btn-delete">                                                    <x-icons.delete/>
+            </button>
                     <button type="submit" class="btn-save">Save Changes</button>
                 </x-slot>
     </x-modal>
-
-    @push('scripts')
-        @include('scripts.membersScript')
-    @endpush
 </x-navbar>

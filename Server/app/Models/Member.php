@@ -9,18 +9,18 @@ use Laravel\Sanctum\HasApiTokens;
 
 class Member extends Authenticatable
 {
+    // Sử dụng trait để hỗ trợ API Tokens (Sanctum)
     use HasApiTokens;
 
+    // Cấu hình kết nối MongoDB và tên collection
     protected $connection = 'mongodb';
     protected $collection = 'members';
 
-    /**
-     * Core Session Fixes for MongoDB Identifier Serialization
-     * ----------------------------------------------------------------------
-     */
+    // Cấu hình Primary Key là _id của MongoDB (string)
     protected $primaryKey = '_id';
     protected $keyType = 'string';
 
+    // Các trường dữ liệu cho phép gán (Mass Assignment)
     protected $fillable = [
         'name',
         'email',
@@ -29,91 +29,87 @@ class Member extends Authenticatable
         'instrument',
         'birthday',
         'joined_in',
-        'status'
+        'status',
+        'background_image',
+        'phone_number'
     ];
 
     /**
-     * Map the primary authentication key correctly for Laravel Auth guards.
+     * Ghi đè phương thức xác thực của Laravel
+     * Để Laravel hiểu trường định danh là '_id' thay vì 'id' mặc định
      */
     public function getAuthIdentifierName()
     {
         return '_id';
     }
 
+    public function getAuthIdentifier()
+    {
+        return (string) $this->_id;
+    }
+
+    /**
+     * Model Events: Tự động xử lý dữ liệu trước khi lưu vào database
+     */
     protected static function booted()
     {
+        // Sự kiện khi tạo mới một Member
         static::creating(function (Member $member) {
-            // Fallback default setups
-            if (empty($member->role)) {
-                $member->role = 'member';
+            // Thiết lập giá trị mặc định nếu không có
+            $member->role = $member->role ?? 'member';
+            $member->status = $member->status ?? 'active';
+            $member->joined_in = $member->joined_in ?? now()->toDateTimeString();
+
+            // Nếu instrument là chuỗi trống hoặc null, gán là mảng rỗng để MongoDB lưu đúng kiểu
+            if (empty($member->instrument)) {
+                $member->instrument = [];
+            } elseif (!is_array($member->instrument)) {
+                // Chuyển đổi chuỗi "guitar,drum" thành mảng
+                $member->instrument = array_filter(array_map('trim', explode(',', $member->instrument)));
             }
 
-            if (empty($member->status)) {
-                $member->status = 'active';
-            }
-
-            if (empty($member->joined_in)) {
-                $member->joined_in = now()->toDateTimeString();
-            }
-
-            if (isset($member->instrument) && !is_array($member->instrument)) {
-                $member->instrument = array_filter(explode(',', $member->instrument));
-            }
-
+            // Hash mật khẩu (mặc định là 12345678 nếu không truyền vào)
             $member->password = Hash::make($member->password ?? '12345678');
         });
 
+        // Sự kiện khi cập nhật thông tin Member
         static::updating(function (Member $member) {
+            // Kiểm tra và chuyển đổi định dạng mảng cho 'instrument' nếu bị thay đổi
             if ($member->isDirty('instrument') && !is_array($member->instrument)) {
                 $member->instrument = array_filter(explode(',', $member->instrument));
             }
 
-            // Safe password mutation logic to avoid accidental unsets in MongoDB
-            if ($member->isDirty('password')) {
-                if (!empty($member->password)) {
-                    $member->password = Hash::make($member->password);
-                } else {
-                    // Fallback to the original value if it was passed empty in an update payload
-                    $member->password = $member->getOriginal('password');
-                }
+            // Hash mật khẩu mới nếu có thay đổi
+            if ($member->isDirty('password') && !empty($member->password)) {
+                $member->password = Hash::make($member->password);
             }
         });
     }
 
-    public function scopeWithFilters(Builder $query, array $filters = [], array $sortParams = [])
-    {
-        if (!empty($filters)) {
-            foreach (['role', 'status'] as $field) {
-                if (!empty($filters[$field])) {
-                    $query->where($field, $filters[$field]);
-                }
-            }
-
-            if (!empty($filters['instrument'])) {
-                $instrumentsArray = is_array($filters['instrument'])
-                    ? $filters['instrument']
-                    : array_filter(explode(',', $filters['instrument']));
-
-                $query->whereIn('instrument', $instrumentsArray);
-            }
-        }
-
-        if (!empty($sortParams['sortBy'])) {
-            $direction = (strtolower($sortParams['sortOrder'] ?? '') === 'desc') ? 'desc' : 'asc';
-            $query->orderBy($sortParams['sortBy'], $direction);
-        }
-
-        return $query;
-    }
-
+    /**
+     * Helper: Kiểm tra quyền quản trị
+     * Dùng để phân quyền trong các Controller hoặc Policy
+     */
     public function isManagementTier(): bool
     {
-        $highRoles = ['admin', 'president', 'vice-president', 'manager'];
-        return in_array(strtolower($this->role ?? ''), $highRoles);
+        return in_array(strtolower($this->role ?? ''), ['admin', 'president', 'vice-president', 'manager']);
     }
-    public function getAuthIdentifier()
+    //* Scope áp dụng bộ lọc cho truy vấn Member.
+    public function scopeWithFilters($query, array $filters)
     {
-        // Ensure the MongoDB _id is returned as a plain string
-        return (string) $this->_id;
+        if (!empty($filters['role'])) {
+            $query->where('role', $filters['role']);
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['instrument'])) {
+            $query->where('instrument', $filters['instrument']);
+        }
+
+
+        return $query;
     }
 }

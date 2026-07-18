@@ -22,7 +22,6 @@
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn-cancel" onclick="closeModal('{{ $id }}')">Cancel</button>
                 {{ $footer ?? '' }}
             </div>
 
