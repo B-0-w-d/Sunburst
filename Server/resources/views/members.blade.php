@@ -4,7 +4,7 @@
 
     <div class="dashboard-layout-wrapper" style="display: flex; gap: 32px; max-width: 100%; max-height: 100%; align-items: flex-start;">
 
-        <aside class="nav-sidebar" style="width: 260px; flex-shrink: 0;">
+        <aside class="nav-sidebar">
             {{-- Danh sách các dự án sắp tới --}}
             <div class="sidebar-section">
                 <div class="section-header">
@@ -80,11 +80,11 @@
             </div>
         </aside>
 
-        <div class="content-container" style="flex-grow: 1; width: 100%; max-width: 1200px;">
+        <div class="content-container">
             <div class="content-header">
                 <div>
-                    <h3 class="content-title">Active Roster</h3>
-                    <p class="content-subtitle">Manage and view performing band members inside MongoDB.</p>
+                    <h3 class="content-title">Member Lists</h3>
+                    <p class="content-subtitle">Manage and view club member informations</p>
                 </div>
                 <span class="content-badge-count">
                     {{ count($members) }} Members Active

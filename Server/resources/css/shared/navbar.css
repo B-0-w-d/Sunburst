@@ -123,14 +123,18 @@
 
 /* --- 3. Sidebar Panel (Middle Context) --- */
 .nav-sidebar {
-    width: 260px;
+    width: 300px;
+    height: 100vh;
+    position: sticky;
+    top: 0;
     background-color: #ffffff;
     border-right: 1px solid #f1f5f9;
     padding: 24px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: start;
     flex-shrink: 0;
+    overflow-y: auto;
 }
 
 .sidebar-section {
