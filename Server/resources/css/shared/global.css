@@ -8,7 +8,7 @@
 }
 
 body {
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Montserrat', sans-serif;
     background-color: #f8f9fa;
     color: #1e293b;
     height: 100vh;
@@ -93,14 +93,18 @@ body {
 
 /* Scrollable areas */
 .modal-body {
-    /* CHANGE: Apply the scroll here */
+    position: sticky;
+    top: 0;
     overflow-y: auto;
     flex: 1;
     min-height: 0;
     padding-right: 8px;
     margin-right: -8px;
-    /* Optional: Ensure it has space to breathe */
     margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    flex-shrink: 0;
 }
 
 /* Modal Inputs */
