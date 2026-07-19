@@ -22,7 +22,7 @@
   */
   --hue: 358;
   /* Header color */
-  --first-color: hsl(var(--hue), 80%, 64%); 
+  --first-color: hsl(var(--hue), 62%, 50%); 
   --first-color-alt: hsl(var(--hue), 80%, 44%);
   --white-color: hsl(var(--hue), 8%, 92%);
   --black-color: hsl(var(--hue), 4%, 8%);
@@ -78,7 +78,7 @@ body {
     overflow: hidden;
     font-family: "Montserrat", sans-serif;
     background: #000;
-    color: #fff;
+    color: var(--white-color);
 }
 
 .scroll-container {
@@ -98,7 +98,7 @@ body {
     justify-content: center;
     align-items: center;
 
-    color: white;
+    color: var(--white-color);
 }
 
 /* ===================================
@@ -211,26 +211,26 @@ ul {
 
     letter-spacing: 4px;
 
-    color: rgba(255,255,255,.7);
+    color: var(--gray-color);
 
     transition: .3s;
 }
 
 .nav__menu a:hover {
-    color: #cf3232;
+    color: var(--first-color);
 }
 
 .nav__signin {
-    width: 180px;
-    height: 60px;
+    width: 150px;
+    height: 30px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    border: 1px solid #cf3232;
+    border: 1px solid var(--first-color);
 
-    font-weight: 700;
+    font-weight: 600;
 
     letter-spacing: 3px;
 
@@ -238,7 +238,7 @@ ul {
 }
 
 .nav__signin:hover {
-    background: #cf3232;
+    background: var(--first-color);
 }
 
 /* ===================================
@@ -277,7 +277,7 @@ ul {
 
     font-size: .95rem;
 
-    color: rgba(255,255,255,.55);
+    color: var(--gray-color);
 }
 
 .home__title {
@@ -294,7 +294,7 @@ ul {
 }
 
 .accent {
-    color: #cf3232;
+    color: var(--first-color);
 }
 
 .home__description {
@@ -306,7 +306,7 @@ ul {
 
     line-height: 1.6;
 
-    color: rgba(255,255,255,.85);
+    color: var(--white-color);
 }
 
 /* ===================================
@@ -337,7 +337,7 @@ ul {
 }
 
 .btn--primary {
-    background: #cf3232;
+    background: var(--first-color);
 }
 
 .btn--primary:hover {
@@ -351,7 +351,7 @@ ul {
 }
 
 .btn--secondary:hover {
-    border-color: #fff;
+    border-color: var(--white-color);
 }
 
 /* ===================================
@@ -372,7 +372,7 @@ ul {
 
     padding: 20px 32px;
 
-    border: 1px solid rgba(255,255,255,.15);
+    border: 1px solid var(--gray-color);
 
     backdrop-filter: blur(15px);
 }
@@ -383,7 +383,7 @@ ul {
 
     border-radius: 50%;
 
-    background: #cf3232;
+    background: var(--first-color);
 }
 
 .home__status span {
@@ -459,7 +459,7 @@ ul {
 .home__scroll-arrow {
     font-size: 2rem;
 
-    color: #cf3232;
+    color: var(--first-color);
 }
 
 /* ===================================
@@ -498,6 +498,7 @@ ul {
 
     .home__description {
         font-size: 1rem;
+        color : var(--white-color);
     }
 
     .home__stats {
