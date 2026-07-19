@@ -2,16 +2,24 @@
 
 namespace App\Models;
 
-use Laravel\Sanctum\PersonalAccessToken as SanctumToken;
-use MongoDB\Laravel\Eloquent\DocumentModel;
+use MongoDB\Laravel\Eloquent\Model;
 
-class PersonalAccessToken extends SanctumToken
+class ActivityLog extends Model
 {
-    use DocumentModel;
-
     protected $connection = 'mongodb';
-    protected $collection = 'personal_access_tokens';
+    protected $collection = 'activity_logs';
 
-    protected $primaryKey = '_id';
-    protected $keyType = 'string';
+    protected $fillable = [
+        'member_id',
+        'token_id',
+        'action',
+        'details',
+        'created_at'
+    ];
+
+    // Quan hệ với Member
+    public function member()
+    {
+        return $this->belongsTo(Member::class, 'member_id', '_id');
+    }
 }

@@ -1,7 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\MemberController;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Member\MemberController;
 
 // 1. Guest Routes: Dành cho khách (chưa đăng nhập)
 Route::middleware(['guest'])->group(function () {
@@ -12,7 +14,7 @@ Route::middleware(['guest'])->group(function () {
     })->name('login');
 
     // Xử lý logic đăng nhập qua POST
-    Route::post('/login', [MemberController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login']);
 
     // Route hiển thị giao diện đăng ký
     Route::get('/register', function () {
@@ -20,7 +22,7 @@ Route::middleware(['guest'])->group(function () {
     })->name('register');
 
     // Xử lý logic đăng ký qua POST
-    Route::post('/register', [MemberController::class, 'register']);
+    Route::post('/register', [RegisterController::class, 'register']);
 });
 
 // 2. Protected Routes: Dành cho thành viên đã xác thực (đăng nhập)
@@ -34,15 +36,15 @@ Route::middleware(['auth'])->group(function () {
     // Danh sách thành viên
     Route::get('/members', [MemberController::class, 'index'])->name('members.index');
 
-    // Đăng xuất
-    Route::post('/logout', [MemberController::class, 'logout']);
+    // Đăng xuất (Dùng AuthController thay vì MemberController)
+    Route::post('/logout', [AuthController::class, 'logout']);
 
     // Quản lý hồ sơ cá nhân
     Route::get('/profile', [MemberController::class, 'editProfile'])->name('profile.edit');
     Route::put('/profile/update', [MemberController::class, 'updateProfile'])->name('profile.update');
 
     // Thêm nhóm route chỉ dành cho cấp cao
-    Route::middleware(['auth', 'management'])->group(function () {
+    Route::middleware(['management'])->group(function () {
         // Chức năng thêm mới thành viên
         Route::post('/members/store', [MemberController::class, 'store']);
         // Chức năng xóa thành viên

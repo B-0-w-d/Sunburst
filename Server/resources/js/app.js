@@ -16,10 +16,13 @@ window.deleteMember = MemberActions.deleteMember;
 
 // Xử lý closeModal chung
 window.closeModal = function(modalId) {
-    // Ưu tiên đóng bằng hàm của Member trước, nếu không thì dùng của Auth
-    if (MemberActions.closeModal) {
+    // Attempt to close via MemberActions first
+    if (typeof MemberActions.closeModal === 'function') {
         MemberActions.closeModal(modalId);
-    } else if (AuthActions.closeModal) {
+    }
+
+    // Also attempt via AuthActions in case the ID belongs to that module
+    if (typeof AuthActions.closeModal === 'function') {
         AuthActions.closeModal(modalId);
     }
 };

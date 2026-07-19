@@ -46,45 +46,56 @@ export function getInstrumentArray(id) {
 /**
  * Xử lý chung cho việc gửi form (Add/Edit)
  */
-async function handleMemberSubmit(event, method, url, modalId) {
-    event.preventDefault();
-    const prefix = modalId === 'addMemberModal' ? 'add' : 'edit';
-    const payload = {
-        name: document.getElementById(`${prefix}-name`).value,
-        email: document.getElementById(`${prefix}-email`).value,
-        birthday: document.getElementById(`${prefix}-birthday`).value || null,
-        role: document.getElementById(`${prefix}-role`).value,
-        instrument: getInstrumentArray(`${prefix}-instruments`)
-    };
-    console.log('Payload gửi đi:', payload);
+ async function handleMemberSubmit(event, method, url, modalId) {
+     event.preventDefault();
+     const prefix = modalId === 'addMemberModal' ? 'add' : 'edit';
 
-    const data = await sendRequest(url, method, payload);
-    if (data.status === 'success') {
-        window.location.reload();
-    } else {
-        alert(data.message || 'Operation failed.');
-    }
-}
+     // Create base payload
+     const payload = {
+         name: document.getElementById(`${prefix}-name`).value,
+         email: document.getElementById(`${prefix}-email`).value,
+         birthday: document.getElementById(`${prefix}-birthday`).value || null,
+         instrument: getInstrumentArray(`${prefix}-instruments`)
+     };
+
+     // Safely add role if the select exists in the DOM
+     const roleSelect = document.getElementById(`${prefix}-role`);
+     if (roleSelect) {
+         payload.role = roleSelect.value;
+     }
+
+     const data = await sendRequest(url, method, payload);
+     if (data.status === 'success') {
+         window.location.reload();
+     } else {
+         alert(data.message || 'Operation failed.');
+     }
+ }
 
 /**
  * Chuẩn bị dữ liệu và mở modal Edit
  */
-export function prepareAndOpenEditModal(id) {
-    if (!id) return;
-    const row = document.getElementById(`member-row-${id}`);
-    if (!row) { alert("Error: Member data row could not be located."); return; }
+ export function prepareAndOpenEditModal(id) {
+     if (!id) return;
+     const row = document.getElementById(`member-row-${id}`);
+     if (!row) { alert("Error: Member data row could not be located."); return; }
 
-    const hiddenIdInput = document.getElementById('edit-member-id');
-    if (hiddenIdInput) hiddenIdInput.value = id;
+     // 1. Set values for elements that MUST exist
+     document.getElementById('edit-member-id').value = id;
+     document.getElementById('edit-name').value = row.querySelector('[data-name]')?.textContent.trim() || '';
+     document.getElementById('edit-email').value = row.querySelector('[data-email]')?.textContent.trim() || '';
+     document.getElementById('edit-birthday').value = row.querySelector('[data-birthday-raw]')?.getAttribute('data-birthday-raw') || '';
+     document.getElementById('edit-instruments').value = row.querySelector('[data-instruments-raw]')?.getAttribute('data-instruments-raw') || '';
 
-    document.getElementById('edit-name').value = row.querySelector('[data-name]')?.textContent.trim() || '';
-    document.getElementById('edit-email').value = row.querySelector('[data-email]')?.textContent.trim() || '';
-    document.getElementById('edit-birthday').value = row.querySelector('[data-birthday-raw]')?.getAttribute('data-birthday-raw') || '';
-    document.getElementById('edit-role').value = row.querySelector('[data-role]')?.getAttribute('data-role') || '';
-    document.getElementById('edit-instruments').value = row.querySelector('[data-instruments-raw]')?.getAttribute('data-instruments-raw') || '';
+     // 2. Safely set role only if the element exists in DOM (for management tier)
+     const roleSelect = document.getElementById('edit-role');
+     if (roleSelect) {
+         roleSelect.value = row.querySelector('[data-role]')?.getAttribute('data-role') || 'member';
+     }
 
-    openModal('editMemberModal');
-}
+     // 3. Open modal once
+     openModal('editMemberModal');
+ }
 
 /**
  * Xử lý submit form cập nhật thành viên

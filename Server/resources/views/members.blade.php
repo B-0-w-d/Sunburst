@@ -225,6 +225,7 @@
             <input type="date" id="edit-birthday" name='birthday' class="form-input">
         </div>
 
+        @if(auth()->user()->isManagementTier())
         <div class="form-group">
             <label class="form-label" for="edit-role">Role</label>
             <select id="edit-role" class="form-input" style="height: 42px;">
@@ -235,6 +236,7 @@
                 <option value="admin">Admin</option>
             </select>
         </div>
+        @endif
 
         <div class="form-group">
             <label class="form-label" for="edit-instruments">Instruments</label>

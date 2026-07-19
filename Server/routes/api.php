@@ -1,46 +1,37 @@
 <?php
 
-use App\Models\Member;
-use App\Http\Controllers\MemberController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Hash;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\KeyController;
+use App\Http\Controllers\Member\MemberController;
 
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+*/
 
-Route::post('/login', function (Request $request) {
-    $request->validate([
-        'email' => 'required|email',
-        'password' => 'required',
-    ]);
+// 1. Routes công khai (Không cần đăng nhập)
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [RegisterController::class, 'register']);
 
-    // 1. Find the member in MongoDB
-    $member = Member::where('email', $request->email)->first();
+// 2. Routes cần đăng nhập (Sử dụng Sanctum cho API)
+Route::middleware(['auth:sanctum'])->group(function () {
 
-    // 2. Explicitly verify the password hash manually
-    if (!$member || !Hash::check($request->password, $member->password)) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'The provided credentials do not match our records.'
-        ], 401);
-    }
+    // Auth - Logout
+    Route::post('/logout', [AuthController::class, 'logout']);
 
-    // 3. Generate a stateless token using Sanctum
-    $token = $member->createToken('auth_token')->plainTextToken;
-
-    return response()->json([
-        'status' => 'success',
-        'message' => 'Authenticated successfully.',
-        'access_token' => $token,
-        'token_type' => 'Bearer',
-    ]);
-});
-
-Route::post('/register', [App\Http\Controllers\MemberController::class, 'register']);
-
-Route::middleware(['auth:web'])->group(function () {
+    // Member Management
     Route::get('/members', [MemberController::class, 'index']);
     Route::post('/members', [MemberController::class, 'store']);
     Route::put('/members/{id}', [MemberController::class, 'update']);
     Route::delete('/members/{id}', [MemberController::class, 'destroy']);
-    Route::post('/members/generate-key', [MemberController::class, 'generateKey']);
+
+    // Key Management
+    Route::post('/members/generate-key', [KeyController::class, 'generateKey']);
+
+    // Profile Management (Nếu bạn đã tách ProfileController thì thay bằng [ProfileController::class, ...])
+    Route::get('/profile', [MemberController::class, 'editProfile']);
+    Route::put('/profile', [MemberController::class, 'updateProfile']);
 });
