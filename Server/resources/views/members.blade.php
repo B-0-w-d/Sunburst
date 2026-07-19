@@ -241,8 +241,7 @@
             <input type="text" id="edit-instruments" class="form-input" placeholder="e.g. Vocal, Bass Guitar, Synth">
         </div>
 
-        <x-slot name="footer">
-            <button type="submit" onclick="deleteMember('{{ $member->_id }}')" class="btn-delete">                                                    <x-icons.delete/>
+        <x-slot name="footer">                                                  <x-icons.delete/>
             </button>
                     <button type="submit" class="btn-save">Save Changes</button>
                 </x-slot>
