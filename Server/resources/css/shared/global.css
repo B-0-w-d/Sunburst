@@ -1,154 +1,99 @@
-/* --- Global Reset --- */
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
+/* Google Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Unbounded:wght@200..900&display=swap");
+
+/* === VARIABLES CSS === */
+:root {
+  --header-height: 3.5rem;
+
+  /*========== Colors ==========*/
+  /* 
+      Color mode HSL(hue, saturation, lightness)
+
+      Change favorite color:
+
+      Default Cyan: hsl(180, 80%, 48%)
+      Blue: hsl(220, 90%, 64%) - Pink: hsl(300, 70%, 64%)
+      Green: hsl(110, 70%, 64%) - Purple: hsl(255, 70%, 64%)
+      Orange: hsl(15, 80%, 64%) - Red: hsl(358, 80%, 64%)
+
+      For more colors visit: https://htmlcolorcodes.com/
+      -> Choose any color 
+      -> Copy the color mode (HSL)
+  */
+  --hue: 358;
+  /* Header color */
+  --first-color: hsl(var(--hue), 62%, 50%); 
+  --first-color-alt: hsl(var(--hue), 80%, 44%);
+  --white-color: hsl(var(--hue), 8%, 92%);
+  --black-color: hsl(var(--hue), 4%, 8%);
+  --gray-color: hsl(var(--hue), 4%, 50%); 
+  --body-color: hsl(var(--hue), 8%, 8%);
+  --container-color: hsl(var(--hue), 8%, 12%);
+
+  /*========== Font and typography ==========*/
+  /*.5rem = 8px | 1rem = 16px ...*/
+  /* font ??? */
+  --body-font: "Unbounded", sans-serif; 
+  --bigger-font-size: 2rem;
+  --h1-font-size: 1.5rem;
+  --h2-font-size: 1.25rem;
+  --h3-font-size: 1rem;
+  --normal-font-size: .938rem;
+  --small-font-size: .813rem;
+
+  /*========== Font weight ==========*/
+  --font-light: 300;
+  --font-regular: 400;
+  --font-medium: 500;
+  --font-semi-bold: 600;
+
+  /*========== z index ==========*/
+  --z-tooltip: 10;
+  --z-fixed: 100;
+}
+
+/*========== Responsive typography ==========*/
+@media screen and (min-width: 1150px) {
+  :root {
+    --bigger-font-size: 3rem;
+    --h1-font-size: 2.25rem;
+    --h2-font-size: 1.5rem;
+    --h3-font-size: 1.25rem;
+    --normal-font-size: 1rem;
+    --small-font-size: .875rem;
+  }
+}
+
+/*=============== BASE ===============*/
+* {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
 }
 
+html,
 body {
-    font-family: 'Montserrat', sans-serif;
-    background-color: #f8f9fa;
-    color: #1e293b;
-    height: 100vh;
-    overflow: hidden;
-}
-
-/* --- Global Scrollbar --- */
-::-webkit-scrollbar {
-    width: 6px;
-}
-
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-
-/* --- Modal Overlay --- */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(4px);
-    opacity: 0;
-    transition: opacity 0.3s ease;
+    overflow: hidden;
+    font-family: "Montserrat", sans-serif;
+    background: #000;
+    color: var(--white-color);
 }
 
-.modal.is-open {
-    display: flex;
-    opacity: 1;
-    align-items: center;
-    justify-content: center;
-}
+@keyframes pulse-animation {
+    0% {
+        transform: scale(0.95);
+        opacity: 0.5;
+    }
 
-/* --- Modal Window (The Container) --- */
-.modal-window {
-    background: #ffffff;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    border-radius: 16px;
-    width: 100%;
-    max-width: 420px;
-    margin: 20px;
-    padding: 24px;
-    transform: translateY(20px);
-    transition: transform 0.3s ease;
+    50% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
 
-    /* HEIGHT FIX: Keep this, but ensure overflow is visible */
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-    /* CHANGE: overflow: hidden -> overflow: visible */
-    overflow: visible;
-}
-
-.modal.is-open .modal-window {
-    transform: translateY(0);
-}
-
-/* --- Modal Components --- */
-.modal-header {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-right: 30px;
-    flex-shrink: 0;
-    /* Ensures header doesn't shrink */
-}
-
-/* Scrollable areas */
-.modal-body {
-    position: sticky;
-    top: 0;
-    overflow-y: auto;
-    flex: 1;
-    min-height: 0;
-    padding-right: 8px;
-    margin-right: -8px;
-    margin-top: 10px;
-    display: flex;
-    flex-direction: column;
-    justify-content: start;
-    flex-shrink: 0;
-}
-
-/* Modal Inputs */
-.modal-body input {
-    width: 100%;
-    padding: 10px;
-    margin-top: 5px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-/* Modal Close Button */
-.modal-close-btn {
-    position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    background: transparent;
-    border: none;
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #64748b;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-    line-height: 1;
-}
-
-.modal-close-btn:hover {
-    background-color: #f1f5f9;
-    color: #1e293b;
-}
-
-/* --- Global Utilities --- */
-.text-center {
-    text-align: center;
-}
-
-.hidden {
-    display: none !important;
-}
-
-.pointer {
-    cursor: pointer;
+    100% {
+        transform: scale(0.95);
+        opacity: 0.5;
+    }
 }

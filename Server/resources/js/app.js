@@ -1,6 +1,7 @@
 // app.js
 import * as AuthActions from './auth';
 import * as MemberActions from './member';
+import './animations/home';
 
 // Gán Auth
 window.handleFormLogin = AuthActions.handleFormLogin;

@@ -5,6 +5,9 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Member\MemberController;
 
+Route::get('/', function () {
+    return view('pages.homepage');
+});
 // 1. Guest Routes: Dành cho khách (chưa đăng nhập)
 Route::middleware(['guest'])->group(function () {
 
@@ -50,4 +53,6 @@ Route::middleware(['auth'])->group(function () {
         // Chức năng xóa thành viên
         Route::delete('/members/{id}', [MemberController::class, 'destroy']);
     });
-});
+});  
+
+
