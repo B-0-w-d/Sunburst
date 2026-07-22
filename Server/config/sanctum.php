@@ -82,6 +82,7 @@ return [
         'authenticate_session' => AuthenticateSession::class,
         'encrypt_cookies' => EncryptCookies::class,
         'validate_csrf_token' => ValidateCsrfToken::class,
+        'personal_access_token' => App\Models\PersonalAccessToken::class,
     ],
 
 ];

@@ -35,6 +35,14 @@ class Member extends Authenticatable
     ];
 
     /**
+     * Định nghĩa quan hệ tokens cho Laravel Sanctum chạy trên MongoDB.
+     */
+    public function tokens()
+    {
+        return $this->hasMany(PersonalAccessToken::class, 'tokenable_id', '_id');
+    }
+
+    /**
      * Ghi đè phương thức xác thực của Laravel
      * Để Laravel hiểu trường định danh là '_id' thay vì 'id' mặc định
      */
@@ -94,8 +102,11 @@ class Member extends Authenticatable
     {
         return in_array(strtolower($this->role ?? ''), ['admin', 'president', 'vice-president', 'manager']);
     }
-    //* Scope áp dụng bộ lọc cho truy vấn Member.
-    public function scopeWithFilters($query, array $filters)
+
+    /**
+     * Scope áp dụng bộ lọc cho truy vấn Member.
+     */
+    public function scopeWithFilters($query, array $filters, array $sort = [])
     {
         if (!empty($filters['role'])) {
             $query->where('role', $filters['role']);
@@ -109,6 +120,13 @@ class Member extends Authenticatable
             $query->where('instrument', $filters['instrument']);
         }
 
+        // Xử lý sắp xếp nếu có truyền lên
+        if (!empty($sort['sortBy'])) {
+            $sortOrder = !empty($sort['sortOrder']) && in_array(strtolower($sort['sortOrder']), ['asc', 'desc'])
+                ? $sort['sortOrder']
+                : 'asc';
+            $query->orderBy($sort['sortBy'], $sortOrder);
+        }
 
         return $query;
     }
