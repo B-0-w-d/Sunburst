@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\PersonalAccessToken;
 
 class AuthController extends Controller
 {
@@ -22,7 +23,6 @@ class AuthController extends Controller
             $user = Auth::user();
 
             if ($request->expectsJson()) {
-                // Tạo token Sanctum để trả về cho client lưu trữ (nếu dùng Bearer Token API)
                 $token = $user->createToken('auth_token')->plainTextToken;
 
                 return response()->json([
@@ -49,17 +49,26 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $user = Auth::user();
+        // 1. Lấy chuỗi PlainText Token từ Header (Ví dụ: Bearer 1|abcxyz...)
+        $tokenString = $request->bearerToken();
 
-        if ($user) {
-            // Xóa token hiện tại nếu request gọi từ API
-            $user->currentAccessToken()?->delete();
+        if ($tokenString) {
+            // Tách ID và chuỗi hash nếu token có định dạng "id|token" (Đặc trưng của Sanctum)
+            if (strpos($tokenString, '|') !== false) {
+                [$id, $tokenString] = explode('|', $tokenString, 2);
+            }
+
+            // Tìm token bằng chuỗi SHA256 trong MongoDB và xóa nó đi
+            $hashedToken = hash('sha256', $tokenString);
+            \App\Models\PersonalAccessToken::where('token', $hashedToken)->delete();
         }
 
+        // 2. Xử lý xóa Session (Nếu ứng dụng có chạy song song cả Web Session)
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
+        // 3. Phản hồi kết quả cho phía Client
         if ($request->expectsJson()) {
             return response()->json([
                 'status' => 'success',
@@ -68,5 +77,36 @@ class AuthController extends Controller
         }
 
         return redirect('/');
+    }
+
+
+    /**
+     * THÊM HÀM NÀY VÀO ĐÂY ĐỂ XEM DANH SÁCH AI ĐANG CÓ TOKEN ĐĂNG NHẬP
+     */
+    public function getActiveSessions(Request $request)
+    {
+        $tokens = PersonalAccessToken::with('tokenable')->get();
+
+        $activeUsers = [];
+
+        foreach ($tokens as $token) {
+            $member = $token->tokenable; // Đối tượng Member sở hữu token
+
+            if ($member) {
+                $activeUsers[] = [
+                    'id' => $member->_id,
+                    'member_name' => $member->name,
+                    'member_email' => $member->email,
+                    'role' => $member->role,
+                    'token_name' => $token->name,
+                    'last_used_at' => $token->last_used_at,
+                ];
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $activeUsers
+        ]);
     }
 }

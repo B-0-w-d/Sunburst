@@ -5,12 +5,13 @@ namespace App\Models;
 use MongoDB\Laravel\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 class Member extends Authenticatable
 {
     // Sử dụng trait để hỗ trợ API Tokens (Sanctum)
-    use HasApiTokens;
+    use HasApiTokens, Notifiable;
 
     // Cấu hình kết nối MongoDB và tên collection
     protected $connection = 'mongodb';
