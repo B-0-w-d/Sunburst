@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\PersonalAccessToken;
+use App\Models\Member;
 
 class AuthController extends Controller
 {
@@ -21,6 +22,17 @@ class AuthController extends Controller
 
             /** @var \App\Models\Member $user */
             $user = Auth::user();
+
+            // === THÊM ĐOẠN NÀY ĐỂ TẠO THÔNG BÁO CÁ NHÂN KHI ĐĂNG NHẬP THÀNH CÔNG ===
+            \App\Models\SystemNotification::create([
+                'type' => 'personal',
+                'recipient_id' => $user->_id,
+                'sender_id' => null,
+                'title' => 'Đăng nhập thành công',
+                'message' => 'Bạn vừa đăng nhập vào hệ thống vào lúc ' . now(),
+                'read_at' => null,
+            ]);
+            // ===================================================================
 
             if ($request->expectsJson()) {
                 $token = $user->createToken('auth_token')->plainTextToken;
@@ -57,6 +69,7 @@ class AuthController extends Controller
             if (strpos($tokenString, '|') !== false) {
                 [$id, $tokenString] = explode('|', $tokenString, 2);
             }
+
 
             // Tìm token bằng chuỗi SHA256 trong MongoDB và xóa nó đi
             $hashedToken = hash('sha256', $tokenString);

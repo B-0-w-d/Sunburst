@@ -11,14 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('notifications', function (Blueprint $collection) {
-            $collection->id();
-            $collection->string('type');
-            $collection->string('notifiable_type');
-            $collection->string('notifiable_id'); // Lưu ID của member dưới dạng chuỗi
-            $collection->text('data'); // Lưu nội dung JSON của thông báo
-            $collection->timestamp('read_at')->nullable();
-            $collection->timestamps();
+        Schema::create('personal_access_tokens', function (Blueprint $table) {
+            $table->id();
+
+            // Thay thế phần morphs gây lỗi bằng cách định nghĩa tường minh cột kiểu dữ liệu
+            $table->string('tokenable_type');
+            $table->unsignedBigInteger('tokenable_id'); // Hoặc dùng string('tokenable_id') nếu _id của Member là dạng chuỗi/ObjectId của MongoDB
+            $table->index(['tokenable_type', 'tokenable_id']);
+
+            $table->string('name');
+            $table->string('token', 64)->unique();
+            $table->text('abilities')->nullable();
+            $table->timestamp('last_used_at')->nullable();
+            $table->timestamp('expires_at')->nullable();
+            $table->timestamps();
         });
     }
 
@@ -27,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('notifications');
+        Schema::dropIfExists('system_notifications'); // Sửa lại đúng tên bảng ở đây
     }
 };

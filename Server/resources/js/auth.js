@@ -25,6 +25,11 @@ export function handleFormLogin(event) {
     .then(res => res.json())
     .then(data => {
         if (data.status === 'success') {
+            // === LƯU ACCESS_TOKEN VÀO LOCALSTORAGE TẠI ĐÂY ===
+            if (data.access_token) {
+                localStorage.setItem('access_token', data.access_token);
+            }
+
             window.location.href = '/';
         } else {
             errorAlert.textContent = data.message || 'Invalid credentials.';

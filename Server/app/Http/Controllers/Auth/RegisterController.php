@@ -26,22 +26,28 @@ class RegisterController extends Controller
             return response()->json(['status' => 'error', 'message' => $validator->errors()->first()], 422);
         }
 
-        $key = ActivationKey::where('key_value', $request->activation_key)
-            ->where('starts_at', '<=', now())
-            ->where('expires_at', '>=', now())
-            ->first();
+        // Khai báo key dùng riêng cho việc debug/test nhanh
+        $debugKey = 'SUNBURST';
 
-        if (!$key) {
-            return response()->json(['status' => 'error', 'message' => 'Key invalid or expired'], 400);
+        // Nếu không phải key debug, tiến hành kiểm tra trong Database như bình thường
+        if ($request->activation_key !== $debugKey) {
+            $key = ActivationKey::where('key_value', $request->activation_key)
+                ->where('starts_at', '<=', now())
+                ->where('expires_at', '>=', now())
+                ->first();
+
+            if (!$key) {
+                return response()->json(['status' => 'error', 'message' => 'Key invalid or expired'], 400);
+            }
         }
 
-        // Đảm bảo dữ liệu được truyền từ request vào Model
+        // Tạo mới tài khoản Member
         $member = Member::create([
             'name'       => $request->name,
             'email'      => $request->email,
             'password'   => $request->password,
             'birthday'   => $request->birthday,
-            'instrument' => $request->instrument, // Đã thêm
+            'instrument' => $request->instrument,
             'role'       => 'member',
             'status'     => 'active'
         ]);

@@ -6,7 +6,8 @@
             <button class="tab-btn">Overview</button>
         </div>
     </div>
-    <div class="header-right">
+    <div class="header-right" style="display: flex; align-items: center; gap: 16px;">
+        <x-notification />
         <div class="status-indicator">
             <span class="pulse-dot"></span> API Active
         </div>

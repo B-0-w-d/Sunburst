@@ -5,12 +5,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\KeyController;
 use App\Http\Controllers\Member\MemberController;
-
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-*/
+use App\Http\Controllers\Member\NotificationController;
 
 // 1. Routes công khai (Không cần đăng nhập)
 Route::post('/login', [AuthController::class, 'login']);
@@ -31,7 +26,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Key Management
     Route::post('/members/generate-key', [KeyController::class, 'generateKey']);
 
-    // Profile Management (Nếu bạn đã tách ProfileController thì thay bằng [ProfileController::class, ...])
+    // Profile Management
     Route::get('/profile', [MemberController::class, 'editProfile']);
     Route::put('/profile', [MemberController::class, 'updateProfile']);
+
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+    Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
 });
