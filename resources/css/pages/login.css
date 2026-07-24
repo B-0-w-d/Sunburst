@@ -39,59 +39,14 @@ body {
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
 }
 
-.modal-header {
+.login-page-wrapper .modal-header {
     margin-bottom: 32px;
     text-align: center;
 }
 
-.modal-title {
+.login-page-wrapper .modal-title {
     font-size: 24px;
     font-weight: 700;
     color: #1e293b;
     margin: 0;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-label {
-    display: block;
-    font-size: 14px;
-    font-weight: 600;
-    color: #475569;
-    margin-bottom: 8px;
-}
-
-.form-input {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    box-sizing: border-box;
-    font-size: 15px;
-    transition: border-color 0.2s;
-}
-
-.form-input:focus {
-    outline: none;
-    border-color: #7b0808;
-    ring: 2px solid #e0e7ff;
-}
-
-.btn-save {
-    background-color: #c70c0c;
-    color: white;
-    padding: 12px;
-    border: none;
-    border-radius: 10px;
-    width: 100%;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.btn-save:hover {
-    background-color: #c70c0c;
 }

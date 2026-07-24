@@ -1,0 +1,229 @@
+/* 1. Mặc định ẩn tất cả các modal */
+.modal,
+[id$="Modal"] {
+    display: none !important;
+}
+
+/* 2. Lớp nền mờ tối (CHỈ làm mờ màn hình, TUYỆT ĐỐI không có background hay padding ở đây) */
+.modal.is-open,
+[id$="Modal"].is-open {
+    display: flex !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    z-index: 99999 !important;
+    justify-content: center !important;
+    align-items: center !important;
+    overflow-y: auto !important;
+}
+
+/* 3. Khung chứa nội dung chính (Chỉ duy nhất thằng này mang màu trắng và bo góc) */
+.modal-window {
+    display: flex !important;
+    flex-direction: column !important;
+    position: relative !important;
+    background: #ffffff !important;
+    width: 100% !important;
+    max-width: 480px !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    padding: 32px !important;
+    border-radius: 24px !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+    box-sizing: border-box !important;
+}
+
+/* Các thành phần header và nút đóng */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    margin-bottom: 24px;
+}
+
+.modal-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.modal-close-btn {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    font-weight: 400;
+    cursor: pointer;
+    color: #64748b;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.modal-close-btn:hover {
+    background-color: #f1f5f9;
+    color: #0f172a;
+}
+
+/* Phần thân và chân modal */
+.modal-body {
+    margin-bottom: 16px;
+}
+
+.modal-footer {
+    margin-top: 24px;
+}
+
+/* Form controls */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-sizing: border-box;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #7b0808;
+}
+
+.btn-save {
+    background-color: #c70c0c;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    width: 100%;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-save:hover {
+    background-color: #a50a0a;
+}
+
+#editProfileModal {
+    display: none !important;
+}
+
+#editProfileModal.is-open {
+    display: flex !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    z-index: 99999 !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+#editProfileModal .modal-window {
+    display: flex !important;
+    flex-direction: column !important;
+    position: relative !important;
+    background: #ffffff !important;
+    width: 100% !important;
+    max-width: 480px !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    padding: 32px !important;
+    border-radius: 24px !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+    box-sizing: border-box !important;
+}
+
+#editProfileModal .modal-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    position: relative !important;
+    margin-bottom: 24px !important;
+}
+
+#editProfileModal .modal-title {
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    margin: 0 !important;
+}
+
+#editProfileModal .modal-close-btn {
+    background: transparent !important;
+    border: none !important;
+    font-size: 24px !important;
+    font-weight: 400 !important;
+    cursor: pointer !important;
+    color: #64748b !important;
+    line-height: 1 !important;
+    padding: 4px 8px !important;
+    border-radius: 8px !important;
+}
+
+#editProfileModal .modal-body {
+    margin-bottom: 16px !important;
+}
+
+#editProfileModal .form-group {
+    margin-bottom: 16px !important;
+}
+
+#editProfileModal .form-group label {
+    display: block !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+    margin-bottom: 6px !important;
+}
+
+#editProfileModal .form-group input {
+    width: 100% !important;
+    padding: 10px 12px !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    box-sizing: border-box !important;
+    font-size: 14px !important;
+}
+
+#editProfileModal .form-group input:focus {
+    outline: none !important;
+    border-color: #7b0808 !important;
+}
+
+#editProfileModal button[type="submit"] {
+    background-color: #cc0000 !important;
+    color: white !important;
+    padding: 10px 40px !important;
+    border: none !important;
+    border-radius: 6px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    width: 100% !important;
+}
+
+#editProfileModal button[type="submit"]:hover {
+    background-color: #a50a0a !important;
+}

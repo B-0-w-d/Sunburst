@@ -2,6 +2,7 @@
 @import "./shared/navbar.css";
 @import "./shared/utilities.css";
 @import "./shared/notification.css";
+@import "./shared/modal.css";
 
 @import "./pages/home.css";
 @import "./pages/members.css";
