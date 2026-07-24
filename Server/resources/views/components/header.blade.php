@@ -7,7 +7,8 @@
         </div>
     </div>
     <div class="header-right" style="display: flex; align-items: center; gap: 16px;">
-        <x-notification />
+        <!-- Gọi component thông báo đã tách vào đây -->
+        @include('components.notification')
         <div class="status-indicator">
             <span class="pulse-dot"></span> API Active
         </div>

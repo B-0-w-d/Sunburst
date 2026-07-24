@@ -6,3 +6,7 @@
 @import "./pages/home.css";
 @import "./pages/members.css";
 @import "./pages/login.css";
+
+[x-cloak] {
+    display: none !important;
+}

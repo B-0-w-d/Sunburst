@@ -1,6 +1,7 @@
 .notification-wrapper {
     position: relative;
     display: inline-block;
+    z-index: 50;
 }
 
 .notification-bell-btn {
@@ -8,7 +9,6 @@
     background: transparent;
     border: none;
     cursor: pointer;
-    pointer-events: none;
     padding: 8px;
     color: #4b5563;
     display: flex;
@@ -274,8 +274,4 @@
     border-radius: 8px;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
     z-index: 9999;
-}
-
-[x-cloak] {
-    display: none !important;
 }
