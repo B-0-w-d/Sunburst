@@ -244,13 +244,16 @@
            </div>
 
            <x-slot name="footer">
-               <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-                   <button type="button" class="btn-delete" onclick="deleteMember()" style="background: none; border: none; cursor: pointer;">
-                       <x-icons.delete/>
-                   </button>
-                   {{-- Chú ý: form="editMemberModalForm" ở đây sẽ tự khớp với ID do component <x-modal> tạo ra dựa theo tên id của modal --}}
-                   <button type="submit" form="editMemberModalForm" class="btn-save">Save Changes</button>
-               </div>
-           </x-slot>
+                          <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+
+                              <button type="button" class="btn-delete" onclick="deleteMember()" style="display: flex; align-items: center; gap: 5px; padding: 8px 12px; background: #ffeeef; color: #cc0000; border: 1px solid #f9d8db; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background-color 0.2s, border-color 0.2s;">
+                                                     <x-icons.delete style="width: 10px; height: 10px;" />
+                                                     <span>Delete</span>
+                                                 </button>
+
+                              {{-- Chú ý: form="editMemberModalForm" ở đây sẽ tự khớp với ID do component <x-modal> tạo ra dựa theo tên id của modal --}}
+                              <button type="submit" form="editMemberModalForm" class="btn-save" style="width: auto; padding: 10px 24px;">Save Changes</button>
+                          </div>
+                      </x-slot>
        </x-modal>
 </x-navbar>
