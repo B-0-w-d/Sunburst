@@ -7,60 +7,54 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 📋 Giới thiệu Project
+Đây là ứng dụng web được phát triển dựa trên framework **Laravel** và sử dụng **MongoDB** làm cơ sở dữ liệu.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 🛠 Yêu cầu hệ thống
+Trước khi bắt đầu, hãy đảm bảo máy tính của bạn đã cài đặt các công cụ sau:
+* **PHP** (phiên bản tương thích với project, khuyên dùng PHP 8.2+)
+* **Composer** (trình quản lý gói cho PHP)
+* **MongoDB Server** và **MongoDB Compass** (để quản lý cơ sở dữ liệu)
+* **Node.js & NPM** (đối với môi trường có sử dụng frontend assets)
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🚀 Hướng dẫn Cài đặt & Chạy trên Máy Mới
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Thực hiện lần lượt các bước sau tại terminal của bạn:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 1. Cài đặt các thư viện PHP
+Chạy lệnh sau để tải về các dependency thông qua Composer:
 
-## Laravel Sponsors
+composer install
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 2. Thiết lập cấu hình môi trường (.env)
 
-### Premium Partners
+Sao chép file cấu hình mẫu để tạo file .env riêng cho môi trường local:
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+cp .env.example .env
 
-## Contributing
+Mở file .env vừa tạo và cập nhật lại thông số kết nối MongoDB (sử dụng chuỗi URI kết nối tới cluster cloud như mẫu dưới đây):
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+DB_CONNECTION=mongodb
+DB_HOST=127.0.0.1
+DB_PORT=27017
+DB_DATABASE=sunburst
+DB_USERNAME=chouphan1207_db_user
+DB_PASSWORD=9RaaVBODoCSLqDgZ
+DB_URI="mongodb+srv://chouphan1207_db_user:9RaaVBODoCSLqDgZ@sunburst.hqsiada.mongodb.net/sunburst?retryWrites=true&w=majority"
 
-## Code of Conduct
+## 3. Tạo Application Key (mã hóa ứng dụng)
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+php artisan key:generate
 
-## Security Vulnerabilities
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 4. Cài đặt và chạy chương trình 
 
-## License
+npm install
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+npm run dev:all (chạy hết từ backend đến frontend)
