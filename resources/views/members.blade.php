@@ -91,6 +91,31 @@
                 </span>
             </div>
 
+            <div class="filter-bar" style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center;">
+                <div>
+                    <label for="filter-role" style="font-size: 13px; font-weight: 600; margin-right: 5px;">Role:</label>
+                    <select id="filter-role" class="form-input" style="padding: 6px 12px; height: 36px; display: inline-block; width: auto;" onchange="applyFilters()">
+                        <option value="">All Roles</option>
+                        <option value="member" {{ request('role') == 'member' ? 'selected' : '' }}>Member</option>
+                        <option value="manager" {{ request('role') == 'manager' ? 'selected' : '' }}>Manager</option>
+                        <option value="vice-president" {{ request('role') == 'vice-president' ? 'selected' : '' }}>Vice President</option>
+                        <option value="president" {{ request('role') == 'president' ? 'selected' : '' }}>President</option>
+                        <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Admin</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="filter-instrument" style="font-size: 13px; font-weight: 600; margin-right: 5px;">Instrument:</label>
+                    <input type="text" id="filter-instrument" class="form-input" placeholder="e.g. Guitar" value="{{ request('instrument') }}" style="padding: 6px 12px; height: 36px; display: inline-block; width: 180px;" onkeypress="if(event.key === 'Enter') applyFilters()">
+                </div>
+
+                <button type="button" onclick="applyFilters()" style="padding: 6px 14px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">Filter</button>
+
+                @if(request('role') || request('instrument'))
+                    <a href="{{ route('members.index') }}" style="font-size: 13px; color: #cc0000; text-decoration: none;">Reset Filters</a>
+                @endif
+            </div>
+
             <div class="content-card">
                 <div class="content-table-wrapper">
                     <table class="content-table">

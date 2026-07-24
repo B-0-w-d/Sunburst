@@ -13,29 +13,42 @@ window.prepareAndOpenEditModal = MemberActions.prepareAndOpenEditModal;
 window.submitEditForm = MemberActions.submitEditForm;
 window.deleteMember = MemberActions.deleteMember;
 
+// Định nghĩa hàm applyFilters trực tiếp hoặc import từ module member nếu có
+export function applyFilters() {
+    const role = document.getElementById('filter-role')?.value || '';
+    const instrument = document.getElementById('filter-instrument')?.value.trim() || '';
+
+    const url = new URL(window.location.origin + window.location.pathname);
+    if (role) url.searchParams.set('role', role);
+    if (instrument) url.searchParams.set('instrument', instrument);
+
+    window.location.href = url.toString();
+}
+window.applyFilters = applyFilters;
+
 /**
- * Mở modal theo ID được truyền vào, thêm class hiển thị và bật kiểu flex style trực tiếp
+ * Mở modal theo ID được truyền vào
  */
 export function openModal(id) {
     const modal = document.getElementById(id);
     if (modal) {
         modal.classList.add('is-open');
-        modal.style.display = 'flex'; // Ép hiển thị trực tiếp bằng JS
+        modal.style.display = 'flex';
     }
 }
 
 /**
- * Đóng modal theo ID, gỡ class hiển thị, ẩn modal và reset form bên trong nếu tồn tại
+ * Đóng modal theo ID
  */
 export function closeModal(id) {
     const modal = document.getElementById(id);
     if (!modal) return;
     modal.classList.remove('is-open');
-    modal.style.display = 'none'; // Ẩn đi khi đóng
+    modal.style.display = 'none';
     const form = document.getElementById(`${id}Form`);
     if (form) form.reset();
 }
 
-// Đồng bộ gán hàm openModal và closeModal vào window để sử dụng toàn cục trên mọi giao diện
+// Gán tường minh vào window để các sự kiện onclick trên HTML tìm thấy
 window.openModal = openModal;
 window.closeModal = closeModal;

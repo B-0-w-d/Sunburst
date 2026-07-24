@@ -178,3 +178,23 @@ export function copyToClipboard() {
         console.error('Failed to copy: ', err);
     });
 }
+
+/**
+ * Thu thập giá trị bộ lọc và reload lại trang theo query params
+ */
+export function applyFilters() {
+    const role = document.getElementById('filter-role')?.value || '';
+    const instrument = document.getElementById('filter-instrument')?.value.trim() || '';
+
+    const url = new URL(window.location.origin + window.location.pathname);
+
+    if (role) {
+        url.searchParams.set('role', role);
+    }
+    if (instrument) {
+        url.searchParams.set('instrument', instrument);
+    }
+
+    // Chuyển hướng đến URL kèm bộ lọc mới
+    window.location.href = url.toString();
+}
