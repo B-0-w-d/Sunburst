@@ -1,3 +1,4 @@
+<!-- Component hiển thị hệ thống thông báo sử dụng Alpine.js và tích hợp API bất đồng bộ -->
 <div class="notification-wrapper" x-data="{
     open: false,        // Trạng thái đóng/mở của khung dropdown thông báo
     unreadCount: 0,     // Tổng số lượng thông báo chưa đọc (dùng cho chấm đỏ)

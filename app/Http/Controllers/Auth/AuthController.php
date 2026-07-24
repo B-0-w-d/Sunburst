@@ -10,20 +10,24 @@ use App\Models\Member;
 
 class AuthController extends Controller
 {
+    // Xử lý logic đăng nhập người dùng (hỗ trợ cả Web Session và API Token Sanctum)
     public function login(Request $request)
     {
+        // Xác thực dữ liệu đầu vào (email và password)
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
 
+        // Kiểm tra thông tin đăng nhập với cơ sở dữ liệu
         if (Auth::attempt($credentials)) {
+            // Tái tạo session để bảo mật
             $request->session()->regenerate();
 
             /** @var \App\Models\Member $user */
             $user = Auth::user();
 
-            // === THÊM ĐOẠN NÀY ĐỂ TẠO THÔNG BÁO CÁ NHÂN KHI ĐĂNG NHẬP THÀNH CÔNG ===
+            // Tạo bản ghi thông báo cá nhân khi đăng nhập thành công
             \App\Models\SystemNotification::create([
                 'type' => 'personal',
                 'recipient_id' => $user->_id,
@@ -32,8 +36,8 @@ class AuthController extends Controller
                 'message' => 'Bạn vừa đăng nhập vào hệ thống vào lúc ' . now(),
                 'read_at' => null,
             ]);
-            // ===================================================================
 
+            // Nếu request là API (expectsJson), tạo token Sanctum và trả về JSON
             if ($request->expectsJson()) {
                 $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -46,9 +50,11 @@ class AuthController extends Controller
                 ]);
             }
 
+            // Nếu là web thông thường, chuyển hướng về trang chủ
             return redirect()->intended('/');
         }
 
+        // Trả về lỗi nếu đăng nhập thất bại (phân biệt giữa API và Web)
         if ($request->expectsJson()) {
             return response()->json([
                 'status' => 'error',
@@ -59,29 +65,29 @@ class AuthController extends Controller
         return back()->withErrors(['email' => 'The provided credentials do not match our records.']);
     }
 
+    // Xử lý đăng xuất (xóa Token API và hủy Session)
     public function logout(Request $request)
     {
-        // 1. Lấy chuỗi PlainText Token từ Header (Ví dụ: Bearer 1|abcxyz...)
+        // Lấy token dạng Bearer từ Header của request
         $tokenString = $request->bearerToken();
 
         if ($tokenString) {
-            // Tách ID và chuỗi hash nếu token có định dạng "id|token" (Đặc trưng của Sanctum)
+            // Tách ID và chuỗi token nếu đúng định dạng Sanctum (id|token)
             if (strpos($tokenString, '|') !== false) {
                 [$id, $tokenString] = explode('|', $tokenString, 2);
             }
 
-
-            // Tìm token bằng chuỗi SHA256 trong MongoDB và xóa nó đi
+            // Hash token bằng SHA256 và xóa khỏi cơ sở dữ liệu MongoDB
             $hashedToken = hash('sha256', $tokenString);
             \App\Models\PersonalAccessToken::where('token', $hashedToken)->delete();
         }
 
-        // 2. Xử lý xóa Session (Nếu ứng dụng có chạy song song cả Web Session)
+        // Hủy bỏ Web Session hiện tại
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        // 3. Phản hồi kết quả cho phía Client
+        // Phản hồi kết quả đăng xuất (JSON hoặc chuyển hướng web)
         if ($request->expectsJson()) {
             return response()->json([
                 'status' => 'success',
@@ -92,18 +98,16 @@ class AuthController extends Controller
         return redirect('/');
     }
 
-
-    /**
-     * THÊM HÀM NÀY VÀO ĐÂY ĐỂ XEM DANH SÁCH AI ĐANG CÓ TOKEN ĐĂNG NHẬP
-     */
+    // Lấy danh sách toàn bộ các phiên đăng nhập đang hoạt động (active sessions) qua token
     public function getActiveSessions(Request $request)
     {
+        // Lấy danh sách token kèm theo thông tin quan hệ tokenable (thành viên sở hữu)
         $tokens = PersonalAccessToken::with('tokenable')->get();
 
         $activeUsers = [];
 
         foreach ($tokens as $token) {
-            $member = $token->tokenable; // Đối tượng Member sở hữu token
+            $member = $token->tokenable;
 
             if ($member) {
                 $activeUsers[] = [
@@ -117,6 +121,7 @@ class AuthController extends Controller
             }
         }
 
+        // Trả về danh sách phiên đăng nhập dưới dạng JSON
         return response()->json([
             'status' => 'success',
             'data' => $activeUsers

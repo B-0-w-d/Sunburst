@@ -2,19 +2,20 @@ import * as AuthActions from './auth';
 import * as MemberActions from './member';
 import './animations/home';
 
-// Gán Auth
+// Gán các hàm xử lý xác thực (Auth) vào đối tượng toàn cục window
 window.handleFormLogin = AuthActions.handleFormLogin;
 window.handleFormRegister = AuthActions.handleFormRegister;
 
-// Gán Member
+// Gán các hàm xử lý thành viên (Member) vào đối tượng toàn cục window
 window.generateActivationKey = MemberActions.generateActivationKey;
 window.copyToClipboard = MemberActions.copyToClipboard;
-window.openModal = MemberActions.openModal;
 window.prepareAndOpenEditModal = MemberActions.prepareAndOpenEditModal;
 window.submitEditForm = MemberActions.submitEditForm;
 window.deleteMember = MemberActions.deleteMember;
 
-
+/**
+ * Mở modal theo ID được truyền vào, thêm class hiển thị và bật kiểu flex style trực tiếp
+ */
 export function openModal(id) {
     const modal = document.getElementById(id);
     if (modal) {
@@ -23,6 +24,9 @@ export function openModal(id) {
     }
 }
 
+/**
+ * Đóng modal theo ID, gỡ class hiển thị, ẩn modal và reset form bên trong nếu tồn tại
+ */
 export function closeModal(id) {
     const modal = document.getElementById(id);
     if (!modal) return;
@@ -32,10 +36,6 @@ export function closeModal(id) {
     if (form) form.reset();
 }
 
-// Xử lý closeModal chung
-window.closeModal = function(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.remove('is-open');
-    }
-};
+// Đồng bộ gán hàm openModal và closeModal vào window để sử dụng toàn cục trên mọi giao diện
+window.openModal = openModal;
+window.closeModal = closeModal;

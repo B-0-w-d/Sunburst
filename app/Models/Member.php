@@ -10,18 +10,18 @@ use Laravel\Sanctum\HasApiTokens;
 
 class Member extends Authenticatable
 {
-    // Sử dụng trait để hỗ trợ API Tokens (Sanctum)
+    // Sử dụng trait để hỗ trợ API Tokens (Sanctum) và tính năng thông báo
     use HasApiTokens, Notifiable;
 
-    // Cấu hình kết nối MongoDB và tên collection
+    // Cấu hình kết nối MongoDB và tên collection tương ứng
     protected $connection = 'mongodb';
     protected $collection = 'members';
 
-    // Cấu hình Primary Key là _id của MongoDB (string)
+    // Cấu hình Primary Key là _id của MongoDB và định dạng là string
     protected $primaryKey = '_id';
     protected $keyType = 'string';
 
-    // Các trường dữ liệu cho phép gán (Mass Assignment)
+    // Các trường dữ liệu cho phép gán giá trị hàng loạt (Mass Assignment)
     protected $fillable = [
         'name',
         'email',

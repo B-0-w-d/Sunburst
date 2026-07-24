@@ -9,7 +9,7 @@ use App\Models\PersonalAccessToken;
 class AppServiceProvider extends ServiceProvider
 {
     /**
-     * Register any application services.
+     * Đăng ký các dịch vụ của ứng dụng (Register any application services).
      */
     public function register(): void
     {
@@ -17,11 +17,11 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Bootstrap any application services.
+     * Khởi động các dịch vụ của ứng dụng (Bootstrap any application services).
      */
     public function boot(): void
     {
-        // Force Sanctum to use MongoDB-compatible model
+        // Cấu hình bắt buộc Laravel Sanctum sử dụng model PersonalAccessToken tương thích với MongoDB
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
     }
 }

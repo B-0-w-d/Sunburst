@@ -1,27 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Thẻ meta để file JS lấy được CSRF Token -->
+    <!-- Thẻ meta cung cấp CSRF Token cho các yêu cầu AJAX/Fetch/Axios -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Register | Dashboard</title>
+    <title>Register | Sunburst Dashboard</title>
 
-    <!-- Vite load file CSS và JS đã biên dịch -->
+    <!-- Nạp các tệp CSS và JS đã biên dịch thông qua Laravel Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
 <body>
-    <!-- Giữ nguyên wrapper và background từ trang login -->
+    <!-- Khu vực bọc toàn trang với hình nền đăng ký đồng bộ với trang đăng nhập -->
     <div class="login-page-wrapper" style="background-image: url('{{ asset('images/login-background.jpg') }}'); background-repeat: no-repeat; background-position: center; background-size: cover;">
         <div class="login-modal">
             <h4 class="welcome-title" style="text-align:center;">Create Account</h4>
             <p style="color: #64748b; font-size: 14px; padding: 8px; text-align: center;">Join Sunburst management site.</p>
 
-            <!-- Form gọi hàm handleFormRegister -->
+            <!-- Biểu mẫu đăng ký gọi hàm xử lý bất đồng bộ handleFormRegister từ app.js -->
             <form id="authRegisterModalForm" onsubmit="handleFormRegister(event)">
 
+                <!-- Khu vực hiển thị thông báo lỗi khi đăng ký thất bại -->
                 <div id="register-error-alert" style="display:none; background:#fef2f2; color:#b91c1c; padding:10px; border-radius:8px; margin-bottom:20px; font-size:13px; text-align:center;"></div>
 
                 <div class="form-group">
@@ -38,8 +39,9 @@
                     <label class="form-label" for="reg-birthday">Date of Birth:</label>
                     <input type="date" id="reg-birthday" class="form-input" required>
                 </div>
+
                 <div class="form-group">
-                    <label class="form-label" for="reg-instruments">Instruments (Comma separated)</label>
+                    <label class="form-label" for="reg-instruments">Instruments (Comma separated):</label>
                     <input type="text" id="reg-instruments" class="form-input" placeholder="Vai trò của bạn: Vocal, Bass,...">
                 </div>
 
@@ -61,7 +63,7 @@
                 <button type="submit" class="btn-save">Register</button>
             </form>
 
-            <!-- Nút điều hướng ngược lại trang Login -->
+            <!-- Phần điều hướng chuyển hướng ngược lại trang Đăng nhập -->
             <div style="text-align: center; margin-top: 15px;">
                 <p style="color: #64748b; font-size: 13px;">
                     Đã là thành viên của Sunburst?

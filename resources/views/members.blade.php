@@ -5,7 +5,7 @@
     <div class="dashboard-layout-wrapper" style="display: flex; gap: 32px; max-width: 100%; max-height: 100%; align-items: flex-start;">
 
         <aside class="nav-sidebar">
-            {{-- Danh sách các dự án sắp tới --}}
+            {{-- Danh sách các dự án sắp tới (chưa làm_ --}}
             <div class="sidebar-section">
                 <div class="section-header">
                     <span class="section-title">Upcomming shows</span>
@@ -50,7 +50,7 @@
                                 onclick="generateActivationKey()"
                                 class="btn-primary"
                                 style="width: 100%; padding: 8px; font-size: 0.8rem; background: #cc0000; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                                    Xuất Key Đăng ký
+                                Xuất Key Đăng ký
                         </button>
 
                         {{-- Ô input hiển thị mã và nút Copy --}}
@@ -69,7 +69,7 @@
                 @endif
             </div>
 
-            {{-- Thẻ khuyến mãi --}}
+            {{-- Thẻ thông báo #2 (chưa làm) --}}
             <div class="promo-card">
                 <span class="promo-tag">Unobvious Tips</span>
                 <h4 class="promo-title">DEO BIET NEN LAM GI O DAY</h4>
@@ -116,7 +116,7 @@
                                     <td>
                                         @php
                                             $role = strtolower($member->role ?? 'member');
-                                            $badgeClass = 'content-badge-' . $role; // e.g., content-badge-president
+                                            $badgeClass = 'content-badge-' . $role;
                                         @endphp
                                         <span class="content-badge {{ $badgeClass }}" data-role="{{ $role }}">
                                             {{ ucfirst(str_replace('-', ' ', $role)) }}
@@ -144,10 +144,10 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <div class="actions">
-                                            {{-- Always show edit for own profile, otherwise show only if management --}}
+                                        <div class="actions" style="display: flex; justify-content: flex-end; gap: 8px;">
                                             @if(Auth::id() === $member->_id || Auth::user()->isManagementTier())
-                                                <button onclick="prepareAndOpenEditModal('{{ $member->_id }}')" class="btn-edit">                                                    <x-icons.edit/>
+                                                <button onclick="prepareAndOpenEditModal('{{ $member->_id }}')" class="btn-edit" type="button">
+                                                    <x-icons.edit/>
                                                 </button>
                                             @endif
                                         </div>
@@ -166,7 +166,8 @@
             </div>
         </div>
     </div>
-        {{--1. ADD NEW MEMBER MODAL--}}
+
+    {{-- 1. ADD NEW MEMBER MODAL --}}
     <x-modal id="addMemberModal" title="Add New Band Member" submitFn="submitAddForm(event)">
         <div class="form-group">
             <label class="form-label" for="add-name">Display Name</label>
@@ -204,48 +205,52 @@
         </x-slot>
     </x-modal>
 
-         {{--2. EDIT EXISTING MEMBER MODAL--}}
+    {{-- 2. EDIT EXISTING MEMBER MODAL --}}
+       <x-modal id="editMemberModal" title="Edit Band Member" submitFn="submitEditForm(event)">
+           {{-- XÓA THẺ <form> VÀ ĐÓNG </form> THỪA Ở ĐÂY, GIỮ LẠI CÁC TRƯỜNG INPUT BÊN TRƯỚC --}}
+           <input type="hidden" id="edit-member-id">
 
-    <x-modal id="editMemberModal" title="Edit Band Member" submitFn="submitEditForm(event)">
-        <form id="editMemberModalForm" onsubmit="submitEditForm(event)">
-        <input type="hidden" id="edit-member-id">
+           <div class="form-group">
+               <label class="form-label" for="edit-name">Display Name</label>
+               <input type="text" id="edit-name" class="form-input" required placeholder="e.g. Ren Nguyen">
+           </div>
 
-        <div class="form-group">
-            <label class="form-label" for="edit-name">Display Name</label>
-            <input type="text" id="edit-name" class="form-input" required placeholder="e.g. Ren Nguyen">
-        </div>
+           <div class="form-group">
+               <label class="form-label" for="edit-email">Email Address</label>
+               <input type="email" id="edit-email" class="form-input" required placeholder="e.g. Rendarapper@gmail.com">
+           </div>
 
-        <div class="form-group">
-            <label class="form-label" for="edit-email">Email Address</label>
-            <input type="email" id="edit-email" class="form-input" required placeholder="e.g. Rendarapper@gmail.com">
-        </div>
+           <div class="form-group">
+               <label class="form-label" for="edit-birthday">Birthday</label>
+               <input type="date" id="edit-birthday" name="birthday" class="form-input">
+           </div>
 
-        <div class="form-group">
-            <label class="form-label" for="edit-birthday">Birthday</label>
-            <input type="date" id="edit-birthday" name='birthday' class="form-input">
-        </div>
+           @if(auth()->user()->isManagementTier())
+           <div class="form-group">
+               <label class="form-label" for="edit-role">Role</label>
+               <select id="edit-role" class="form-input" style="height: 42px;">
+                   <option value="member">Member</option>
+                   <option value="manager">Manager</option>
+                   <option value="vice-president">Vice President</option>
+                   <option value="president">President</option>
+                   <option value="admin">Admin</option>
+               </select>
+           </div>
+           @endif
 
-        @if(auth()->user()->isManagementTier())
-        <div class="form-group">
-            <label class="form-label" for="edit-role">Role</label>
-            <select id="edit-role" class="form-input" style="height: 42px;">
-                <option value="member">Member</option>
-                <option value="manager">Manager</option>
-                <option value="vice-president">Vice President</option>
-                <option value="president">President</option>
-                <option value="admin">Admin</option>
-            </select>
-        </div>
-        @endif
+           <div class="form-group">
+               <label class="form-label" for="edit-instruments">Instruments</label>
+               <input type="text" id="edit-instruments" class="form-input" placeholder="e.g. Vocal, Bass Guitar, Synth">
+           </div>
 
-        <div class="form-group">
-            <label class="form-label" for="edit-instruments">Instruments</label>
-            <input type="text" id="edit-instruments" class="form-input" placeholder="e.g. Vocal, Bass Guitar, Synth">
-        </div>
-
-        <x-slot name="footer">                                                  <x-icons.delete/>
-            </button>
-                    <button type="submit" class="btn-save">Save Changes</button>
-                </x-slot>
-    </x-modal>
+           <x-slot name="footer">
+               <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                   <button type="button" class="btn-delete" onclick="deleteMember()" style="background: none; border: none; cursor: pointer;">
+                       <x-icons.delete/>
+                   </button>
+                   {{-- Chú ý: form="editMemberModalForm" ở đây sẽ tự khớp với ID do component <x-modal> tạo ra dựa theo tên id của modal --}}
+                   <button type="submit" form="editMemberModalForm" class="btn-save">Save Changes</button>
+               </div>
+           </x-slot>
+       </x-modal>
 </x-navbar>

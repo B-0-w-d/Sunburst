@@ -11,8 +11,10 @@ use App\Models\Member;
 
 class RegisterController extends Controller
 {
+    // Xử lý logic đăng ký tài khoản thành viên mới
     public function register(Request $request)
     {
+        // Xác thực dữ liệu đầu vào (tên, email, password, mã kích hoạt,...)
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:members,email',
@@ -22,26 +24,28 @@ class RegisterController extends Controller
             'instrument' => 'nullable',
         ]);
 
+        // Trả về lỗi 422 nếu dữ liệu không hợp lệ
         if ($validator->fails()) {
             return response()->json(['status' => 'error', 'message' => $validator->errors()->first()], 422);
         }
 
-        // Khai báo key dùng riêng cho việc debug/test nhanh
+        // Khai báo mã kích hoạt dự phòng dùng riêng cho việc debug/test nhanh
         $debugKey = 'SUNBURST';
 
-        // Nếu không phải key debug, tiến hành kiểm tra trong Database như bình thường
+        // Kiểm tra mã kích hoạt trong database nếu không phải là mã debug
         if ($request->activation_key !== $debugKey) {
             $key = ActivationKey::where('key_value', $request->activation_key)
                 ->where('starts_at', '<=', now())
                 ->where('expires_at', '>=', now())
                 ->first();
 
+            // Trả về lỗi 400 nếu mã không tồn tại hoặc đã hết hạn
             if (!$key) {
                 return response()->json(['status' => 'error', 'message' => 'Key invalid or expired'], 400);
             }
         }
 
-        // Tạo mới tài khoản Member
+        // Tạo mới bản ghi thành viên (Member) trong cơ sở dữ liệu
         $member = Member::create([
             'name'       => $request->name,
             'email'      => $request->email,
@@ -52,8 +56,10 @@ class RegisterController extends Controller
             'status'     => 'active'
         ]);
 
+        // Tự động đăng nhập cho thành viên vừa đăng ký thành công
         Auth::login($member);
 
+        // Trả về thông báo thành công dưới dạng JSON
         return response()->json(['status' => 'success', 'message' => 'Account created successfully!']);
     }
 }

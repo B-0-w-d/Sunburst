@@ -13,9 +13,10 @@ class NotificationController extends Controller
      */
     public function index(Request $request)
     {
+        // Lấy ID của thành viên hiện tại từ request
         $memberId = $request->user()->_id;
 
-        // Lấy thông báo cá nhân của user hoặc thông báo hệ thống chung
+        // Truy vấn lấy danh sách thông báo (thuộc về user hoặc là thông báo hệ thống chung), sắp xếp mới nhất lên đầu
         $notifications = SystemNotification::where(function ($query) use ($memberId) {
             $query->where('recipient_id', $memberId)
                 ->orWhere('type', 'system');
@@ -23,7 +24,7 @@ class NotificationController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Đếm số lượng chưa đọc (read_at là null) để hiển thị badge chuông
+        // Đếm số lượng thông báo chưa đọc (read_at là null) phục vụ hiển thị badge thông báo
         $unreadCount = SystemNotification::where(function ($query) use ($memberId) {
             $query->where('recipient_id', $memberId)
                 ->orWhere('type', 'system');
@@ -31,6 +32,7 @@ class NotificationController extends Controller
             ->whereNull('read_at')
             ->count();
 
+        // Trả về dữ liệu JSON chứa danh sách và số lượng chưa đọc
         return response()->json([
             'status' => 'success',
             'unread_count' => $unreadCount,
@@ -43,8 +45,10 @@ class NotificationController extends Controller
      */
     public function markAsRead(Request $request, $id)
     {
+        // Tìm thông báo theo ID
         $notification = SystemNotification::find($id);
 
+        // Nếu tìm thấy, cập nhật thời điểm đọc (read_at) là thời gian hiện tại
         if ($notification) {
             $notification->update(['read_at' => now()]);
             return response()->json([
@@ -53,6 +57,7 @@ class NotificationController extends Controller
             ]);
         }
 
+        // Trả về lỗi 404 nếu không tìm thấy thông báo
         return response()->json([
             'status' => 'error',
             'message' => 'Không tìm thấy thông báo'
@@ -64,8 +69,10 @@ class NotificationController extends Controller
      */
     public function markAllAsRead(Request $request)
     {
+        // Lấy ID thành viên hiện tại
         $memberId = $request->user()->_id;
 
+        // Cập nhật tất cả thông báo chưa đọc của user này thành đã đọc
         SystemNotification::where(function ($query) use ($memberId) {
             $query->where('recipient_id', $memberId)
                 ->orWhere('type', 'system');
@@ -84,6 +91,7 @@ class NotificationController extends Controller
      */
     public function destroy(Request $request, $id)
     {
+        // Tìm thông báo theo ID và thực hiện xóa
         $notification = SystemNotification::find($id);
 
         if ($notification) {
@@ -94,6 +102,7 @@ class NotificationController extends Controller
             ]);
         }
 
+        // Trả về lỗi 404 nếu không tìm thấy bản ghi thông báo
         return response()->json([
             'status' => 'error',
             'message' => 'Không tìm thấy thông báo'
