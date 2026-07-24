@@ -58,3 +58,5 @@ php artisan key:generate
 npm install
 
 npm run dev:all (chạy hết từ backend đến frontend)
+
+DB URI cũng là connection string để dùng trong Mongo Compass nha
