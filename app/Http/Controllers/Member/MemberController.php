@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Member;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\SystemNotification;
 
 class MemberController extends Controller
 {
@@ -61,6 +62,18 @@ class MemberController extends Controller
         // Tạo mới bản ghi thành viên từ toàn bộ dữ liệu request
         $member = Member::create($request->all());
 
+        // Tạo thông báo hệ thống khi thêm thành viên thành công
+        if ($member) {
+            SystemNotification::create([
+                'type' => 'personal',
+                'recipient_id' => (string) $member->_id, // ID của thành viên mới được tạo (MongoDB)
+                'sender_id' => Auth::id() ? (string) Auth::id() : null,
+                'title' => 'Tài khoản đã được khởi tạo',
+                'message' => 'Hồ sơ thành viên của bạn đã được thêm vào hệ thống thành công lúc ' . now(),
+                'read_at' => null,
+            ]);
+        }
+
         // Phản hồi kết quả thành công hoặc thất bại ghi database
         return $member
             ? response()->json(['status' => 'success', 'message' => 'Added successfully!'], 201)
@@ -99,7 +112,6 @@ class MemberController extends Controller
     /**
      * Xóa thông tin thành viên.
      */
-
     public function destroy($id)
     {
         /** @var \App\Models\Member $currentUser */

@@ -63,7 +63,7 @@
 }">
     <!-- 1. ICON CHUÔNG TRÊN HEADER -->
     <button @click.stop="toggleDropdown" type="button" class="notification-bell-btn">
-        <x-icons.bell /> <!-- ĐÃ ĐÓNG THẺ COMPONENT Ở ĐÂY -->
+        <x-icons.bell />
 
         <!-- Hiển thị chấm đỏ thông báo chưa đọc nếu số lượng lớn hơn 0 -->
         <template x-if="unreadCount > 0">
