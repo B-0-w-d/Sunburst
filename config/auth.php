@@ -38,11 +38,11 @@ return [
     'guards' => [
         'web' => [
             'driver' => 'session',
-            'provider' => 'users',
+            'provider' => 'members',
         ],
         'api' => [
-            'driver' => 'session',
-            'provider' => 'users',
+            'driver' => 'sanctum',
+            'provider' => 'members',
         ],
     ],
 
@@ -64,7 +64,7 @@ return [
     */
 
     'providers' => [
-        'users' => [
+        'members' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\Member::class),
         ],

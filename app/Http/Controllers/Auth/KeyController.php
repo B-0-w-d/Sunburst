@@ -11,12 +11,13 @@ class KeyController extends Controller
     // Xử lý tạo mã kích hoạt mới (yêu cầu quyền quản lý - management tier)
     public function generateKey(Request $request)
     {
+            // Ép lấy user thông qua guard sanctum để đọc chính xác Bearer Token
         /** @var \App\Models\Member $currentUser */
-        $currentUser = Auth::user();
+        $currentUser = Auth::guard('sanctum')->user();
 
         // Kiểm tra xem người dùng đã đăng nhập và có thuộc cấp quản lý hay không, nếu không trả về lỗi 403
         if (!$currentUser || !$currentUser->isManagementTier()) {
-            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized or insufficient permissions'], 403);
         }
 
         // Tạo một mã ngẫu nhiên dạng chuỗi hex (4 byte) và chuyển thành chữ in hoa

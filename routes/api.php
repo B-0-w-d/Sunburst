@@ -13,17 +13,10 @@ Route::post('/register', [RegisterController::class, 'register']);
 
 // 2. Routes cần đăng nhập (Sử dụng Sanctum cho API)
 Route::middleware(['auth:sanctum'])->group(function () {
-
     // Auth - Logout
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // Member Management
-    Route::get('/members', [MemberController::class, 'index']);
-    Route::post('/members', [MemberController::class, 'store']);
-    Route::put('/members/{id}', [MemberController::class, 'update']);
-    Route::delete('/members/{id}', [MemberController::class, 'destroy']);
-
-    // Key Management
+    // Key Management (ĐẶT LÊN TRƯỚC để tránh bị đè route với /members)
     Route::post('/members/generate-key', [KeyController::class, 'generateKey']);
 
     // Profile Management
@@ -35,4 +28,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
     Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
+
+    // Member Management (ĐẶT SAU CÙNG các route tĩnh của members)
+    Route::get('/members', [MemberController::class, 'index']);
+    Route::post('/members', [MemberController::class, 'store']);
+    Route::put('/members/{id}', [MemberController::class, 'update']);
+    Route::delete('/members/{id}', [MemberController::class, 'destroy']);
 });

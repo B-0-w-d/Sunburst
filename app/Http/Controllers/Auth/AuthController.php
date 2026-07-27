@@ -21,11 +21,13 @@ class AuthController extends Controller
 
         // Kiểm tra thông tin đăng nhập với cơ sở dữ liệu
         if (Auth::attempt($credentials)) {
-            // Tái tạo session để bảo mật
-            $request->session()->regenerate();
-
             /** @var \App\Models\Member $user */
             $user = Auth::user();
+
+            // Chỉ tái tạo session nếu request có hỗ trợ session (tránh lỗi Session store on request với API)
+            if ($request->hasSession()) {
+                $request->session()->regenerate();
+            }
 
             // Tạo bản ghi thông báo cá nhân khi đăng nhập thành công
             \App\Models\SystemNotification::create([
@@ -82,10 +84,12 @@ class AuthController extends Controller
             \App\Models\PersonalAccessToken::where('token', $hashedToken)->delete();
         }
 
-        // Hủy bỏ Web Session hiện tại
+        // Hủy bỏ Web Session hiện tại nếu tồn tại session trên request
         Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
 
         // Phản hồi kết quả đăng xuất (JSON hoặc chuyển hướng web)
         if ($request->expectsJson()) {

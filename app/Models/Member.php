@@ -20,6 +20,7 @@ class Member extends Authenticatable
     // Cấu hình Primary Key là _id của MongoDB và định dạng là string
     protected $primaryKey = '_id';
     protected $keyType = 'string';
+    public $incrementing = false;
 
     // Các trường dữ liệu cho phép gán giá trị hàng loạt (Mass Assignment)
     protected $fillable = [
@@ -37,10 +38,11 @@ class Member extends Authenticatable
 
     /**
      * Định nghĩa quan hệ tokens cho Laravel Sanctum chạy trên MongoDB.
+     * Đảm bảo khớp kiểu dữ liệu chuỗi cho tokenable_id.
      */
     public function tokens()
     {
-        return $this->hasMany(PersonalAccessToken::class, 'tokenable_id', '_id');
+        return $this->morphMany(\App\Models\PersonalAccessToken::class, 'tokenable');
     }
 
     /**
