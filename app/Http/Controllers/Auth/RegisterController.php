@@ -11,10 +11,9 @@ use App\Models\Member;
 
 class RegisterController extends Controller
 {
-    // Xử lý logic đăng ký tài khoản thành viên mới
     public function register(Request $request)
     {
-        // Xác thực dữ liệu đầu vào (tên, email, password, mã kích hoạt,...)
+        // 1. Xác thực dữ liệu đầu vào
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:members,email',
@@ -24,28 +23,30 @@ class RegisterController extends Controller
             'instrument' => 'nullable',
         ]);
 
-        // Trả về lỗi 422 nếu dữ liệu không hợp lệ
         if ($validator->fails()) {
-            return response()->json(['status' => 'error', 'message' => $validator->errors()->first()], 422);
+            if ($request->expectsJson()) {
+                return response()->json(['status' => 'error', 'message' => $validator->errors()->first()], 422);
+            }
+            return back()->withErrors($validator)->withInput();
         }
 
-        // Khai báo mã kích hoạt dự phòng dùng riêng cho việc debug/test nhanh
+        // 2. Kiểm tra mã kích hoạt
         $debugKey = 'SUNBURST';
-
-        // Kiểm tra mã kích hoạt trong database nếu không phải là mã debug
         if ($request->activation_key !== $debugKey) {
             $key = ActivationKey::where('key_value', $request->activation_key)
                 ->where('starts_at', '<=', now())
                 ->where('expires_at', '>=', now())
                 ->first();
 
-            // Trả về lỗi 400 nếu mã không tồn tại hoặc đã hết hạn
             if (!$key) {
-                return response()->json(['status' => 'error', 'message' => 'Key invalid or expired'], 400);
+                if ($request->expectsJson()) {
+                    return response()->json(['status' => 'error', 'message' => 'Key invalid or expired'], 400);
+                }
+                return back()->withErrors(['activation_key' => 'Key invalid or expired'])->withInput();
             }
         }
 
-        // Tạo mới bản ghi thành viên (Member) trong cơ sở dữ liệu
+        // 3. Tạo thành viên mới (GIỮ NGUYÊN password như code gốc của bạn, phòng trường hợp Model đã tự băm)
         $member = Member::create([
             'name'       => $request->name,
             'email'      => $request->email,
@@ -56,10 +57,50 @@ class RegisterController extends Controller
             'status'     => 'active'
         ]);
 
-        // Tự động đăng nhập cho thành viên vừa đăng ký thành công
-        Auth::login($member);
+        // 4. THAY VÌ AUTH::LOGIN, TA DÙNG AUTH::ATTEMPT (Giống hệt hàm Login của bạn)
+        // Việc này giải quyết dứt điểm lỗi lệch dữ liệu Session của MongoDB
+        $credentials = [
+            'email' => $request->email,
+            'password' => $request->password
+        ];
 
-        // Trả về thông báo thành công dưới dạng JSON
-        return response()->json(['status' => 'success', 'message' => 'Account created successfully!']);
+        if (Auth::attempt($credentials)) {
+            $user = Auth::user();
+
+            if ($request->hasSession()) {
+                $request->session()->regenerate();
+            }
+
+            // 5. Tạo thông báo đăng ký thành công
+            \App\Models\SystemNotification::create([
+                'type' => 'personal',
+                'recipient_id' => $user->_id,
+                'sender_id' => null,
+                'title' => 'Đăng ký thành công',
+                'message' => 'Chào mừng bạn đến với hệ thống vào lúc ' . now(),
+                'read_at' => null,
+            ]);
+
+            // 6. Trả về Token cho Frontend
+            if ($request->expectsJson()) {
+                $token = $user->createToken('auth_token')->plainTextToken;
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Account created and logged in successfully!',
+                    'access_token' => $token,
+                    'token_type' => 'Bearer',
+                    'member' => $user
+                ]);
+            }
+
+            return redirect()->intended('/');
+        }
+
+        // 7. Fallback nếu đăng nhập tự động thất bại
+        if ($request->expectsJson()) {
+            return response()->json(['status' => 'error', 'message' => 'Đăng ký thành công nhưng tự động đăng nhập thất bại. Vui lòng đăng nhập tay.'], 500);
+        }
+        return redirect('/login')->withErrors(['email' => 'Vui lòng đăng nhập lại.']);
     }
 }

@@ -59,7 +59,7 @@ export function getInstrumentArray(id) {
 
 /**
  * Xử lý đăng ký thành viên thông qua AJAX (Fetch API)
- * Đã sửa lỗi null và đồng bộ hóa logic nhạc cụ
+ * Đã sửa lỗi null, đồng bộ hóa logic nhạc cụ và tự động lưu Access Token
  * @param {Event} event - Sự kiện submit từ form đăng ký
  */
 export function handleFormRegister(event) {
@@ -102,6 +102,11 @@ export function handleFormRegister(event) {
     .then(res => res.json())
     .then(data => {
         if (data.status === 'success') {
+            // === LƯU ACCESS_TOKEN VÀO LOCALSTORAGE TẠI ĐÂY (Đồng bộ với Login) ===
+            if (data.access_token) {
+                localStorage.setItem('access_token', data.access_token);
+            }
+
             window.location.href = '/';
         } else {
             if (errorAlert) {
