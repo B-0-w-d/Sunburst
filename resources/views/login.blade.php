@@ -10,30 +10,48 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
+        /* CSS hỗ trợ hiệu ứng chuyển bước mượt mà */
+        .step-section {
+            transition: all 0.35s ease-in-out;
+            max-height: 400px;
+            opacity: 1;
+            overflow: hidden;
+        }
 
+        .step-section.hidden-step,
+        .form-group.hidden-step {
+            max-height: 0;
+            opacity: 0;
+            margin: 0 !important;
+            padding: 0 !important;
+            pointer-events: none;
+            overflow: hidden;
+        }
     </style>
 </head>
 
 <body>
     <div class="login-page-wrapper" style="background-image: url('{{ asset('images/login-background.jpg') }}'); background-repeat: no-repeat; background-position: center; background-size: cover;">
         <div class="login-modal">
-            <h4 class="welcome-title" style="text-align:center;">Sunburst Manager</h4>
-            <p style="color: #64748b; font-size: 14px; padding: 8px; text-align: center;">Đây là trang diễn đàn cho thành viên chính thức của câu lạc bộ.</p>
+
+            <!-- Sử dụng class text-title hiện đại -->
+            <h4 class="text-title" style="text-align: center; margin-bottom: 4px;">Sunburst Manager</h4>
+            <p style="color: #64748b; font-size: 14px; padding: 4px 8px 16px 8px; text-align: center;">Đây là trang diễn đàn cho thành viên chính thức của câu lạc bộ.</p>
 
             <form id="authLoginModalForm" onsubmit="handleFormLogin(event)">
 
                 <div id="login-error-alert" style="display:none; background:#fef2f2; color:#b91c1c; padding:10px; border-radius:8px; margin-bottom:20px; font-size:13px; text-align:center;"></div>
 
                 <!-- BƯỚC 1: Nhập Email -->
-                <div class="form-group" id="step-email-group">
+                <div class="form-group step-section" id="step-email-group">
                     <label class="form-label" for="login-email">Your email:</label>
                     <div style="display: flex; gap: 8px;">
                         <input type="email" id="login-email" class="form-input" required placeholder="rennguyen@gmail.com" style="flex: 1;">
-                        <button type="button" id="btn-next-step" class="btn-save" style="width: auto; padding: 0 16px; margin-top: 0;" onclick="proceedToPassword()">Next</button>
+                        <button type="button" id="btn-next-step" class="btn btn-primary" style="width: auto; padding: 0 20px; margin-top: 0;" onclick="proceedToPassword()">Next</button>
                     </div>
                 </div>
 
-                <!-- BƯỚC 2: Nhập Password & Nút Login (Ban đầu bị ẩn đi có hiệu ứng) -->
+                <!-- BƯỚC 2: Nhập Password & Nút Login -->
                 <div class="step-section hidden-step" id="step-password-group">
                     <div class="form-group">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
@@ -43,14 +61,14 @@
                         <input type="password" id="login-password" class="form-input" placeholder="••••••••">
                     </div>
 
-                    <button type="submit" class="btn-save">Lez gooooo</button>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Lez gooooo</button>
                 </div>
 
-                <div style="text-align: center; margin-top: 15px;">
+                <div style="text-align: center; margin-top: 20px;">
                     <p style="color: #64748b; font-size: 13px;">
                         Thành viên mới của Sunburst?
-                        <a href="{{ route('register') }}" style="color: #3b82f6; text-decoration: none; font-weight: bold;">
-                            Đăng ký tại đây.
+                        <a href="{{ route('register') }}" style="color: #dc2626; text-decoration: none; font-weight: bold;">
+                            Đăng ký đi ba.
                         </a>
                     </p>
                 </div>

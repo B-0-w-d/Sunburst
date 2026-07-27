@@ -70,7 +70,7 @@
             </div>
 
             {{-- Thẻ thông báo #2 (chưa làm) --}}
-            <div class="promo-card">
+            <div class="card">
                 <span class="promo-tag">Unobvious Tips</span>
                 <h4 class="promo-title">DEO BIET NEN LAM GI O DAY</h4>
                 <p class="promo-meta">3 min read</p>
@@ -109,7 +109,7 @@
                     <input type="text" id="filter-instrument" class="form-input" placeholder="e.g. Guitar" value="{{ request('instrument') }}" style="padding: 6px 12px; height: 36px; display: inline-block; width: 180px;" onkeypress="if(event.key === 'Enter') applyFilters()">
                 </div>
 
-                <button type="button" onclick="applyFilters()" style="padding: 6px 14px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">Filter</button>
+                <button type="button" onclick="applyFilters()" style="padding: 6px 14px; background: #dc2626; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">Filter</button>
 
                 @if(request('role') || request('instrument'))
                     <a href="{{ route('members.index') }}" style="font-size: 13px; color: #cc0000; text-decoration: none;">Reset Filters</a>

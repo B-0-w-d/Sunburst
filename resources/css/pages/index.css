@@ -66,12 +66,10 @@ ul {
     inset: 0;
 
     background:
-        linear-gradient(
-            90deg,
-            rgba(0,0,0,.85) 0%,
-            rgba(0,0,0,.45) 40%,
-            rgba(0,0,0,.85) 100%
-        );
+        linear-gradient(90deg,
+            rgba(0, 0, 0, .85) 0%,
+            rgba(0, 0, 0, .45) 40%,
+            rgba(0, 0, 0, .85) 100%);
 
     z-index: 2;
 }
@@ -182,7 +180,7 @@ ul {
 
 .home__content {
     width: 900px;
-    
+
 }
 
 .home__tour {
@@ -262,7 +260,7 @@ ul {
 }
 
 .btn--secondary {
-    border: 1px solid rgba(255,255,255,.2);
+    border: 1px solid rgba(255, 255, 255, .2);
 
     backdrop-filter: blur(10px);
 }
@@ -328,7 +326,7 @@ ul {
 
     padding-top: 40px;
 
-    border-top: 1px solid rgba(255,255,255,.08);
+    border-top: 1px solid rgba(255, 255, 255, .08);
 }
 
 .stat h3 {
@@ -344,7 +342,7 @@ ul {
 
     letter-spacing: 4px;
 
-    color: rgba(255,255,255,.5);
+    color: rgba(255, 255, 255, .5);
 }
 
 /* ===================================
@@ -370,7 +368,7 @@ ul {
 
     letter-spacing: 5px;
 
-    color: rgba(255,255,255,.6);
+    color: rgba(255, 255, 255, .6);
 }
 
 .home__scroll-arrow {
@@ -415,7 +413,7 @@ ul {
 
     .home__description {
         font-size: 1rem;
-        color : var(--white-color);
+        color: var(--white-color);
     }
 
     .home__stats {

@@ -3,10 +3,14 @@
 @import "./shared/utilities.css";
 @import "./shared/notification.css";
 @import "./shared/modal.css";
+@import "./shared/button.css";
+@import "./shared/instrumentSelector.css";
 
 @import "./pages/home.css";
 @import "./pages/members.css";
 @import "./pages/login.css";
+@import "./pages/register.css";
+
 
 [x-cloak] {
     display: none !important;

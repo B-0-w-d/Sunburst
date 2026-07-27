@@ -106,20 +106,3 @@
     outline: none;
     border-color: #7b0808;
 }
-
-.btn-save {
-    background-color: #c70c0c;
-    color: white;
-    padding: 12px;
-    border: none;
-    border-radius: 10px;
-    width: 100%;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.btn-save:hover {
-    background-color: #a50a0a;
-}

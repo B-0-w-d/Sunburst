@@ -5,19 +5,22 @@
  * @param {Object|null} body - Dữ liệu gửi đi (JSON object)
  * @returns {Promise<Object>} Dữ liệu JSON trả về từ server
  */
-async function sendRequest(url, method, body = null) {
-    const response = await fetch(url, {
-        method,
-        credentials: 'include',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-        },
-        body: body ? JSON.stringify(body) : null
-    });
-    return await response.json();
-}
+ async function sendRequest(url, method, body = null) {
+     const token = localStorage.getItem('access_token'); // Sửa 'token' thành 'access_token'
+
+     const response = await fetch(url, {
+         method,
+         credentials: 'include',
+         headers: {
+             'Accept': 'application/json',
+             'Content-Type': 'application/json',
+             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+             ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+         },
+         body: body ? JSON.stringify(body) : null
+     });
+     return await response.json();
+ }
 
 /**
  * Hiển thị modal dựa trên ID bằng cách thêm class 'is-open'
@@ -134,33 +137,33 @@ export async function deleteMember(id) {
 /**
  * Gửi yêu cầu tới server để tạo mã kích hoạt tài khoản mới
  */
-export async function generateActivationKey() {
-    try {
-        const response = await fetch('/api/members/generate-key', {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            }
-        });
+ export async function generateActivationKey() {
+     try {
+         const token = localStorage.getItem('access_token'); // Sửa 'token' thành 'access_token'
 
-        const data = await response.json();
+         const response = await fetch('/api/members/generate-key', {
+             method: 'POST',
+             headers: {
+                 'Accept': 'application/json',
+                 'Content-Type': 'application/json',
+                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                 ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+             }
+         });
 
-        // Kiểm tra kết quả trả về từ Controller
-        if (data.status === 'success') {
-            // Cập nhật mã kích hoạt vừa tạo hiển thị lên giao diện
-            document.getElementById('key-display').value = data.key;
-            // Cập nhật thông tin thời hạn hết hiệu lực của mã
-            document.getElementById('key-expiry').textContent = `Expires at: ${new Date(data.expires_at).toLocaleString()}`;
-        } else {
-            alert(data.message || 'Failed to generate key.');
-        }
-    } catch (error) {
-        console.error('Error generating key:', error);
-        alert('An error occurred while generating the key.');
-    }
-}
+         const data = await response.json();
+
+         if (data.status === 'success') {
+             document.getElementById('key-display').value = data.key;
+             document.getElementById('key-expiry').textContent = `Expires at: ${new Date(data.expires_at).toLocaleString()}`;
+         } else {
+             alert(data.message || 'Failed to generate key.');
+         }
+     } catch (error) {
+         console.error('Error generating key:', error);
+         alert('An error occurred while generating the key.');
+     }
+ }
 
 /**
  * Sao chép mã kích hoạt hiện tại vào bộ nhớ tạm (clipboard) của thiết bị

@@ -1,19 +1,24 @@
 import * as AuthActions from './auth';
 import * as MemberActions from './member';
+import { initInstrumentSelector, getSelectedInstruments } from './instrumentSelector';
 import './animations/home';
 
-// Gán các hàm xử lý xác thực (Auth) vào đối tượng toàn cục window
+// 1. Gán các hàm xử lý xác thực (Auth) vào window
 window.handleFormLogin = AuthActions.handleFormLogin;
 window.handleFormRegister = AuthActions.handleFormRegister;
 
-// Gán các hàm xử lý thành viên (Member) vào đối tượng toàn cục window
+// 2. Gán các hàm xử lý Component Nhạc cụ vào window
+window.initInstrumentSelector = initInstrumentSelector;
+window.getSelectedInstruments = getSelectedInstruments;
+
+// 3. Gán các hàm xử lý thành viên (Member) vào window
 window.generateActivationKey = MemberActions.generateActivationKey;
 window.copyToClipboard = MemberActions.copyToClipboard;
 window.prepareAndOpenEditModal = MemberActions.prepareAndOpenEditModal;
 window.submitEditForm = MemberActions.submitEditForm;
 window.deleteMember = MemberActions.deleteMember;
 
-// Định nghĩa hàm applyFilters trực tiếp hoặc import từ module member nếu có
+// 4. Hàm lọc dữ liệu
 export function applyFilters() {
     const role = document.getElementById('filter-role')?.value || '';
     const instrument = document.getElementById('filter-instrument')?.value.trim() || '';
@@ -26,9 +31,7 @@ export function applyFilters() {
 }
 window.applyFilters = applyFilters;
 
-/**
- * Mở modal theo ID được truyền vào
- */
+// 5. Quản lý Modal
 export function openModal(id) {
     const modal = document.getElementById(id);
     if (modal) {
@@ -37,9 +40,6 @@ export function openModal(id) {
     }
 }
 
-/**
- * Đóng modal theo ID
- */
 export function closeModal(id) {
     const modal = document.getElementById(id);
     if (!modal) return;
@@ -49,6 +49,11 @@ export function closeModal(id) {
     if (form) form.reset();
 }
 
-// Gán tường minh vào window để các sự kiện onclick trên HTML tìm thấy
 window.openModal = openModal;
 window.closeModal = closeModal;
+
+// 6. Tự động khởi tạo Component Nhạc cụ và Slider Đăng ký khi DOM sẵn sàng
+document.addEventListener('DOMContentLoaded', () => {
+    initInstrumentSelector();
+    AuthActions.initRegisterSlider(); // <-- Kích hoạt trượt slider và chuyển đổi chấm (dots)
+});

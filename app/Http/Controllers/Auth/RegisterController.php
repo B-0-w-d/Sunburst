@@ -31,7 +31,7 @@ class RegisterController extends Controller
         }
 
         // 2. Kiểm tra mã kích hoạt
-        $debugKey = 'SUNBURST';
+        $debugKey = 'cc';
         if ($request->activation_key !== $debugKey) {
             $key = ActivationKey::where('key_value', $request->activation_key)
                 ->where('starts_at', '<=', now())
