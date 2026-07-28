@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\KeyController;
+use App\Http\Controllers\System\CalendarController;
 use App\Http\Controllers\Member\MemberController;
 use App\Http\Controllers\Member\NotificationController;
 
@@ -12,6 +13,7 @@ use App\Http\Controllers\Member\NotificationController;
 | Public API Routes
 |--------------------------------------------------------------------------
 */
+
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [RegisterController::class, 'register']);
 
@@ -49,4 +51,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/{id}/read', [NotificationController::class, 'markAsRead']);
         Route::delete('/{id}', [NotificationController::class, 'destroy']);
     });
+
+    // Calendar Routes
+    Route::get('/calendar', [CalendarController::class, 'index']);
+    Route::post('/calendar', [CalendarController::class, 'store']);
+    Route::put('/calendar/{id}', [CalendarController::class, 'update']);
+    Route::delete('/calendar/{id}', [CalendarController::class, 'destroy']);
 });

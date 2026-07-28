@@ -1,5 +1,6 @@
 import * as AuthActions from './auth';
 import * as MemberActions from './member';
+import './calendar';
 import { initInstrumentSelector, getSelectedInstruments } from './instrumentSelector';
 import './animations/home';
 

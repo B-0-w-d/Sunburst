@@ -25,7 +25,7 @@
             <img src="{{ asset('images/SunburstLogo.png') }}" width="60" height="60" alt="Logo">
             <nav class="icon-nav">
                 <a href="/" class="icon-link {{ request()->is('/') ? 'active' : '' }}"><x-icons.house /></a>
-                <a href="#" class="icon-link"><x-icons.chat /></a>
+                <a href="/calendar" class="icon-link"><x-icons.chat /></a>
                 <a href="/members" class="icon-link {{ request()->is('members*') ? 'active' : '' }}"><x-icons.grid /></a>
                 <a href="#" class="icon-link"><x-icons.heart /></a>
             </nav>

@@ -4,7 +4,7 @@
 
         </div>
     </div>
-</x-navbar>
+</x-management-site.components.navbar>
 
 {{-- Sử dụng @push('scripts') để đẩy đoạn script cấu hình modal vào stack scripts của layout chính thay vì viết trần trên view --}}
 @push('scripts')

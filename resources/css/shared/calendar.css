@@ -1,0 +1,317 @@
+/* --- MODERN CALENDAR STYLING --- */
+.calendar-widget {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+    border: 1px solid #f1f5f9;
+    padding: 24px;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+/* Header */
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.calendar-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.calendar-title h4 {
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.loading-spinner {
+    font-size: 0.8rem;
+    color: #ef4444;
+    font-weight: 500;
+    background: #fef2f2;
+    padding: 2px 8px;
+    border-radius: 99px;
+}
+
+.calendar-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-cal-nav,
+.btn-cal-today {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-cal-nav:hover,
+.btn-cal-today:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: #0f172a;
+}
+
+.btn-cal-today {
+    background: #f8fafc;
+}
+
+/* Grid cấu trúc lịch */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+}
+
+.calendar-day-header {
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 8px 0;
+}
+
+/* Ô ngày trong tháng */
+.calendar-day-cell {
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+.calendar-day-cell:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.calendar-day-cell.other-month {
+    background: #f8fafc;
+    opacity: 0.5;
+}
+
+.calendar-day-cell.is-today {
+    border-color: #3b82f6;
+    background: #f0fdf4;
+    /* Hoặc đổi thành xanh nhẹ #eff6ff cho hiện đại */
+}
+
+/* Số thứ tự ngày */
+.day-number-wrapper {
+    padding: 8px 8px 4px 8px;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.day-number {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #334155;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.calendar-day-cell.is-today .day-number {
+    background: #2563eb;
+    color: #ffffff;
+    font-weight: 700;
+}
+
+/* --- MODE FULL (Trang lịch lớn) --- */
+.calendar-full .calendar-day-cell {
+    min-height: 120px;
+    /* Tăng chiều cao thoáng hơn để chứa được nhiều event */
+}
+
+.calendar-full .event-items-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 0 6px 6px 6px;
+    max-height: 85px;
+    /* Giới hạn chiều cao phần sự kiện trong ô */
+    overflow-y: auto;
+    /* Tự động xuất hiện thanh cuộn gọn gàng khi có quá nhiều event (như ngày sinh nhật dồn dập) */
+    scrollbar-width: thin;
+    /* Firefox scrollbar mảnh */
+}
+
+/* Tùy chỉnh thanh cuộn nhỏ đẹp cho Chrome/Safari */
+.calendar-full .event-items-wrapper::-webkit-scrollbar {
+    width: 4px;
+}
+
+.calendar-full .event-items-wrapper::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.calendar-full .event-item {
+    font-size: 0.72rem;
+    color: #ffffff;
+    padding: 3px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    font-weight: 500;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: filter 0.15s ease;
+}
+
+.calendar-full .event-item:hover {
+    filter: brightness(0.9);
+}
+
+/* --- MODE COMPACT (Modal lịch nhỏ) --- */
+.calendar-compact {
+    padding: 12px;
+}
+
+.calendar-compact .calendar-header h4 {
+    font-size: 1rem;
+}
+
+.calendar-compact .calendar-day-cell {
+    min-height: 48px;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.calendar-compact .event-dots {
+    display: flex;
+    gap: 3px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 90%;
+}
+
+.calendar-compact .event-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+/* --- TOP ACTIONS & PAGE HEADER --- */
+.calendar-page-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+}
+
+.calendar-top-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    padding: 20px 24px;
+    border-radius: 16px;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+}
+
+.calendar-page-info h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 4px 0;
+}
+
+.calendar-page-info p {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.btn-add-event {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #2563eb;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);
+}
+
+.btn-add-event:hover {
+    background: #1d4ed8;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.btn-add-event svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* --- PHẦN CHO PHÉP SCROLL KHI NHIỀU SỰ KIỆN TRONG 1 NGÀY --- */
+.calendar-full .calendar-day-cell {
+    min-height: 120px;
+    /* Cố định chiều cao tối thiểu của ô ngày */
+}
+
+.calendar-full .event-items-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 0 4px 4px 4px;
+
+    max-height: 80px;
+    /* 1. Giới hạn chiều cao tối đa của vùng chứa sự kiện trong ô */
+    overflow-y: auto;
+    /* 2. Tự động bật thanh cuộn dọc khi nội dung vượt quá max-height */
+    scrollbar-width: thin;
+    /* 3. Làm thanh cuộn gọn gàng hơn trên Firefox */
+}
+
+/* --- TỐI ƯU HIỆN THỊ KHI CÓ THANH CUỘN (SCROLL) --- */
+
+/* 1. Tạo hiệu ứng bóng mờ (gradient) phía dưới vùng sự kiện để báo hiệu nội dung còn có thể cuộn xuống */
+.calendar-full .event-items-wrapper {
+    position: relative;
+    mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
+}
+
+/* 2. Làm nổi bật thanh cuộn khi rê chuột vào ô ngày */
+.calendar-full .calendar-day-cell:hover .event-items-wrapper::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    /* Đổi màu đậm hơn một chút khi hover để dễ thấy */
+}
+
+/* 3. Đảm bảo khoảng cách lề bên phải của thẻ event không bị đè bởi thanh cuộn */
+.calendar-full .event-items-wrapper .event-item {
+    margin-right: 2px;
+}

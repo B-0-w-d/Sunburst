@@ -46,7 +46,7 @@ class MemberController extends Controller
             return response()->json(['status' => 'success', 'count' => $list->count(), 'data' => $list], 200);
         }
 
-        return view('members', ['members' => $list]);
+        return view('/management-site/members', ['members' => $list]);
     }
 
     /**
