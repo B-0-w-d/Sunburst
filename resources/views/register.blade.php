@@ -17,8 +17,8 @@
         <div class="register-card">
 
             <div class="card-header">
-                <h1 class="card-title">Tạo tài khoản</h1>
-                <p class="card-subtitle">Tham gia Sunburst Dashboard</p>
+            <h1 class="card-title">Chào thành viên mới nhá!</h1>
+                <p class="card-subtitle">Nhớ hỏi Ban Chủ nhiệm key đăng ký, lát dùng đó</p>
             </div>
 
             <!-- Thanh tiến trình dạng Chấm (Dots) -->
@@ -35,17 +35,17 @@
                         <!-- BƯỚC 1 -->
                         <div class="step-pane" id="pane-1">
                             <div class="form-group">
-                                <label class="form-label" for="reg-name">Họ và tên *</label>
-                                <input type="text" id="reg-name" class="form-input" placeholder="Nguyễn Văn A">
+                                <label class="form-label" for="reg-name">Tên hoặc Nickname:</label>
+                                <input type="text" id="reg-name" class="form-input" placeholder="Ren Nguyễn">
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" for="reg-email">Địa chỉ Email *</label>
-                                <input type="email" id="reg-email" class="form-input" placeholder="example@gmail.com">
+                                <label class="form-label" for="reg-email">Email:</label>
+                                <input type="email" id="reg-email" class="form-input" placeholder="cc@cc.com">
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" for="reg-birthday">Ngày sinh *</label>
+                                <label class="form-label" for="reg-birthday">Năm sinh: </label>
                                 <input type="date" id="reg-birthday" class="form-input">
                             </div>
 

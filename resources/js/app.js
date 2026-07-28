@@ -17,8 +17,9 @@ window.copyToClipboard = MemberActions.copyToClipboard;
 window.prepareAndOpenEditModal = MemberActions.prepareAndOpenEditModal;
 window.submitEditForm = MemberActions.submitEditForm;
 window.deleteMember = MemberActions.deleteMember;
+window.applyFilters = applyFilters;
 
-// 4. Hàm lọc dữ liệu
+// 4. Lọc dữ liệu
 export function applyFilters() {
     const role = document.getElementById('filter-role')?.value || '';
     const instrument = document.getElementById('filter-instrument')?.value.trim() || '';
@@ -29,7 +30,6 @@ export function applyFilters() {
 
     window.location.href = url.toString();
 }
-window.applyFilters = applyFilters;
 
 // 5. Quản lý Modal
 export function openModal(id) {
