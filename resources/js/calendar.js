@@ -8,6 +8,12 @@ document.addEventListener('alpine:init', () => {
         calendarDays: [],
         events: [],
 
+        // --- STATE DÀNH CHO MODAL CHI TIẾT NGÀY ---
+        showDayModal: false,
+        selectedDateFormatted: '',
+        selectedDateFull: '',
+        selectedDayEvents: [],
+
         init() {
             this.updateCalendar();
             this.fetchEvents();
@@ -53,7 +59,7 @@ document.addEventListener('alpine:init', () => {
                 });
             }
 
-            // 3. Các ngày của tháng sau (lấp đầy lưới 35 hoặc 42 ô) - ĐÃ SỬA days.size thành days.length
+            // 3. Các ngày của tháng sau (lấp đầy lưới 35 hoặc 42 ô)
             const totalCells = days.length <= 35 ? 35 : 42;
             const nextDaysCount = totalCells - days.length;
             for (let i = 1; i <= nextDaysCount; i++) {
@@ -132,46 +138,100 @@ document.addEventListener('alpine:init', () => {
 
         mapEventsToDays() {
             this.calendarDays.forEach(day => {
-                    // Lọc các sự kiện thuộc về ngày này dựa trên múi giờ địa phương
-                    let matchedEvents = this.events.filter(evt => {
-                        let rawDate = evt.start_time || evt.start_date || evt.date;
-                        if (!rawDate) return false;
+                let matchedEvents = this.events.filter(evt => {
+                    let rawDate = evt.start_time || evt.start_date || evt.date;
+                    if (!rawDate) return false;
 
-                        // Chuyển đổi chuỗi ISO thành đối tượng Date của Javascript (tự động convert sang giờ local)
-                        let dateObj = new Date(rawDate);
+                    let dateObj = new Date(rawDate);
+                    let year = dateObj.getFullYear();
+                    let month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                    let dt = String(dateObj.getDate()).padStart(2, '0');
+                    let evtLocalDate = `${year}-${month}-${dt}`;
 
-                        // Format lại thành chuẩn YYYY-MM-DD theo giờ local của máy người dùng
-                        let year = dateObj.getFullYear();
-                        let month = String(dateObj.getMonth() + 1).padStart(2, '0');
-                        let dt = String(dateObj.getDate()).padStart(2, '0');
-                        let evtLocalDate = `${year}-${month}-${dt}`;
-
-                        return evtLocalDate === day.fullDate;
-                    });
-
-                    // Loại bỏ các sự kiện bị trùng lặp ID
-                    const uniqueEventsMap = new Map();
-                    matchedEvents.forEach(evt => {
-                        const eventId = evt._id || evt.id || evt.title;
-                        uniqueEventsMap.set(eventId, evt);
-                    });
-
-                    day.events = Array.from(uniqueEventsMap.values());
+                    return evtLocalDate === day.fullDate;
                 });
-                },
+
+                const uniqueEventsMap = new Map();
+                matchedEvents.forEach(evt => {
+                    const eventId = evt._id || evt.id || evt.title;
+                    uniqueEventsMap.set(eventId, evt);
+                });
+
+                day.events = Array.from(uniqueEventsMap.values());
+            });
+        },
 
         getEventColor(type) {
             switch (type) {
-                case 'show': return '#3b82f6';    // Xanh dương
-                case 'practice': return '#10b981'; // Xanh lá
-                case 'meeting': return '#f59e0b';  // Cam
-                case 'event': return '#ec4899';    // Hồng (cho sự kiện nhậu hoặc event ngoài lề)
-                default: return '#6366f1';         // Tím mặc định
+                case 'show': return '#3b82f6';
+                case 'practice': return '#10b981';
+                case 'meeting': return '#f59e0b';
+                case 'event': return '#ec4899';
+                default: return '#6366f1';
             }
         },
 
+        // --- CÁC HÀM TƯƠNG TÁC MODAL CHI TIẾT NGÀY & EVENT ---
+        openDayDetail(date) {
+            this.selectedDateFull = date.fullDate;
+            this.selectedDateFormatted = `${date.dayNumber}/${this.currentDate.getMonth() + 1}/${this.currentDate.getFullYear()}`;
+            this.selectedDayEvents = date.events || [];
+            this.showDayModal = true;
+        },
+
         selectEvent(evt) {
-            console.log('Xem chi tiết sự kiện:', evt);
+            const eventDate = evt.start_time || evt.start_date || evt.date;
+            if (eventDate) {
+                const dateObj = new Date(eventDate);
+                const fullDateStr = dateObj.toISOString().split('T')[0];
+                const dayCell = this.calendarDays.find(d => d.fullDate === fullDateStr);
+                if (dayCell) {
+                    this.openDayDetail(dayCell);
+                }
+            }
+        },
+
+        addEventForDate(dateStr) {
+            this.showDayModal = false;
+            window.dispatchEvent(new CustomEvent('open-add-event-modal', { detail: { date: dateStr } }));
+        },
+
+        editEvent(evt) {
+            this.showDayModal = false;
+            window.dispatchEvent(new CustomEvent('open-edit-event-modal', { detail: { event: evt } }));
+        },
+
+        deleteEvent(evt) {
+            if (!confirm(`Bạn có chắc chắn muốn xóa sự kiện "${evt.title}"?`)) return;
+
+            const token = localStorage.getItem('access_token');
+            const eventId = evt._id || evt.id;
+
+            fetch(`/api/calendar/${eventId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    this.events = this.events.filter(e => (e._id || e.id) !== eventId);
+                    this.mapEventsToDays();
+                    this.selectedDayEvents = this.selectedDayEvents.filter(e => (e._id || e.id) !== eventId);
+                    if (this.selectedDayEvents.length === 0) {
+                        this.showDayModal = false;
+                    }
+                } else {
+                    alert(data.message || 'Xóa sự kiện thất bại!');
+                }
+            })
+            .catch(err => {
+                console.error('Lỗi khi xóa sự kiện:', err);
+                alert('Có lỗi xảy ra khi xóa sự kiện.');
+            });
         }
     }));
 });
