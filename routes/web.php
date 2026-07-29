@@ -13,11 +13,11 @@ use App\Http\Controllers\Member\MemberController;
 
 Route::middleware('guest')->group(function () {
     // Đăng nhập
-    Route::get('/login', fn() => view('/management-site/login'))->name('login');
+    Route::get('/login', fn() => view('management-site/login'))->name('login');
     Route::post('/login', [AuthController::class, 'login']);
 
     // Đăng ký (3 bước Slide)
-    Route::get('/register', fn() => view('/management-site/register'))->name('register');
+    Route::get('/register', fn() => view('management-site/register'))->name('register');
     Route::post('/register', [RegisterController::class, 'register']);
 });
 
@@ -38,8 +38,10 @@ Route::middleware('auth')->group(function () {
         Route::put('/update', [MemberController::class, 'updateProfile'])->name('update');
     });
 
-    // Calendar View
-    Route::get('/calendar', fn() => view('management-site/calendar'))->name('calendar');
+    // Calendar & When2meet View
+    Route::get('/calendar', function () {
+        return view('management-site.calendar');
+    })->name('calendar');
 
     // Members (User thông thường có thể xem)
     Route::get('/members', [MemberController::class, 'index'])->name('members.index');

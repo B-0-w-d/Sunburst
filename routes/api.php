@@ -44,6 +44,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}', [MemberController::class, 'destroy']);
     });
 
+    // Calendar & When2meet Management
+    Route::prefix('calendar')->group(function () {
+        Route::get('/', [CalendarController::class, 'index']);                             // Lấy danh sách lịch / khảo sát
+        Route::post('/', [CalendarController::class, 'store']);                        // Admin tạo lịch hoặc tạo khảo sát POLL
+        Route::post('/{eventId}/availability', [CalendarController::class, 'submitAvailability']); // Thành viên điền lịch rảnh When2meet
+        Route::get('/{eventId}/poll-report', [CalendarController::class, 'getPollReport']); // Admin xem báo cáo tổng hợp rảnh/bận
+        Route::post('/{eventId}/confirm-poll', [CalendarController::class, 'confirmPoll']); // Admin chốt lịch từ khảo sát
+        Route::patch('/{eventId}/rsvp', [CalendarController::class, 'updateRsvp']);        // Thành viên phản hồi RSVP
+    });
+
     // Notifications
     Route::prefix('notifications')->group(function () {
         Route::get('/', [NotificationController::class, 'index']);
@@ -51,10 +61,4 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/{id}/read', [NotificationController::class, 'markAsRead']);
         Route::delete('/{id}', [NotificationController::class, 'destroy']);
     });
-
-    // Calendar Routes
-    Route::get('/calendar', [CalendarController::class, 'index']);
-    Route::post('/calendar', [CalendarController::class, 'store']);
-    Route::put('/calendar/{id}', [CalendarController::class, 'update']);
-    Route::delete('/calendar/{id}', [CalendarController::class, 'destroy']);
 });

@@ -1,237 +1,312 @@
-document.addEventListener('alpine:init', () => {
-    Alpine.data('calendarComponent', (config) => ({
-        mode: config.mode || 'full',
-        currentDate: new Date(),
-        currentMonthYear: '',
-        isLoading: false,
-        weekDays: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'],
-        calendarDays: [],
-        events: [],
+// Lấy token từ localStorage
+const token = localStorage.getItem('access_token');
 
-        // --- STATE DÀNH CHO MODAL CHI TIẾT NGÀY ---
-        showDayModal: false,
-        selectedDateFormatted: '',
-        selectedDateFull: '',
-        selectedDayEvents: [],
+const headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Authorization': `Bearer ${token}` // Gửi kèm Bearer Token để Sanctum xác thực
+};
 
-        init() {
-            this.updateCalendar();
-            this.fetchEvents();
-        },
+document.addEventListener('DOMContentLoaded', function () {
+    const container = document.getElementById('eventList');
+    if (!container) return;
 
-        updateCalendar() {
-            const year = this.currentDate.getFullYear();
-            const month = this.currentDate.getMonth();
+    let currentTab = 'confirmed';
+    let activeEventId = null;
+    let isMouseDown = false;
+    let isSelecting = true;
 
-            // Format tiêu đề tháng/năm
-            this.currentMonthYear = `Tháng ${month + 1}, ${year}`;
+    // Load danh sách ban đầu
+    fetchEvents(currentTab);
 
-            // Lấy ngày đầu tiên của tháng
-            const firstDayIndex = new Date(year, month, 1).getDay();
-            // Số ngày trong tháng hiện tại
-            const lastDay = new Date(year, month + 1, 0).getDate();
-            // Số ngày của tháng trước
-            const prevLastDay = new Date(year, month, 0).getDate();
+    // Chuyển Tab
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentTab = this.getAttribute('data-tab');
+            fetchEvents(currentTab);
+        });
+    });
 
-            let days = [];
+    // Quản lý Modal chung
+    function toggleModal(modalId, show = true) {
+        document.getElementById(modalId)?.classList.toggle('active', show);
+    }
 
-            // 1. Các ngày của tháng trước (lấp đầy tuần)
-            for (let i = firstDayIndex; i > 0; i--) {
-                let d = new Date(year, month - 1, prevLastDay - i + 1);
-                days.push({
-                    dayNumber: prevLastDay - i + 1,
-                    fullDate: d.toISOString().split('T')[0],
-                    isCurrentMonth: false,
-                    isToday: this.isTodayCheck(d),
-                    events: []
-                });
-            }
+    document.getElementById('openCreateModalBtn')?.addEventListener('click', () => toggleModal('createEventModal', true));
+    document.querySelectorAll('.close-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            toggleModal(this.getAttribute('data-modal'), false);
+        });
+    });
 
-            // 2. Các ngày trong tháng hiện tại
-            for (let i = 1; i <= lastDay; i++) {
-                let d = new Date(year, month, i);
-                days.push({
-                    dayNumber: i,
-                    fullDate: d.toISOString().split('T')[0],
-                    isCurrentMonth: true,
-                    isToday: this.isTodayCheck(d),
-                    events: []
-                });
-            }
+    // Toggle form tạo sự kiện giữa POLL và CONFIRMED
+    document.getElementById('eventStatus')?.addEventListener('change', function () {
+        const isPoll = this.value === 'POLL';
+        const pollSec = document.getElementById('pollConfigSection');
+        const confSec = document.getElementById('confirmedConfigSection');
+        if (pollSec) pollSec.style.display = isPoll ? 'block' : 'none';
+        if (confSec) confSec.style.display = isPoll ? 'none' : 'block';
+    });
 
-            // 3. Các ngày của tháng sau (lấp đầy lưới 35 hoặc 42 ô)
-            const totalCells = days.length <= 35 ? 35 : 42;
-            const nextDaysCount = totalCells - days.length;
-            for (let i = 1; i <= nextDaysCount; i++) {
-                let d = new Date(year, month + 1, i);
-                days.push({
-                    dayNumber: i,
-                    fullDate: d.toISOString().split('T')[0],
-                    isCurrentMonth: false,
-                    isToday: this.isTodayCheck(d),
-                    events: []
-                });
-            }
-
-            this.calendarDays = days;
-            this.mapEventsToDays();
-        },
-
-        isTodayCheck(date) {
-            const today = new Date();
-            return date.getDate() === today.getDate() &&
-                   date.getMonth() === today.getMonth() &&
-                   date.getFullYear() === today.getFullYear();
-        },
-
-        prevMonth() {
-            this.currentDate.setMonth(this.currentDate.getMonth() - 1);
-            this.updateCalendar();
-            this.fetchEvents();
-        },
-
-        nextMonth() {
-            this.currentDate.setMonth(this.currentDate.getMonth() + 1);
-            this.updateCalendar();
-            this.fetchEvents();
-        },
-
-        today() {
-            this.currentDate = new Date();
-            this.updateCalendar();
-            this.fetchEvents();
-        },
-
-        fetchEvents() {
-            this.isLoading = true;
-            const year = this.currentDate.getFullYear();
-            const month = this.currentDate.getMonth() + 1;
-
-            const token = localStorage.getItem('access_token');
-
-            fetch(`/api/calendar?year=${year}&month=${month}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error(`HTTP error! status: ${res.status}`);
-                }
-                return res.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    this.events = data.data || [];
-                    this.mapEventsToDays();
-                }
-                this.isLoading = false;
-            })
-            .catch(err => {
-                console.error('Lỗi tải sự kiện:', err);
-                this.isLoading = false;
+    // 1. Fetch danh sách sự kiện từ API GET /api/calendar
+    async function fetchEvents(status) {
+        try {
+            const res = await fetch(`/api/calendar?status=${status.toUpperCase()}`, {
+                headers: headers
             });
-        },
+            const result = await res.json();
+            container.innerHTML = '';
 
-        mapEventsToDays() {
-            this.calendarDays.forEach(day => {
-                let matchedEvents = this.events.filter(evt => {
-                    let rawDate = evt.start_time || evt.start_date || evt.date;
-                    if (!rawDate) return false;
-
-                    let dateObj = new Date(rawDate);
-                    let year = dateObj.getFullYear();
-                    let month = String(dateObj.getMonth() + 1).padStart(2, '0');
-                    let dt = String(dateObj.getDate()).padStart(2, '0');
-                    let evtLocalDate = `${year}-${month}-${dt}`;
-
-                    return evtLocalDate === day.fullDate;
-                });
-
-                const uniqueEventsMap = new Map();
-                matchedEvents.forEach(evt => {
-                    const eventId = evt._id || evt.id || evt.title;
-                    uniqueEventsMap.set(eventId, evt);
-                });
-
-                day.events = Array.from(uniqueEventsMap.values());
-            });
-        },
-
-        getEventColor(type) {
-            switch (type) {
-                case 'show': return '#3b82f6';
-                case 'practice': return '#10b981';
-                case 'meeting': return '#f59e0b';
-                case 'event': return '#ec4899';
-                default: return '#6366f1';
+            if (!result.data || result.data.length === 0) {
+                container.innerHTML = '<p class="subtitle">Không có sự kiện nào.</p>';
+                return;
             }
-        },
 
-        // --- CÁC HÀM TƯƠNG TÁC MODAL CHI TIẾT NGÀY & EVENT ---
-        openDayDetail(date) {
-            this.selectedDateFull = date.fullDate;
-            this.selectedDateFormatted = `${date.dayNumber}/${this.currentDate.getMonth() + 1}/${this.currentDate.getFullYear()}`;
-            this.selectedDayEvents = date.events || [];
-            this.showDayModal = true;
-        },
+            result.data.forEach(ev => {
+                const card = document.createElement('div');
+                card.className = 'event-card';
 
-        selectEvent(evt) {
-            const eventDate = evt.start_time || evt.start_date || evt.date;
-            if (eventDate) {
-                const dateObj = new Date(eventDate);
-                const fullDateStr = dateObj.toISOString().split('T')[0];
-                const dayCell = this.calendarDays.find(d => d.fullDate === fullDateStr);
-                if (dayCell) {
-                    this.openDayDetail(dayCell);
+                let actionBtn = '';
+                if (ev.status === 'POLL') {
+                    actionBtn = `<button class="btn btn-primary w-100 fill-poll-btn" data-id="${ev._id}" data-config='${JSON.stringify(ev.poll_config)}'>Điền Lịch Rảnh</button>`;
+                    actionBtn += `<button class="btn btn-outline w-100 mt-2 view-report-btn" data-id="${ev._id}" data-title="${ev.title}">Xem Báo Cáo & Chốt Lịch</button>`;
                 }
-            }
-        },
 
-        addEventForDate(dateStr) {
-            this.showDayModal = false;
-            window.dispatchEvent(new CustomEvent('open-add-event-modal', { detail: { date: dateStr } }));
-        },
-
-        editEvent(evt) {
-            this.showDayModal = false;
-            window.dispatchEvent(new CustomEvent('open-edit-event-modal', { detail: { event: evt } }));
-        },
-
-        deleteEvent(evt) {
-            if (!confirm(`Bạn có chắc chắn muốn xóa sự kiện "${evt.title}"?`)) return;
-
-            const token = localStorage.getItem('access_token');
-            const eventId = evt._id || evt.id;
-
-            fetch(`/api/calendar/${eventId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    this.events = this.events.filter(e => (e._id || e.id) !== eventId);
-                    this.mapEventsToDays();
-                    this.selectedDayEvents = this.selectedDayEvents.filter(e => (e._id || e.id) !== eventId);
-                    if (this.selectedDayEvents.length === 0) {
-                        this.showDayModal = false;
-                    }
-                } else {
-                    alert(data.message || 'Xóa sự kiện thất bại!');
-                }
-            })
-            .catch(err => {
-                console.error('Lỗi khi xóa sự kiện:', err);
-                alert('Có lỗi xảy ra khi xóa sự kiện.');
+                card.innerHTML = `
+                    <div>
+                        <span class="badge badge-${ev.type.toLowerCase()}">${ev.type}</span>
+                        <h4>${ev.title}</h4>
+                        <div class="event-info">
+                            <p><strong>Trạng thái:</strong> ${ev.status}</p>
+                            ${ev.start_time ? `<p><strong>Bắt đầu:</strong> ${ev.start_time}</p>` : ''}
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">${actionBtn}</div>
+                `;
+                container.appendChild(card);
             });
+
+            bindEventListeners();
+        } catch (err) {
+            console.error('Lỗi tải danh sách lịch:', err);
         }
-    }));
+    }
+
+    function bindEventListeners() {
+        document.querySelectorAll('.fill-poll-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                activeEventId = this.getAttribute('data-id');
+                const config = JSON.parse(this.getAttribute('data-config'));
+                buildWhen2MeetMatrix(config, 'w2mMatrixTable', false);
+                toggleModal('when2meetModal', true);
+            });
+        });
+
+        document.querySelectorAll('.view-report-btn').forEach(btn => {
+            btn.addEventListener('click', async function () {
+                activeEventId = this.getAttribute('data-id');
+                const title = this.getAttribute('data-title');
+                const reportTitle = document.getElementById('reportTitle');
+                if (reportTitle) reportTitle.innerText = `Báo Cáo: ${title}`;
+
+                try {
+                    const res = await fetch(`/api/calendar/${activeEventId}/poll-report`, {
+                        headers: headers
+                    });
+                    const json = await res.json();
+                    document.getElementById('statTargetCount').innerText = `Tổng mục tiêu: ${json.target_count}`;
+                    document.getElementById('statSubmittedCount').innerText = `Đã phản hồi: ${json.submitted_count}`;
+
+                    buildHeatmapMatrix(json.slot_statistics, json.target_count);
+                    toggleModal('reportModal', true);
+                } catch (e) {
+                    alert('Không thể tải báo cáo.');
+                }
+            });
+        });
+    }
+
+    function buildWhen2MeetMatrix(config, tableId, isReadonly = false, slotStats = null) {
+        const table = document.getElementById(tableId);
+        if (!table) return;
+        table.innerHTML = '';
+
+        const startDate = new Date(config.start_date);
+        const endDate = new Date(config.end_date);
+        const [dStartH, dStartM] = config.daily_start_time.split(':').map(Number);
+        const [dEndH, dEndM] = config.daily_end_time.split(':').map(Number);
+        const step = config.step_minutes || 30;
+
+        let dates = [];
+        let curr = new Date(startDate);
+        while (curr <= endDate) {
+            dates.push(new Date(curr));
+            curr.setDate(curr.getDate() + 1);
+        }
+
+        let timeSlots = [];
+        let totalMinutesStart = dStartH * 60 + dStartM;
+        let totalMinutesEnd = dEndH * 60 + dEndM;
+        for (let m = totalMinutesStart; m < totalMinutesEnd; m += step) {
+            let hh = String(Math.floor(m / 60)).padStart(2, '0');
+            let mm = String(m % 60).padStart(2, '0');
+            timeSlots.push(`${hh}:${mm}`);
+        }
+
+        let headerRow = '<tr><th>Thời gian</th>';
+        dates.forEach(d => {
+            headerRow += `<th>${d.toISOString().split('T')[0]}</th>`;
+        });
+        headerRow += '</tr>';
+        table.innerHTML += headerRow;
+
+        timeSlots.forEach(time => {
+            let row = `<tr><td><strong>${time}</strong></td>`;
+            dates.forEach(d => {
+                let dateStr = d.toISOString().split('T')[0];
+                let slotISO = `${dateStr}T${time}:00`;
+
+                if (isReadonly) {
+                    let count = slotStats ? (slotStats[slotISO] || 0) : 0;
+                    let heatmapClass = count > 0 ? (count > 2 ? 'heatmap-high' : 'heatmap-mid') : '';
+                    row += `<td class="time-slot-cell ${heatmapClass}">${count}</td>`;
+                } else {
+                    row += `<td class="time-slot-cell" data-slot="${slotISO}"></td>`;
+                }
+            });
+            row += '</tr>';
+            table.innerHTML += row;
+        });
+
+        if (!isReadonly) {
+            initDragSelection(table);
+        }
+    }
+
+    function initDragSelection(table) {
+        const cells = table.querySelectorAll('.time-slot-cell');
+        cells.forEach(cell => {
+            cell.addEventListener('mousedown', (e) => {
+                isMouseDown = true;
+                isSelecting = !cell.classList.contains('selected');
+                cell.classList.toggle('selected', isSelecting);
+                e.preventDefault();
+            });
+
+            cell.addEventListener('mouseenter', () => {
+                if (isMouseDown) {
+                    cell.classList.toggle('selected', isSelecting);
+                }
+            });
+        });
+
+        document.addEventListener('mouseup', () => {
+            isMouseDown = false;
+        });
+    }
+
+    function buildHeatmapMatrix(slotStats, targetCount) {
+        let sampleConfig = {
+            start_date: "2026-08-01",
+            end_date: "2026-08-05",
+            daily_start_time: "18:00",
+            daily_end_time: "22:00",
+            step_minutes: 30
+        };
+        buildWhen2MeetMatrix(sampleConfig, 'reportMatrixTable', true, slotStats);
+    }
+
+    document.getElementById('saveAvailabilityBtn')?.addEventListener('click', async function () {
+        const selectedCells = document.querySelectorAll('#w2mMatrixTable .time-slot-cell.selected');
+        const availableSlots = Array.from(selectedCells).map(c => c.getAttribute('data-slot'));
+
+        try {
+            const res = await fetch(`/api/calendar/${activeEventId}/availability`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ available_slots: availableSlots })
+            });
+            const result = await res.json();
+            if (res.ok) {
+                alert('Đã gửi lịch rảnh thành công!');
+                toggleModal('when2meetModal', false);
+            } else {
+                alert(result.message || 'Lỗi gửi lịch rảnh.');
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    });
+
+    document.getElementById('createEventForm')?.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const statusVal = document.getElementById('eventStatus').value;
+
+        let payload = {
+            title: document.getElementById('eventTitle').value,
+            type: document.getElementById('eventType').value,
+            status: statusVal,
+            target_member_ids: document.getElementById('targetMemberIds').value.split(',').map(s => s.trim()).filter(Boolean)
+        };
+
+        if (statusVal === 'POLL') {
+            payload.poll_config = {
+                start_date: document.getElementById('pollStartDate').value,
+                end_date: document.getElementById('pollEndDate').value,
+                daily_start_time: document.getElementById('dailyStartTime').value,
+                daily_end_time: document.getElementById('dailyEndTime').value,
+                step_minutes: 30
+            };
+        } else {
+            payload.start_time = document.getElementById('startTime').value;
+            payload.end_time = document.getElementById('endTime').value;
+        }
+
+        try {
+            const res = await fetch('/api/calendar', {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                alert('Tạo thành công!');
+                toggleModal('createEventModal', false);
+                fetchEvents(currentTab);
+            } else {
+                const err = await res.json();
+                alert(err.message || 'Lỗi tạo sự kiện.');
+            }
+        } catch (ex) {
+            console.error(ex);
+        }
+    });
+
+    document.getElementById('confirmPollBtn')?.addEventListener('click', async function () {
+        const startTime = document.getElementById('confirmStartTime').value;
+        const endTime = document.getElementById('confirmEndTime').value;
+
+        if (!startTime || !endTime) {
+            alert('Vui lòng chọn thời gian bắt đầu và kết thúc để chốt lịch.');
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/calendar/${activeEventId}/confirm-poll`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ start_time: startTime, end_time: endTime })
+            });
+            if (res.ok) {
+                alert('Đã chốt lịch thành công!');
+                toggleModal('reportModal', false);
+                fetchEvents(currentTab);
+            } else {
+                alert('Lỗi chốt lịch.');
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    });
 });

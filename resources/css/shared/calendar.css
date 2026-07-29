@@ -1,349 +1,299 @@
-/* --- MODERN CALENDAR STYLING --- */
-.calendar-widget {
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
-    border: 1px solid #f1f5f9;
+.calendar-container {
     padding: 24px;
-    width: 100%;
-    box-sizing: border-box;
+    max-width: 1200px;
+    margin: 0 auto;
     font-family: inherit;
+    color: #333;
 }
 
-/* Header */
 .calendar-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #f1f5f9;
 }
 
-.calendar-title {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.calendar-title h4 {
-    font-weight: 700;
-    color: #1e293b;
+.calendar-header h2 {
     margin: 0;
-    font-size: 1.25rem;
+    font-size: 24px;
+    color: #1a1a1a;
 }
 
-.loading-spinner {
-    font-size: 0.8rem;
-    color: #ef4444;
-    font-weight: 500;
-    background: #fef2f2;
-    padding: 2px 8px;
-    border-radius: 99px;
+.subtitle {
+    color: #666;
+    font-size: 14px;
+    margin-top: 4px;
 }
 
-.calendar-controls {
+/* Tabs */
+.calendar-tabs {
     display: flex;
-    gap: 8px;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #eaeaea;
+    padding-bottom: 10px;
 }
 
-.btn-cal-nav,
-.btn-cal-today {
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
-    color: #475569;
-    border-radius: 8px;
-    padding: 6px 14px;
-    font-size: 0.85rem;
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 8px 16px;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    color: #666;
+    border-radius: 6px;
+    transition: all 0.2s;
 }
 
-.btn-cal-nav:hover,
-.btn-cal-today:hover {
-    background: #f8fafc;
-    border-color: #94a3b8;
-    color: #0f172a;
+.tab-btn.active {
+    background: #4f46e5;
+    color: #fff;
 }
 
-.btn-cal-today {
-    background: #f8fafc;
-}
-
-/* Grid cấu trúc lịch */
-.calendar-grid {
+/* Grid hiển thị danh sách */
+.event-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
 }
 
-.calendar-day-header {
-    text-align: center;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 8px 0;
-}
-
-/* Ô ngày trong tháng */
-.calendar-day-cell {
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    background: #ffffff;
-    transition: all 0.2s ease;
+.event-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    position: relative;
-}
-
-.calendar-day-cell:hover {
-    border-color: #cbd5e1;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.calendar-day-cell.other-month {
-    background: #f8fafc;
-    opacity: 0.5;
-}
-
-.calendar-day-cell.is-today {
-    border-color: #3b82f6;
-    background: #f0fdf4;
-}
-
-/* Số thứ tự ngày */
-.day-number-wrapper {
-    padding: 8px 8px 4px 8px;
-    display: flex;
-    justify-content: flex-start;
-}
-
-.day-number {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #334155;
-    width: 26px;
-    height: 26px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-}
-
-.calendar-day-cell.is-today .day-number {
-    background: #2563eb;
-    color: #ffffff;
-    font-weight: 700;
-}
-
-/* --- MODE FULL (Trang lịch lớn) --- */
-.calendar-full .calendar-day-cell {
-    height: 120px !important;
-    min-height: 120px !important;
-    max-height: 120px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-}
-
-.calendar-full .day-number-wrapper {
-    padding: 6px 8px 2px 8px !important;
-    flex-shrink: 0;
-}
-
-.calendar-full .event-list {
-    flex: 1 !important;
-    overflow: hidden !important;
-    display: flex !important;
-    flex-direction: column !important;
-    min-height: 0;
-}
-
-.calendar-full .event-items-wrapper {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 3px !important;
-    padding: 0 4px 4px 4px !important;
-    height: 100% !important;
-    max-height: 84px !important;
-    overflow-y: auto !important;
-    scrollbar-width: thin;
-}
-
-/* Tùy chỉnh thanh cuộn nhỏ gọn */
-.calendar-full .event-items-wrapper::-webkit-scrollbar {
-    width: 3px !important;
-}
-
-.calendar-full .event-items-wrapper::-webkit-scrollbar-track {
-    background: transparent !important;
-}
-
-.calendar-full .event-items-wrapper::-webkit-scrollbar-thumb {
-    background: #cbd5e1 !important;
-    border-radius: 4px !important;
-}
-
-.calendar-full .event-item {
-    font-size: 0.72rem !important;
-    color: #ffffff !important;
-    padding: 3px 8px !important;
-    border-radius: 6px !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    cursor: pointer !important;
-    font-weight: 500 !important;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
-    margin-right: 2px !important;
-    flex-shrink: 0 !important;
-    height: auto !important;
-}
-
-.calendar-full .event-item:hover {
-    filter: brightness(0.9);
-}
-
-/* Làm nổi bật thanh cuộn khi hover vào ô ngày */
-.calendar-full .calendar-day-cell:hover .event-items-wrapper::-webkit-scrollbar-thumb {
-    background: #94a3b8;
-}
-
-/* --- MODE COMPACT (Modal lịch nhỏ) --- */
-.calendar-compact {
-    padding: 12px;
-}
-
-.calendar-compact .calendar-header h4 {
-    font-size: 1rem;
-}
-
-.calendar-compact .calendar-day-cell {
-    min-height: 48px;
-    align-items: center;
-    justify-content: flex-start;
-}
-
-.calendar-compact .event-dots {
-    display: flex;
-    gap: 3px;
-    margin-bottom: 6px;
-    flex-wrap: wrap;
-    justify-content: center;
-    max-width: 90%;
-}
-
-.calendar-compact .event-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-}
-
-/* --- TOP ACTIONS & PAGE HEADER --- */
-.calendar-page-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    width: 100%;
-}
-
-.calendar-top-actions {
-    display: flex;
     justify-content: space-between;
+}
+
+.event-card h4 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    color: #111827;
+}
+
+.badge {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 4px;
+    margin-bottom: 12px;
+}
+
+.badge-practice {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.badge-meeting {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.badge-show {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.badge-event {
+    background: #f3e8ff;
+    color: #7e22ce;
+}
+
+.event-info p {
+    margin: 4px 0;
+    font-size: 13px;
+    color: #4b5563;
+}
+
+/* Buttons */
+.btn {
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-primary {
+    background: #4f46e5;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: #4338ca;
+}
+
+.btn-success {
+    background: #16a34a;
+    color: #fff;
+}
+
+.btn-success:hover {
+    background: #15803d;
+}
+
+.btn-outline {
+    background: #fff;
+    border: 1px solid #d1d5db;
+    color: #374151;
+}
+
+.btn-outline:hover {
+    background: #f9fafb;
+}
+
+.w-100 {
+    width: 100%;
+    margin-top: 10px;
+}
+
+/* Modal thuần CSS */
+.custom-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
     align-items: center;
-    background: #ffffff;
-    padding: 20px 24px;
-    border-radius: 16px;
-    border: 1px solid #f1f5f9;
-    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+    justify-content: center;
 }
 
-.calendar-page-info h2 {
-    font-size: 1.35rem;
-    font-weight: 700;
-    color: #0f172a;
-    margin: 0 0 4px 0;
+.custom-modal.active {
+    display: flex;
 }
 
-.calendar-page-info p {
-    font-size: 0.85rem;
-    color: #64748b;
-    margin: 0;
+.modal-content {
+    background: #fff;
+    padding: 24px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 500px;
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
-/* --- TÔ FULL Ô NẾU CHỈ CÓ 1 SỰ KIỆN --- */
-.calendar-full .calendar-day-cell.single-event-cell {
-    height: 120px !important;
-    min-height: 120px !important;
-    max-height: 120px !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    position: relative !important;
-    background: transparent !important;
+.modal-large {
+    max-width: 800px;
 }
 
-.calendar-full .calendar-day-cell.single-event-cell .day-number-wrapper {
-    position: absolute !important;
-    top: 6px !important;
-    left: 8px !important;
-    z-index: 3 !important;
-    padding: 0 !important;
+.close-btn {
+    position: absolute;
+    right: 16px;
+    top: 12px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #9ca3af;
 }
 
-.calendar-full .calendar-day-cell.single-event-cell .day-number {
-    color: #1e293b !important;
-    font-weight: 700 !important;
+.form-group {
+    margin-bottom: 14px;
 }
 
-.calendar-full .calendar-day-cell.single-event-cell .event-list,
-.calendar-full .calendar-day-cell.single-event-cell .event-items-wrapper {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100% !important;
-    height: 120px !important;
-    max-height: 120px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    display: block !important;
-    overflow: hidden !important;
+.form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #374151;
 }
 
-.calendar-full .calendar-day-cell.single-event-cell .event-item {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 120px !important;
-    border-radius: 12px !important;
-    box-sizing: border-box !important;
-    display: flex !important;
-    align-items: flex-start !important;
-    padding-top: 32px !important;
-    padding-left: 10px !important;
-    padding-right: 10px !important;
-    font-size: 0.78rem !important;
-    font-weight: 600 !important;
-    box-shadow: none !important;
-    margin: 0 !important;
-    white-space: normal !important;
-    word-break: break-word !important;
-    overflow: hidden !important;
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
 }
 
-.calendar-full .calendar-day-cell.single-event-cell .event-item span {
-    display: -webkit-box !important;
-    line-clamp: 3 !important;
-    -webkit-line-clamp: 3 !important;
-    -webkit-box-orient: vertical !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    line-height: 1.3 !important;
+.form-row {
+    display: flex;
+    gap: 10px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+/* Ma trận When2meet (Table CSS) */
+.matrix-scroll-container {
+    overflow-x: auto;
+    max-height: 400px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    margin-top: 10px;
+}
+
+.w2m-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+    font-size: 12px;
+    user-select: none;
+}
+
+.w2m-table th,
+.w2m-table td {
+    border: 1px solid #e5e7eb;
+    padding: 6px;
+}
+
+.w2m-table th {
+    background: #f9fafb;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.time-slot-cell {
+    width: 40px;
+    height: 24px;
+    background: #fff;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+
+.time-slot-cell.selected {
+    background: #22c55e !important;
+}
+
+/* Màu xanh khi chọn rảnh */
+.time-slot-cell.heatmap-low {
+    background: #dcfce7;
+}
+
+.time-slot-cell.heatmap-mid {
+    background: #86efac;
+}
+
+.time-slot-cell.heatmap-high {
+    background: #22c55e;
+    color: #fff;
+    font-weight: bold;
+}
+
+.modal-actions {
+    margin-top: 20px;
+    text-align: right;
+}
+
+.report-stats {
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #4b5563;
+    margin-bottom: 10px;
 }
