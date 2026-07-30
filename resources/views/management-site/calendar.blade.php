@@ -74,26 +74,32 @@
                     </div>
 
                     <!-- Cấu hình thời gian dành riêng cho dạng Khảo Sát (POLL) -->
-                    <div id="pollConfigSection" class="config-section">
-                        <h4>Cấu hình thời gian khảo sát</h4>
-                        <div class="form-row">
-                            <div class="form-group"><label>Ngày bắt đầu</label><input type="date" id="pollStartDate"></div>
-                            <div class="form-group"><label>Ngày kết thúc</label><input type="date" id="pollEndDate"></div>
+                        <div id="pollConfigSection" class="config-section">
+                            <h4>Cấu hình thời gian khảo sát</h4>
+                            <div class="form-row">
+                                <div class="form-group"><label>Ngày bắt đầu</label><input type="date" id="pollStartDate"></div>
+                                <div class="form-group"><label>Ngày kết thúc</label><input type="date" id="pollEndDate"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Giờ mở đầu ngày</label><input type="time" id="dailyStartTime" value="18:00"></div>
+                                <div class="form-group"><label>Giờ kết thúc ngày</label><input type="time" id="dailyEndTime" value="22:00"></div>
+                            </div>
                         </div>
-                        <div class="form-row">
-                            <div class="form-group"><label>Giờ mở đầu ngày</label><input type="time" id="dailyStartTime" value="18:00"></div>
-                            <div class="form-group"><label>Giờ kết thúc ngày</label><input type="time" id="dailyEndTime" value="22:00"></div>
-                        </div>
-                    </div>
 
-                    <!-- Cấu hình thời gian dành riêng cho dạng Lịch Cố Định (CONFIRMED) -->
-                    <div id="confirmedConfigSection" class="config-section" style="display: none;">
-                        <h4>Thời gian diễn ra sự kiện</h4>
-                        <div class="form-row">
-                            <div class="form-group"><label>Bắt đầu</label><input type="datetime-local" id="startTime"></div>
-                            <div class="form-group"><label>Kết thúc</label><input type="datetime-local" id="endTime"></div>
+                        <!-- Cấu hình thời gian dành riêng cho dạng Lịch Cố Định (CONFIRMED) -->
+                        <div id="confirmedConfigSection" class="config-section" style="display: none;">
+                            <!-- Tiêu đề kết hợp với checkbox chọn cả ngày -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <h4 style="margin: 0;">Thời gian diễn ra sự kiện</h4>
+                                <label style="font-size: 13px; font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                                    <input type="checkbox" id="allDayEventCheckbox" style="cursor: pointer;"> Cả ngày
+                                </label>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Bắt đầu</label><input type="datetime-local" id="startTime"></div>
+                                <div class="form-group"><label>Kết thúc</label><input type="datetime-local" id="endTime"></div>
+                            </div>
                         </div>
-                    </div>
 
                     <!-- Component chọn thành viên tham gia -->
                     <div class="form-group">

@@ -543,3 +543,46 @@ window.updateMemberHiddenInput = function() {
         hiddenInput.value = ids.join(',');
     }
 }
+document.addEventListener('DOMContentLoaded', function () {
+    // =====================================================================
+    // THAY ĐỔI GIAO DIỆN KHI CHỌN TRẠNG THÁI KHỞI TẠO (POLL / CONFIRMED)
+    // =====================================================================
+    const eventStatusSelect = document.getElementById('eventStatus');
+    if (eventStatusSelect) {
+        eventStatusSelect.addEventListener('change', function () {
+            const isPoll = this.value === 'POLL';
+            const pollSec = document.getElementById('pollConfigSection');
+            const confSec = document.getElementById('confirmedConfigSection');
+            if (pollSec) pollSec.style.display = isPoll ? 'block' : 'none';
+            if (confSec) confSec.style.display = isPoll ? 'none' : 'block';
+        });
+    }
+
+    // =====================================================================
+    // XỬ LÝ CHỌN "CẢ NGÀY" (ALL-DAY) CHO LỊCH CỐ ĐỊNH (CONFIRMED)
+    // =====================================================================
+    const allDayCheckbox = document.getElementById('allDayEventCheckbox');
+    if (allDayCheckbox) {
+        allDayCheckbox.addEventListener('change', function () {
+            const startTimeInput = document.getElementById('startTime');
+            const endTimeInput = document.getElementById('endTime');
+
+            if (this.checked) {
+                // Lấy ngày hiện tại dạng YYYY-MM-DD làm mặc định nếu ô input chưa chọn ngày
+                const today = new Date().toISOString().split('T')[0];
+
+                // Giữ nguyên phần ngày nếu người dùng đã chọn trước đó, nếu chưa thì lấy ngày hiện tại
+                let startVal = startTimeInput.value ? startTimeInput.value.split('T')[0] : today;
+                let endVal = endTimeInput.value ? endTimeInput.value.split('T')[0] : startVal;
+
+                // Tự động gán khung giờ bắt đầu từ 00:00 và kết thúc vào 23:59 của ngày đó
+                startTimeInput.value = `${startVal}T00:00`;
+                endTimeInput.value = `${endVal}T23:59`;
+            } else {
+                // Nếu bỏ chọn "Cả ngày", làm trống lại để người dùng tự nhập
+                startTimeInput.value = '';
+                endTimeInput.value = '';
+            }
+        });
+    }
+});
