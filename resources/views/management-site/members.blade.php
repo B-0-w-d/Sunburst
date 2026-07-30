@@ -1,11 +1,15 @@
+{{-- Khởi tạo component Navbar và nạp tệp JavaScript app.js --}}
 <x-navbar>
     @vite(['resources/js/app.js'])
+    {{-- Đặt tiêu đề cho trang quản lý thành viên thông qua Slot --}}
     <x-slot name="title">Members | Sunburst</x-slot>
 
+    {{-- Khung bố cục tổng thể trang dashboard quản lý thành viên --}}
     <div class="dashboard-layout-wrapper" style="display: flex; gap: 32px; max-width: 100%; max-height: 100%; align-items: flex-start;">
 
+        {{-- Phần Sidebar bên trái chứa các điều hướng và công cụ quản lý nhanh --}}
         <aside class="nav-sidebar">
-            {{-- Danh sách các dự án sắp tới (chưa làm_ --}}
+            {{-- Danh sách các dự án hoặc show diễn sắp tới --}}
             <div class="sidebar-section">
                 <div class="section-header">
                     <span class="section-title">Upcomming shows</span>
@@ -23,10 +27,11 @@
                 </div>
             </div>
 
-            {{-- Danh sách thành viên và các chức năng quản lý --}}
+            {{-- Danh sách thành viên rút gọn và tính năng xuất key đăng ký nhanh --}}
             <div class="sidebar-section">
                 <div class="section-header">
                     <span class="section-title">Members</span>
+                    {{-- Nút mở modal thêm thành viên mới --}}
                     <button class="add-btn" onclick="openModal('addMemberModal')">+</button>
                 </div>
 
@@ -43,7 +48,7 @@
                     @endforelse
                 </div>
 
-                {{-- Chức năng chỉ hiển thị cho Management Tier (Admin, President, v.v.) --}}
+                {{-- Chức năng quản lý key đăng ký, chỉ hiển thị cho tài khoản có quyền Management Tier --}}
                 @if(auth()->user()->isManagementTier())
                     <div class="management-controls" style="padding: 15px 0 0 0; border-top: 1px solid #e2e8f0; margin-top: 10px;">
                         <button type="button"
@@ -53,7 +58,7 @@
                                 Xuất Key Đăng ký
                         </button>
 
-                        {{-- Ô input hiển thị mã và nút Copy --}}
+                        {{-- Ô input hiển thị mã key kích hoạt và nút sao chép (copy) --}}
                         <div style="margin-top: 10px; display: flex; gap: 5px;">
                             <input type="text" id="key-display" readonly
                                    style="flex-grow: 1; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-family: monospace; font-size: 0.9rem;"
@@ -64,12 +69,13 @@
                             </button>
                         </div>
 
+                        {{-- Dòng chữ hiển thị thời gian hết hạn của key --}}
                         <small id="key-expiry" style="display: block; margin-top: 5px; color: #64748b; font-size: 0.75rem;"></small>
                     </div>
                 @endif
             </div>
 
-            {{-- Thẻ thông báo #2 (chưa làm) --}}
+            {{-- Thẻ tiện ích thông tin bổ sung (Promo Card) --}}
             <div class="card">
                 <span class="promo-tag">Unobvious Tips</span>
                 <h4 class="promo-title">DEO BIET NEN LAM GI O DAY</h4>
@@ -80,17 +86,20 @@
             </div>
         </aside>
 
+        {{-- Khu vực nội dung chính hiển thị bảng danh sách thành viên chi tiết --}}
         <div class="content-container">
             <div class="content-header">
                 <div>
                     <h3 class="content-title">Member Lists</h3>
                     <p class="content-subtitle">Manage and view club member informations</p>
                 </div>
+                {{-- Huy hiệu hiển thị tổng số thành viên đang hoạt động --}}
                 <span class="content-badge-count">
                     {{ count($members) }} Members Active
                 </span>
             </div>
 
+            {{-- Thanh lọc (Filter bar) tìm kiếm thành viên theo vai trò và nhạc cụ --}}
             <div class="filter-bar" style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center;">
                 <div>
                     <label for="filter-role" style="font-size: 13px; font-weight: 600; margin-right: 5px;">Role:</label>
@@ -116,6 +125,7 @@
                 @endif
             </div>
 
+            {{-- Bảng hiển thị thông tin chi tiết từng thành viên --}}
             <div class="content-card">
                 <div class="content-table-wrapper">
                     <table class="content-table">
@@ -170,6 +180,7 @@
                                     </td>
                                     <td>
                                         <div class="actions" style="display: flex; justify-content: flex-end; gap: 8px;">
+                                            {{-- Hiển thị nút sửa nếu là chính tài khoản đó hoặc có quyền quản lý --}}
                                             @if(Auth::id() === $member->_id || Auth::user()->isManagementTier())
                                                 <button onclick="prepareAndOpenEditModal('{{ $member->_id }}')" class="btn-edit" type="button">
                                                     <x-icons.edit/>
@@ -192,7 +203,9 @@
         </div>
     </div>
 
-    {{-- 1. ADD NEW MEMBER MODAL --}}
+    {{-- ===================================================================== --}}
+    {{-- MODAL 1: THÊM THÀNH VIÊN MỚI                                           --}}
+    {{-- ===================================================================== --}}
     <x-modal id="addMemberModal" title="Add New Band Member" submitFn="submitAddForm(event)">
         <div class="form-group">
             <label class="form-label" for="add-name">Display Name</label>
@@ -230,54 +243,56 @@
         </x-slot>
     </x-modal>
 
-    {{-- 2. EDIT EXISTING MEMBER MODAL --}}
-       <x-modal id="editMemberModal" title="Edit Band Member" submitFn="submitEditForm(event)">
-           {{-- XÓA THẺ <form> VÀ ĐÓNG </form> THỪA Ở ĐÂY, GIỮ LẠI CÁC TRƯỜNG INPUT BÊN TRƯỚC --}}
-           <input type="hidden" id="edit-member-id">
+    {{-- ===================================================================== --}}
+    {{-- MODAL 2: CHỈNH SỬA THÔNG TIN THÀNH VIÊN                                 --}}
+    {{-- ===================================================================== --}}
+    <x-modal id="editMemberModal" title="Edit Band Member" submitFn="submitEditForm(event)">
+        <input type="hidden" id="edit-member-id">
 
-           <div class="form-group">
-               <label class="form-label" for="edit-name">Display Name</label>
-               <input type="text" id="edit-name" class="form-input" required placeholder="e.g. Ren Nguyen">
-           </div>
+        <div class="form-group">
+            <label class="form-label" for="edit-name">Display Name</label>
+            <input type="text" id="edit-name" class="form-input" required placeholder="e.g. Ren Nguyen">
+        </div>
 
-           <div class="form-group">
-               <label class="form-label" for="edit-email">Email Address</label>
-               <input type="email" id="edit-email" class="form-input" required placeholder="e.g. Rendarapper@gmail.com">
-           </div>
+        <div class="form-group">
+            <label class="form-label" for="edit-email">Email Address</label>
+            <input type="email" id="edit-email" class="form-input" required placeholder="e.g. Rendarapper@gmail.com">
+        </div>
 
-           <div class="form-group">
-               <label class="form-label" for="edit-birthday">Birthday</label>
-               <input type="date" id="edit-birthday" name="birthday" class="form-input">
-           </div>
+        <div class="form-group">
+            <label class="form-label" for="edit-birthday">Birthday</label>
+            <input type="date" id="edit-birthday" name="birthday" class="form-input">
+        </div>
 
-           @if(auth()->user()->isManagementTier())
-           <div class="form-group">
-               <label class="form-label" for="edit-role">Role</label>
-               <select id="edit-role" class="form-input" style="height: 42px;">
-                   <option value="member">Member</option>
-                   <option value="manager">Manager</option>
-                   <option value="vice-president">Vice President</option>
-                   <option value="president">President</option>
-                   <option value="admin">Admin</option>
-               </select>
-           </div>
-           @endif
+        @if(auth()->user()->isManagementTier())
+            <div class="form-group">
+                <label class="form-label" for="edit-role">Role</label>
+                <select id="edit-role" class="form-input" style="height: 42px;">
+                    <option value="member">Member</option>
+                    <option value="manager">Manager</option>
+                    <option value="vice-president">Vice President</option>
+                    <option value="president">President</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+        @endif
 
-           <div class="form-group">
-               <label class="form-label" for="edit-instruments">Instruments</label>
-               <input type="text" id="edit-instruments" class="form-input" placeholder="e.g. Vocal, Bass Guitar, Synth">
-           </div>
+        <div class="form-group">
+            <label class="form-label" for="edit-instruments">Instruments</label>
+            <input type="text" id="edit-instruments" class="form-input" placeholder="e.g. Vocal, Bass Guitar, Synth">
+        </div>
 
-           <x-slot name="footer">
-                          <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+        <x-slot name="footer">
+            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                {{-- Nút xóa thành viên --}}
+                <button type="button" class="btn-delete" onclick="deleteMember(document.getElementById('edit-member-id').value)" style="display: flex; align-items: center; gap: 5px; padding: 8px 12px; background: #ffeeef; color: #cc0000; border: 1px solid #f9d8db; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background-color 0.2s, border-color 0.2s;">
+                    <x-icons.delete style="width: 10px; height: 10px;" />
+                    <span>Delete</span>
+                </button>
 
-                              <button type="button" class="btn-delete" onclick="deleteMember(document.getElementById('edit-member-id').value)" style="display: flex; align-items: center; gap: 5px; padding: 8px 12px; background: #ffeeef; color: #cc0000; border: 1px solid #f9d8db; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background-color 0.2s, border-color 0.2s;">                                                     <x-icons.delete style="width: 10px; height: 10px;" />
-                                                     <span>Delete</span>
-                                                 </button>
-
-                              {{-- Chú ý: form="editMemberModalForm" ở đây sẽ tự khớp với ID do component <x-modal> tạo ra dựa theo tên id của modal --}}
-                              <button type="submit" form="editMemberModalForm" class="btn-save" style="width: auto; padding: 10px 24px;">Save Changes</button>
-                          </div>
-                      </x-slot>
-       </x-modal>
+                {{-- Nút lưu thay đổi liên kết với form chỉnh sửa --}}
+                <button type="submit" form="editMemberModalForm" class="btn-save" style="width: auto; padding: 10px 24px;">Save Changes</button>
+            </div>
+        </x-slot>
+    </x-modal>
 </x-navbar>

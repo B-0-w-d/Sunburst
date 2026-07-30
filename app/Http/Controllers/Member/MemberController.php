@@ -46,7 +46,8 @@ class MemberController extends Controller
             return response()->json(['status' => 'success', 'count' => $list->count(), 'data' => $list], 200);
         }
 
-        return view('/management-site/members', ['members' => $list]);
+        // Đảm bảo tên view trỏ đúng thư mục management-site.register
+        return view('management-site.members', ['members' => $list]);
     }
 
     /**

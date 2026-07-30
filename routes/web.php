@@ -16,7 +16,7 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', fn() => view('management-site/login'))->name('login');
     Route::post('/login', [AuthController::class, 'login']);
 
-    // Đăng ký (3 bước Slide)
+    // Trỏ về đúng view form đăng ký tài khoản (thay vì gọi MemberController@index)
     Route::get('/register', fn() => view('management-site/register'))->name('register');
     Route::post('/register', [RegisterController::class, 'register']);
 });

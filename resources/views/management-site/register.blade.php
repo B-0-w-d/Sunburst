@@ -1,298 +1,107 @@
-{{-- Khởi tạo component Navbar và nạp tệp JavaScript app.js --}}
-<x-navbar>
-    @vite(['resources/js/app.js'])
-    {{-- Đặt tiêu đề cho trang quản lý thành viên thông qua Slot --}}
-    <x-slot name="title">Members | Sunburst</x-slot>
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
-    {{-- Khung bố cục tổng thể trang dashboard quản lý thành viên --}}
-    <div class="dashboard-layout-wrapper" style="display: flex; gap: 32px; max-width: 100%; max-height: 100%; align-items: flex-start;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        {{-- Phần Sidebar bên trái chứa các điều hướng và công cụ quản lý nhanh --}}
-        <aside class="nav-sidebar">
-            {{-- Danh sách các dự án hoặc show diễn sắp tới --}}
-            <div class="sidebar-section">
-                <div class="section-header">
-                    <span class="section-title">Upcomming shows</span>
-                </div>
-                <div class="project-list">
-                    <a href="#" class="project-item">
-                        <span class="dot dot-blue"></span> Campaigns
-                    </a>
-                    <a href="#" class="project-item active">
-                        <span class="dot dot-red"></span> Publications
-                    </a>
-                    <a href="#" class="project-item">
-                        <span class="dot dot-green"></span> Development
-                    </a>
-                </div>
+    <title>Đăng ký | Sunburst Dashboard</title>
+
+    <!-- Import CSS và JS chính qua Vite -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+
+<body>
+    <div class="login-page-wrapper" style="background-image: url('{{ asset('images/login-background.jpg') }}'); background-repeat: no-repeat; background-position: center; background-size: cover;">
+        <div class="register-card">
+
+            <div class="card-header">
+            <h1 class="card-title">Chào thành viên mới nhá!</h1>
+                <p class="card-subtitle">Nhớ hỏi Ban Chủ nhiệm key đăng ký, lát dùng đó</p>
             </div>
 
-            {{-- Danh sách thành viên rút gọn và tính năng xuất key đăng ký nhanh --}}
-            <div class="sidebar-section">
-                <div class="section-header">
-                    <span class="section-title">Members</span>
-                    {{-- Nút mở modal thêm thành viên mới --}}
-                    <button class="add-btn" onclick="openModal('addMemberModal')">+</button>
-                </div>
+            <!-- Thanh tiến trình dạng Chấm (Dots) -->
+            <x-progressDot />
 
-                <div class="member-list">
-                    @forelse ($members as $member)
-                        <div class="member-item">
-                            <x-icons.user />
-                            <span>{{ $member->name ?? 'N/A' }}</span>
-                        </div>
-                    @empty
-                        <div class="member-item" style="color: #64748b; font-size: 0.85rem; justify-content: center;">
-                            No members
-                        </div>
-                    @endforelse
-                </div>
+            <!-- Div Báo lỗi -->
+            <div id="register-error-alert"></div>
 
-                {{-- Chức năng quản lý key đăng ký, chỉ hiển thị cho tài khoản có quyền Management Tier --}}
-                @if(auth()->user()->isManagementTier())
-                    <div class="management-controls" style="padding: 15px 0 0 0; border-top: 1px solid #e2e8f0; margin-top: 10px;">
-                        <button type="button"
-                                onclick="generateActivationKey()"
-                                class="btn-primary"
-                                style="width: 100%; padding: 8px; font-size: 0.8rem; background: #cc0000; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                                Xuất Key Đăng ký
-                        </button>
+            <!-- Form Đăng ký -->
+            <form id="registerForm" onsubmit="return false;">
+                <div class="slider-window">
+                    <div class="slider-track" id="slider-track">
 
-                        {{-- Ô input hiển thị mã key kích hoạt và nút sao chép (copy) --}}
-                        <div style="margin-top: 10px; display: flex; gap: 5px;">
-                            <input type="text" id="key-display" readonly
-                                   style="flex-grow: 1; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-family: monospace; font-size: 0.9rem;"
-                                   placeholder="">
-                            <button type="button" onclick="copyToClipboard()"
-                                    style="padding: 5px 10px; background: #edf2f7; border: 1px solid #cbd5e0; border-radius: 4px; cursor: pointer;">
-                                <x-icons.copy/>
-                            </button>
+                        <!-- BƯỚC 1 -->
+                        <div class="step-pane" id="pane-1">
+                            <div class="form-group">
+                                <label class="form-label" for="reg-name">Tên hoặc Nickname:</label>
+                                <input type="text" id="reg-name" class="form-input" placeholder="Ren Nguyễn">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="reg-email">Email:</label>
+                                <input type="email" id="reg-email" class="form-input" placeholder="cc@cc.com">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="reg-birthday">Năm sinh: </label>
+                                <input type="date" id="reg-birthday" class="form-input">
+                            </div>
+
+                            <div class="btn-group">
+                                <button type="button" id="btn-step1-next" class="btn btn-primary">Tiếp theo →</button>
+                            </div>
                         </div>
 
-                        {{-- Dòng chữ hiển thị thời gian hết hạn của key --}}
-                        <small id="key-expiry" style="display: block; margin-top: 5px; color: #64748b; font-size: 0.75rem;"></small>
+                        <!-- BƯỚC 2 -->
+                        <div class="step-pane" id="pane-2">
+                            <label class="form-label" style="font-size: 14px; margin-bottom: 12px;">
+                                Hãy chọn sở trường của bạn:
+                            </label>
+
+                            <!-- Sử dụng Blade Component nhạc cụ -->
+                            <x-instrumentSelect id="register-instruments" />
+
+                            <div class="btn-group">
+                                <button type="button" id="btn-step2-prev" class="btn btn-secondary">← Quay lại</button>
+                                <button type="button" id="btn-step2-next" class="btn btn-primary">Tiếp theo →</button>
+                            </div>
+                        </div>
+
+                        <!-- BƯỚC 3 -->
+                        <div class="step-pane" id="pane-3">
+                            <div class="form-group">
+                                <label class="form-label" for="reg-password">Mật khẩu *</label>
+                                <input type="password" id="reg-password" class="form-input" placeholder="••••••••" autocomplete="new-password">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="reg-password-confirm">Xác nhận mật khẩu *</label>
+                                <input type="password" id="reg-password-confirm" class="form-input" placeholder="••••••••" autocomplete="new-password">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="reg-key">Mã kích hoạt (Activation Key) *</label>
+                                <input type="text" id="reg-key" class="form-input" placeholder="Nhập mã từ Ban chủ nhiệm">
+                            </div>
+
+                            <div class="btn-group">
+                                <button type="button" id="btn-step3-prev" class="btn btn-secondary">← Quay lại</button>
+                                <button type="button" id="btn-submit-register" class="btn btn-primary">Đăng ký ngay</button>
+                            </div>
+                        </div>
+
                     </div>
-                @endif
-            </div>
-
-            {{-- Thẻ tiện ích thông tin bổ sung (Promo Card) --}}
-            <div class="card">
-                <span class="promo-tag">Unobvious Tips</span>
-                <h4 class="promo-title">DEO BIET NEN LAM GI O DAY</h4>
-                <p class="promo-meta">3 min read</p>
-                <a href="#" class="promo-btn">
-                    Read post <span class="arrow">→</span>
-                </a>
-            </div>
-        </aside>
-
-        {{-- Khu vực nội dung chính hiển thị bảng danh sách thành viên chi tiết --}}
-        <div class="content-container">
-            <div class="content-header">
-                <div>
-                    <h3 class="content-title">Member Lists</h3>
-                    <p class="content-subtitle">Manage and view club member informations</p>
                 </div>
-                {{-- Huy hiệu hiển thị tổng số thành viên đang hoạt động --}}
-                <span class="content-badge-count">
-                    {{ count($members) }} Members Active
-                </span>
+            </form>
+
+            <div class="footer-link">
+                Đã có tài khoản? <a href="{{ route('login') }}">Đăng nhập đi má</a>
             </div>
 
-            {{-- Thanh lọc (Filter bar) tìm kiếm thành viên theo vai trò và nhạc cụ --}}
-            <div class="filter-bar" style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center;">
-                <div>
-                    <label for="filter-role" style="font-size: 13px; font-weight: 600; margin-right: 5px;">Role:</label>
-                    <select id="filter-role" class="form-input" style="padding: 6px 12px; height: 36px; display: inline-block; width: auto;" onchange="applyFilters()">
-                        <option value="">All Roles</option>
-                        <option value="member" {{ request('role') == 'member' ? 'selected' : '' }}>Member</option>
-                        <option value="manager" {{ request('role') == 'manager' ? 'selected' : '' }}>Manager</option>
-                        <option value="vice-president" {{ request('role') == 'vice-president' ? 'selected' : '' }}>Vice President</option>
-                        <option value="president" {{ request('role') == 'president' ? 'selected' : '' }}>President</option>
-                        <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Admin</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label for="filter-instrument" style="font-size: 13px; font-weight: 600; margin-right: 5px;">Instrument:</label>
-                    <input type="text" id="filter-instrument" class="form-input" placeholder="e.g. Guitar" value="{{ request('instrument') }}" style="padding: 6px 12px; height: 36px; display: inline-block; width: 180px;" onkeypress="if(event.key === 'Enter') applyFilters()">
-                </div>
-
-                <button type="button" onclick="applyFilters()" style="padding: 6px 14px; background: #dc2626; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">Filter</button>
-
-                @if(request('role') || request('instrument'))
-                    <a href="{{ route('members.index') }}" style="font-size: 13px; color: #cc0000; text-decoration: none;">Reset Filters</a>
-                @endif
-            </div>
-
-            {{-- Bảng hiển thị thông tin chi tiết từng thành viên --}}
-            <div class="content-card">
-                <div class="content-table-wrapper">
-                    <table class="content-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 25%;">Name & Email</th>
-                                <th style="width: 12%;">Role</th>
-                                <th style="width: 23%;">Instruments</th>
-                                <th style="width: 15%;">Birthday</th>
-                                <th style="width: 15%;">Joined Date</th>
-                                <th style="width: 10%; text-align: right;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($members as $member)
-                                <tr id="member-row-{{ $member->_id }}">
-                                    <td>
-                                        <div class="user-identity">
-                                            <span class="user-name" data-name>{{ $member->name ?? 'N/A' }}</span>
-                                            <span class="user-email" data-email>{{ $member->email ?? 'N/A' }}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        @php
-                                            $role = strtolower($member->role ?? 'member');
-                                            $badgeClass = 'content-badge-' . $role;
-                                        @endphp
-                                        <span class="content-badge {{ $badgeClass }}" data-role="{{ $role }}">
-                                            {{ ucfirst(str_replace('-', ' ', $role)) }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="instrument-tags" data-instruments-raw="{{ implode(', ', (array)($member->instrument ?? [])) }}">
-                                            @if(!empty($member->instrument))
-                                                @foreach ((array)$member->instrument as $inst)
-                                                    <span class="instrument-tag">{{ trim($inst) }}</span>
-                                                @endforeach
-                                            @else
-                                                <span class="no-instruments">No instruments assigned</span>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="content-date" data-birthday-raw="{{ $member->birthday ?? '' }}">
-                                            {{ !empty($member->birthday) ? date('M d, Y', strtotime($member->birthday)) : 'N/A' }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="content-date">
-                                            {{ !empty($member->joined_in) ? date('M d, Y', strtotime($member->joined_in)) : 'N/A' }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="actions" style="display: flex; justify-content: flex-end; gap: 8px;">
-                                            {{-- Hiển thị nút sửa nếu là chính tài khoản đó hoặc có quyền quản lý --}}
-                                            @if(Auth::id() === $member->_id || Auth::user()->isManagementTier())
-                                                <button onclick="prepareAndOpenEditModal('{{ $member->_id }}')" class="btn-edit" type="button">
-                                                    <x-icons.edit/>
-                                                </button>
-                                            @endif
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" style="text-align: center; padding: 40px 0; color: #64748b;">
-                                        No members found.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
         </div>
     </div>
+</body>
 
-    {{-- ===================================================================== --}}
-    {{-- MODAL 1: THÊM THÀNH VIÊN MỚI                                           --}}
-    {{-- ===================================================================== --}}
-    <x-modal id="addMemberModal" title="Add New Band Member" submitFn="submitAddForm(event)">
-        <div class="form-group">
-            <label class="form-label" for="add-name">Display Name</label>
-            <input type="text" id="add-name" class="form-input" required placeholder="e.g. Ren Nguyen">
-        </div>
-
-        <div class="form-group">
-            <label class="form-label" for="add-email">Email Address</label>
-            <input type="email" id="add-email" class="form-input" required placeholder="e.g. Rendarapper@gmail.com">
-        </div>
-
-        <div class="form-group">
-            <label class="form-label" for="add-birthday">Birthday</label>
-            <input type="date" id="add-birthday" class="form-input">
-        </div>
-
-        <div class="form-group">
-            <label class="form-label" for="add-role">Role Hierarchy</label>
-            <select id="add-role" class="form-input" style="height: 42px;">
-                <option value="member" selected>Member</option>
-                <option value="manager">Manager</option>
-                <option value="vice-president">Vice President</option>
-                <option value="president">President</option>
-                <option value="admin">Admin</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label" for="add-instruments">Instruments (Comma separated)</label>
-            <input type="text" id="add-instruments" class="form-input" placeholder="e.g. Vocal, Bass Guitar">
-        </div>
-
-        <x-slot name="footer">
-            <button type="submit" class="btn-save">Create Member</button>
-        </x-slot>
-    </x-modal>
-
-    {{-- ===================================================================== --}}
-    {{-- MODAL 2: CHỈNH SỬA THÔNG TIN THÀNH VIÊN                                 --}}
-    {{-- ===================================================================== --}}
-    <x-modal id="editMemberModal" title="Edit Band Member" submitFn="submitEditForm(event)">
-        <input type="hidden" id="edit-member-id">
-
-        <div class="form-group">
-            <label class="form-label" for="edit-name">Display Name</label>
-            <input type="text" id="edit-name" class="form-input" required placeholder="e.g. Ren Nguyen">
-        </div>
-
-        <div class="form-group">
-            <label class="form-label" for="edit-email">Email Address</label>
-            <input type="email" id="edit-email" class="form-input" required placeholder="e.g. Rendarapper@gmail.com">
-        </div>
-
-        <div class="form-group">
-            <label class="form-label" for="edit-birthday">Birthday</label>
-            <input type="date" id="edit-birthday" name="birthday" class="form-input">
-        </div>
-
-        @if(auth()->user()->isManagementTier())
-            <div class="form-group">
-                <label class="form-label" for="edit-role">Role</label>
-                <select id="edit-role" class="form-input" style="height: 42px;">
-                    <option value="member">Member</option>
-                    <option value="manager">Manager</option>
-                    <option value="vice-president">Vice President</option>
-                    <option value="president">President</option>
-                    <option value="admin">Admin</option>
-                </select>
-            </div>
-        @endif
-
-        <div class="form-group">
-            <label class="form-label" for="edit-instruments">Instruments</label>
-            <input type="text" id="edit-instruments" class="form-input" placeholder="e.g. Vocal, Bass Guitar, Synth">
-        </div>
-
-        <x-slot name="footer">
-            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-                {{-- Nút xóa thành viên --}}
-                <button type="button" class="btn-delete" onclick="deleteMember(document.getElementById('edit-member-id').value)" style="display: flex; align-items: center; gap: 5px; padding: 8px 12px; background: #ffeeef; color: #cc0000; border: 1px solid #f9d8db; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background-color 0.2s, border-color 0.2s;">
-                    <x-icons.delete style="width: 10px; height: 10px;" />
-                    <span>Delete</span>
-                </button>
-
-                {{-- Nút lưu thay đổi liên kết với form chỉnh sửa --}}
-                <button type="submit" form="editMemberModalForm" class="btn-save" style="width: auto; padding: 10px 24px;">Save Changes</button>
-            </div>
-        </x-slot>
-    </x-modal>
-</x-navbar>
+</html>
