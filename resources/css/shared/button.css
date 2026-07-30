@@ -1,6 +1,7 @@
 /* ==========================================
    BUTTON BASE & GROUP
    ========================================== */
+/* Kiểu dáng cơ bản cho mọi loại nút bấm, thiết lập flexbox, kích thước, bo tròn và hiệu ứng chuyển động */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -16,6 +17,7 @@
     text-decoration: none;
 }
 
+/* Khung nhóm chứa nhiều nút bấm nằm ngang, tự động căn chỉnh khoảng cách */
 .btn-group {
     display: flex;
     gap: 10px;
@@ -24,17 +26,19 @@
     width: 100%;
 }
 
+/* Các nút bấm bên trong nhóm sẽ tự động chia đều không gian hiển thị */
 .btn-group .btn {
     flex: 1;
     max-width: none;
 }
 
-/* Căn giữa riêng cho nút đơn (như ở Bước 1) */
+/* Căn giữa riêng cho nút đơn (như ở Bước 1) thông qua bộ chọn trạng thái */
 .btn-group:has(#btn-step1-next),
 .step-pane:not(:has(#btn-step2-prev)) .btn-group {
     justify-content: center;
 }
 
+/* Giới hạn kích thước tối đa cho nút đơn lẻ để tránh bị kéo giãn toàn bộ chiều ngang */
 .btn-group:has(#btn-step1-next) .btn,
 .step-pane:not(:has(#btn-step2-prev)) .btn-group .btn {
     max-width: 240px;
@@ -45,7 +49,7 @@
    BUTTON VARIANTS
    ========================================== */
 
-/* Primary */
+/* Primary (Nút chính - màu đỏ thương hiệu) */
 .btn--primary,
 .btn-primary {
     background-color: var(--first-color, #dc2626);
@@ -64,7 +68,7 @@
     box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
 }
 
-/* Secondary */
+/* Secondary (Nút phụ - kiểu trong suốt hoặc nền xám nhạt tùy biến) */
 .btn--secondary {
     background-color: transparent;
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -84,7 +88,7 @@
     background-color: #e2e8f0;
 }
 
-/* Cancel */
+/* Cancel (Nút hủy bỏ/quay lại - sử dụng tông màu xám trung tính) */
 .btn-cancel {
     background-color: #f1f5f9;
     color: #475569;
@@ -94,7 +98,7 @@
     background-color: #e2e8f0;
 }
 
-/* Save */
+/* Save (Nút lưu thay đổi/xác nhận chính trong các Modal quản trị) */
 .btn-save {
     background-color: #c70c0c;
     color: white;

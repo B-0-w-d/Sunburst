@@ -39,7 +39,7 @@
         .catch(error => console.error('Lỗi tải thông báo:', error));
     },
 
-    // Hàm gửi yêu cầu đánh dấu 1 thông báo cụ thể là đã đọc
+    // Hàm gửi yêu cầu đánh dấu 1 thông báo cụ thể là đã đọc và điều hướng sang trang /calendar
     markAsRead(id) {
         fetch(`/api/notifications/${id}/read`, {
             method: 'PATCH',
@@ -47,7 +47,16 @@
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + localStorage.getItem('access_token')
             }
-        }).then(() => this.fetchData()); // Sau khi cập nhật thành công, gọi lại hàm fetchData để làm mới giao diện
+        })
+        .then(() => {
+            // Sau khi cập nhật thành công, điều hướng thẳng đến trang lịch
+            window.location.href = '/calendar';
+        })
+        .catch(error => {
+            console.error('Lỗi đánh dấu đã đọc:', error);
+            // Vẫn cho phép chuyển hướng ngay cả khi gọi API lỗi để không kẹt chân người dùng
+            window.location.href = '/calendar';
+        });
     },
 
     // Hàm gửi yêu cầu đánh dấu tất cả thông báo là đã đọc
@@ -63,7 +72,10 @@
 }">
     <!-- 1. ICON CHUÔNG TRÊN HEADER -->
     <button @click.stop="toggleDropdown" type="button" class="notification-bell-btn">
-        <x-icons.bell />
+        <svg class="bell-icon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
 
         <!-- Hiển thị chấm đỏ thông báo chưa đọc nếu số lượng lớn hơn 0 -->
         <template x-if="unreadCount > 0">
@@ -81,7 +93,7 @@
         <div class="dropdown-list">
             <!-- Vòng lặp hiển thị danh sách thông báo, hỗ trợ nhận diện cả _id (MongoDB) hoặc id (MySQL) -->
             <template x-for="item in notifications" :key="item._id || item.id">
-                <div @click="markAsRead(item._id || item.id)" class="dropdown-item" :class="{ 'unread-bg': !item.read_at }">
+                <div @click="markAsRead(item._id || item.id)" class="dropdown-item" :class="{ 'unread-bg': !item.read_at }" style="cursor: pointer;">
                     <!-- Chấm nhỏ màu xanh/đỏ biểu thị thông báo chưa đọc bên trong item -->
                     <template x-if="!item.read_at">
                         <span class="item-unread-dot"></span>

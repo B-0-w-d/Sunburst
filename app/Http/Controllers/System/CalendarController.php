@@ -87,16 +87,17 @@ class CalendarController extends Controller
 
         $event = Event::create($eventData);
 
-        // Gửi thông báo cho các thành viên được chỉ định
-        foreach ($request->target_member_ids as $memberId) {
-            SystemNotification::create([
-                'type' => 'personal',
-                'recipient_id' => $memberId,
-                'sender_id' => (string) $currentUser->_id,
-                'title' => $request->status === 'POLL' ? 'Khảo sát lịch mới: ' . $event->title : 'Lịch mới đã chốt: ' . $event->title,
-                'message' => $request->status === 'POLL' ? 'Vui lòng vào điền lịch rảnh của bạn.' : 'Sự kiện diễn ra vào lúc ' . $event->start_time,
-                'read_at' => null,
-            ]);
+        // Gửi thông báo cho các thành viên được chỉ định bằng helper function
+        if (!empty($request->target_member_ids)) {
+            foreach ($request->target_member_ids as $memberId) {
+                send_system_notification([
+                    'type'         => 'personal',
+                    'recipient_id' => $memberId,
+                    'sender_id'    => (string) $currentUser->_id,
+                    'title'        => $request->status === 'POLL' ? 'Khảo sát lịch mới: ' . $event->title : 'Lịch mới đã chốt: ' . $event->title,
+                    'message'      => $request->status === 'POLL' ? 'Vui lòng vào điền lịch rảnh của bạn.' : 'Sự kiện diễn ra vào lúc ' . $event->start_time,
+                ]);
+            }
         }
 
         return response()->json([
@@ -139,6 +140,17 @@ class CalendarController extends Controller
                 'available_slots' => $request->available_slots,
             ]
         );
+
+        // Gửi thông báo cho người tạo sự kiện (organizer) biết có thành viên vừa điền lịch
+        if (!empty($event->organizer_id) && $event->organizer_id !== (string) $currentUser->_id) {
+            send_system_notification([
+                'type'         => 'personal',
+                'recipient_id' => $event->organizer_id,
+                'sender_id'    => (string) $currentUser->_id,
+                'title'        => 'Phản hồi lịch rảnh mới',
+                'message'      => 'Thành viên vừa cập nhật lịch rảnh cho khảo sát: "' . $event->title . '"',
+            ]);
+        }
 
         return response()->json([
             'status' => 'success',
@@ -213,16 +225,15 @@ class CalendarController extends Controller
             'end_time' => $request->end_time,
         ]);
 
-        // Gửi thông báo lịch đã chính thức được chốt tới các thành viên
+        // Gửi thông báo lịch đã chính thức được chốt tới các thành viên bằng helper function
         if (!empty($event->target_member_ids)) {
             foreach ($event->target_member_ids as $memberId) {
-                SystemNotification::create([
-                    'type' => 'personal',
+                send_system_notification([
+                    'type'         => 'personal',
                     'recipient_id' => $memberId,
-                    'sender_id' => (string) $currentUser->_id,
-                    'title' => 'Lịch đã được chốt: ' . $event->title,
-                    'message' => 'Sự kiện đã được chốt lịch vào lúc ' . $request->start_time,
-                    'read_at' => null,
+                    'sender_id'    => (string) $currentUser->_id,
+                    'title'        => 'Lịch đã được chốt: ' . $event->title,
+                    'message'      => 'Sự kiện đã được chốt lịch vào lúc ' . $request->start_time,
                 ]);
             }
         }
@@ -232,5 +243,33 @@ class CalendarController extends Controller
             'message' => 'Poll confirmed and schedule finalized successfully.',
             'data' => $event
         ]);
+    }
+
+    /**
+     * 6. Admin xóa lịch hoặc khảo sát
+     */
+    public function destroy($eventId)
+    {
+        /** @var \App\Models\Member $currentUser */
+        $currentUser = Auth::user();
+        if (!$currentUser || !$currentUser->isManagementTier()) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized action.'], 403);
+        }
+
+        $event = Event::find($eventId);
+        if (!$event) {
+            return response()->json(['status' => 'error', 'message' => 'Event or poll not found.'], 404);
+        }
+
+        // Xóa các dữ liệu lịch rảnh liên quan của thành viên
+        MemberAvailability::where('event_id', (string) $eventId)->delete();
+
+        // Xóa sự kiện
+        $event->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Event deleted successfully.'
+        ], 200);
     }
 }

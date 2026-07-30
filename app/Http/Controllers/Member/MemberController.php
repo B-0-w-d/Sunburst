@@ -50,6 +50,18 @@ class MemberController extends Controller
     }
 
     /**
+     * Hiển thị trang quản lý lịch & khảo sát, truyền kèm danh sách thành viên.
+     */
+    public function calendar()
+    {
+        // Sử dụng Member thay vì User để đồng bộ với model của bạn (lấy id và name)
+        $allMembers = Member::select('id', 'name')->get()->toArray();
+
+        // Trả về view kèm theo biến allMembers
+        return view('management-site.calendar', compact('allMembers'));
+    }
+
+    /**
      * Thêm mới thành viên (Dành cho Admin/Management).
      */
     public function store(Request $request)

@@ -1,3 +1,7 @@
+/* ==========================================================================
+   REGISTER CARD, PROGRESS LINE & SLIDER TRACK STYLES
+   ========================================================================== */
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -164,7 +168,6 @@ body {
     margin-bottom: 18px;
     text-align: center;
 }
-
 
 .footer-link {
     text-align: center;

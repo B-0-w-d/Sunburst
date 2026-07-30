@@ -271,8 +271,7 @@
            <x-slot name="footer">
                           <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
 
-                              <button type="button" class="btn-delete" onclick="deleteMember()" style="display: flex; align-items: center; gap: 5px; padding: 8px 12px; background: #ffeeef; color: #cc0000; border: 1px solid #f9d8db; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background-color 0.2s, border-color 0.2s;">
-                                                     <x-icons.delete style="width: 10px; height: 10px;" />
+                              <button type="button" class="btn-delete" onclick="deleteMember(document.getElementById('edit-member-id').value)" style="display: flex; align-items: center; gap: 5px; padding: 8px 12px; background: #ffeeef; color: #cc0000; border: 1px solid #f9d8db; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background-color 0.2s, border-color 0.2s;">                                                     <x-icons.delete style="width: 10px; height: 10px;" />
                                                      <span>Delete</span>
                                                  </button>
 

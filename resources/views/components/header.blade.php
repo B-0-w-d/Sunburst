@@ -1,16 +1,18 @@
-<!-- Phần header của trang quản trị, chứa tiêu đề, các nút tab bộ lọc và khu vực hiển thị trạng thái hệ thống -->
+<!-- Khối điều hướng và tiêu đề đầu trang của trang quản trị (canvas-header) -->
 <header class="canvas-header">
+    <!-- Phần bên trái header: hiển thị tên bảng điều khiển và các nút tab chuyển đổi giao diện -->
     <div class="header-left">
+        <!-- Tiêu đề chính định danh trang quản trị Sunburst -->
         <h2 class="page-title">Sunburst Dashboard</h2>
-        <div class="filter-tabs">
-            <button class="tab-btn active">Server</button>
-            <button class="tab-btn">Overview</button>
-        </div>
+        <!-- Bộ lọc dạng tab dùng để chuyển đổi giữa các góc nhìn hiển thị (Server hoặc Overview) -->
     </div>
+    <!-- Phần bên phải header: căn chỉnh bố cục dạng Flexbox để chứa chuông thông báo và trạng thái kết nối -->
     <div class="header-right" style="display: flex; align-items: center; gap: 16px;">
-        <!-- Nhúng component hiển thị thông báo hệ thống/cá nhân đã được tách gọn gàng -->
+        <!-- Tích hợp sub-view Blade chứa giao diện component thông báo của hệ thống hoặc cá nhân -->
         @include('components.notification')
+        <!-- Khối hiển thị nhãn trạng thái hoạt động của hệ thống kèm theo hiệu ứng chấm tròn nhấp nháy -->
         <div class="status-indicator">
+            <!-- Chấm tròn tạo hiệu ứng chớp nháy (pulse) biểu thị tín hiệu kết nối -->
             <span class="pulse-dot"></span> API Active
         </div>
     </div>

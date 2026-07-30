@@ -1,30 +1,50 @@
+{{-- Nhúng thành phần giao diện khung điều hướng chung (Navbar Layout) --}}
 <x-navbar>
     <div class="calendar-container">
-        <!-- Header Section -->
+        <!-- ===================================================================== -->
+        <!-- PHẦN ĐẦU TRANG & TIÊU ĐỀ CHÍNH                                        -->
+        <!-- ===================================================================== -->
         <div class="calendar-header">
             <div>
                 <h2>Quản Lý Lịch & Khảo Sát CLB</h2>
-                <p class="subtitle">Hệ thống lịch trình và khảo sát thời gian rảnh When2meet</p>
+                <p class="subtitle">Hệ thống lịch trình và khảo sát thời gian rảnh trực tuyến</p>
             </div>
+            <!-- Chỉ hiển thị nút tạo lịch/khảo sát nếu tài khoản thuộc cấp quản lý -->
             @if(auth()->user()->isManagementTier())
                 <button id="openCreateModalBtn" class="btn btn-primary">+ Tạo Lịch / Khảo Sát</button>
             @endif
         </div>
 
-        <!-- Tabs chuyển đổi qua lại -->
-        <div class="calendar-tabs">
-            <button class="tab-btn active" data-tab="confirmed">Lịch Đã Chốt</button>
-            <button class="tab-btn" data-tab="poll">Khảo Sát Đang Mở (When2meet)</button>
-        </div>
+        <!-- ===================================================================== -->
+        <!-- KHU VỰC HIỂN THỊ DANH SÁCH (CHIA THÀNH 2 SECTION DỌC)                  -->
+        <!-- ===================================================================== -->
+        <div class="sections-container" style="display: flex; flex-direction: column; gap: 30px; margin-top: 20px;">
 
-        <!-- Danh sách hiển thị -->
-        <div class="event-list-wrapper">
-            <div id="eventList" class="event-grid">
-                <!-- Dữ liệu được render động bằng JavaScript -->
+            <!-- 1. KHU VỰC LỊCH ĐÃ CHỐT (Ở TRÊN) -->
+            <div class="section-block">
+                <h3 style="margin-bottom: 15px; border-bottom: 2px solid #007bff; padding-bottom: 5px; display: inline-block;">📅 Lịch Đã Chốt</h3>
+                <div class="event-list-wrapper">
+                    <div id="confirmedEventList" class="event-grid">
+                        <!-- Danh sách sự kiện CONFIRMED sẽ được JavaScript render vào đây -->
+                    </div>
+                </div>
             </div>
+
+            <!-- 2. KHU VỰC KHẢO SÁT ĐANG MỞ (Ở DƯỚI) -->
+            <div class="section-block">
+                <h3 style="margin-bottom: 15px; border-bottom: 2px solid #28a745; padding-bottom: 5px; display: inline-block;">📊 Khảo Sát Đang Mở</h3>
+                <div class="event-list-wrapper">
+                    <div id="pollEventList" class="event-grid">
+                        <!-- Danh sách khảo sát POLL sẽ được JavaScript render vào đây -->
+                    </div>
+                </div>
+            </div>
+
         </div>
 
-        <!-- MODAL 1: Admin tạo lịch / khảo sát -->
+        <!-- ===================================================================== -->
+        <!-- MODAL: TẠO SỰ KIỆN HOẶC KHẢO SÁT MỚI                                   -->
+        <!-- ===================================================================== -->
         <div id="createEventModal" class="custom-modal">
             <div class="modal-content">
                 <span class="close-btn" data-modal="createEventModal">&times;</span>
@@ -47,13 +67,13 @@
                         <div class="form-group">
                             <label>Trạng thái khởi tạo</label>
                             <select id="eventStatus">
-                                <option value="POLL">POLL (Khảo sát When2meet)</option>
+                                <option value="POLL">POLL (Khảo sát thời gian)</option>
                                 <option value="CONFIRMED">CONFIRMED (Chốt lịch luôn)</option>
                             </select>
                         </div>
                     </div>
 
-                    <!-- Khu vực cấu hình riêng cho POLL -->
+                    <!-- Cấu hình thời gian dành riêng cho dạng Khảo Sát (POLL) -->
                     <div id="pollConfigSection" class="config-section">
                         <h4>Cấu hình thời gian khảo sát</h4>
                         <div class="form-row">
@@ -66,7 +86,7 @@
                         </div>
                     </div>
 
-                    <!-- Khu vực cấu hình riêng cho CONFIRMED trực tiếp -->
+                    <!-- Cấu hình thời gian dành riêng cho dạng Lịch Cố Định (CONFIRMED) -->
                     <div id="confirmedConfigSection" class="config-section" style="display: none;">
                         <h4>Thời gian diễn ra sự kiện</h4>
                         <div class="form-row">
@@ -75,9 +95,14 @@
                         </div>
                     </div>
 
+                    <!-- Component chọn thành viên tham gia -->
                     <div class="form-group">
-                        <label>Danh sách ID Thành viên tham gia (phân cách bằng dấu phẩy)</label>
-                        <input type="text" id="targetMemberIds" placeholder="id_1, id_2, id_3...">
+                        <label>Thành viên tham gia (Kéo thả hoặc bấm vào tên để thêm)</label>
+                        <x-memberSelect
+                            id="eventMemberSelector"
+                            :members="$allMembers"
+                            :selected="[]"
+                        />
                     </div>
 
                     <button type="submit" class="btn btn-success w-100">Xác Nhận Tạo</button>
@@ -85,16 +110,18 @@
             </div>
         </div>
 
-        <!-- MODAL 2: Giao diện Ma trận When2meet cho Thành viên -->
-        <div id="when2meetModal" class="custom-modal">
+        <!-- ===================================================================== -->
+        <!-- MODAL: ĐIỀN LỊCH RẢNH                                                 -->
+        <!-- ===================================================================== -->
+        <div id="pollMatrixModal" class="custom-modal">
             <div class="modal-content modal-large">
-                <span class="close-btn" data-modal="when2meetModal">&times;</span>
-                <h3 id="w2mTitle">Điền Lịch Rảnh</h3>
+                <span class="close-btn" data-modal="pollMatrixModal">&times;</span>
+                <h3 id="pollMatrixTitle">Điền Lịch Rảnh</h3>
                 <p class="subtitle">Kéo chuột bôi đen các ô thời gian bạn rảnh, sau đó bấm Lưu.</p>
 
                 <div class="matrix-scroll-container">
                     <table id="w2mMatrixTable" class="w2m-table">
-                        <!-- Sinh ma trận bằng JS -->
+                        <!-- Bảng ma trận tương tác điền lịch sẽ được render động tại đây -->
                     </table>
                 </div>
 
@@ -104,7 +131,9 @@
             </div>
         </div>
 
-        <!-- MODAL 3: Admin xem báo cáo & Chốt lịch -->
+        <!-- ===================================================================== -->
+        <!-- MODAL: BÁO CÁO TỔNG HỢP & CHỐT LỊCH                                     -->
+        <!-- ===================================================================== -->
         <div id="reportModal" class="custom-modal">
             <div class="modal-content modal-large">
                 <span class="close-btn" data-modal="reportModal">&times;</span>
@@ -116,16 +145,8 @@
 
                 <div class="matrix-scroll-container">
                     <table id="reportMatrixTable" class="w2m-table">
-                        <!-- Heatmap report -->
+                        <!-- Bảng biểu đồ nhiệt (Heatmap) báo cáo sẽ được render động tại đây -->
                     </table>
-                </div>
-
-                <div class="form-group mt-3">
-                    <label>Chốt khung giờ từ báo cáo:</label>
-                    <div class="form-row">
-                        <input type="datetime-local" id="confirmStartTime">
-                        <input type="datetime-local" id="confirmEndTime">
-                    </div>
                 </div>
 
                 <div class="modal-actions">
@@ -134,13 +155,13 @@
             </div>
         </div>
     </div>
-
-    <!-- Đính kèm file CSS và JS theo cấu trúc thư mục -->
-        @push('styles')
-            <link rel="stylesheet" href="{{ asset('app.css') }}">
-        @endpush
-
-        @push('scripts')
-                @vite(['resources/js/calendar.js'])
-            @endpush
 </x-navbar>
+
+{{-- Khai báo Styles và Scripts chuyển ra ngoài thẻ Component để Stack đẩy đúng vị trí --}}
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('app.css') }}">
+@endpush
+
+@push('scripts')
+    @vite(['resources/js/calendar.js'])
+@endpush

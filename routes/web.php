@@ -38,10 +38,8 @@ Route::middleware('auth')->group(function () {
         Route::put('/update', [MemberController::class, 'updateProfile'])->name('update');
     });
 
-    // Calendar & When2meet View
-    Route::get('/calendar', function () {
-        return view('management-site.calendar');
-    })->name('calendar');
+    // Calendar & PollMatrix View
+    Route::get('/calendar', [MemberController::class, 'calendar'])->name('calendar');
 
     // Members (User thông thường có thể xem)
     Route::get('/members', [MemberController::class, 'index'])->name('members.index');

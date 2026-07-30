@@ -1,3 +1,7 @@
+/* ==========================================================================
+   1. CONTAINER CHÍNH & HEADER
+   Khung chứa toàn bộ giao diện lịch, căn giữa màn hình và thiết lập font chữ chung.
+   ========================================================================== */
 .calendar-container {
     padding: 24px;
     max-width: 1200px;
@@ -6,6 +10,7 @@
     color: #333;
 }
 
+/* Thanh tiêu đề chính của lịch (bao gồm tên tiêu đề và nút chức năng chung) */
 .calendar-header {
     display: flex;
     justify-content: space-between;
@@ -13,19 +18,24 @@
     margin-bottom: 20px;
 }
 
+/* Tiêu đề cấp 2 (Heading 2) của header */
 .calendar-header h2 {
     margin: 0;
     font-size: 24px;
     color: #1a1a1a;
 }
 
+/* Phụ đề hiển thị bên dưới tiêu đề chính */
 .subtitle {
     color: #666;
     font-size: 14px;
     margin-top: 4px;
 }
 
-/* Tabs */
+/* ==========================================================================
+   2. THANH TABS CHUYỂN ĐỔI (Lịch đã chốt / Khảo sát)
+   Khu vực điều hướng dạng tab để chuyển đổi qua lại giữa các góc nhìn dữ liệu.
+   ========================================================================== */
 .calendar-tabs {
     display: flex;
     gap: 10px;
@@ -34,6 +44,7 @@
     padding-bottom: 10px;
 }
 
+/* Nút bấm chuyển tab mặc định (chưa kích hoạt) */
 .tab-btn {
     background: none;
     border: none;
@@ -46,18 +57,23 @@
     transition: all 0.2s;
 }
 
+/* Trạng thái khi tab được bấm chọn (active) */
 .tab-btn.active {
     background: #4f46e5;
     color: #fff;
 }
 
-/* Grid hiển thị danh sách */
+/* ==========================================================================
+   3. GRID & CARD HIỂN THỊ DANH SÁCH SỰ KIỆN
+   Bố cục lưới (Grid) dùng để hiển thị danh sách các sự kiện dạng thẻ (Card).
+   ========================================================================== */
 .event-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 16px;
 }
 
+/* Thẻ card bao bọc thông tin chi tiết của từng sự kiện */
 .event-card {
     background: #fff;
     border: 1px solid #e5e7eb;
@@ -67,14 +83,20 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    position: relative;
+    /* Quan trọng để định vị nút xóa dạng dấu X tuyệt đối bên trong */
 }
 
+/* Tiêu đề sự kiện nằm trong card */
 .event-card h4 {
     margin: 0 0 8px 0;
     font-size: 18px;
     color: #111827;
+    padding-right: 20px;
+    /* Tránh text bị đè vào nút dấu X ở góc trên bên phải */
 }
 
+/* Thẻ nhãn (Badge) phân loại sự kiện (Practice, Meeting, Show, Event) */
 .badge {
     display: inline-block;
     padding: 2px 8px;
@@ -84,33 +106,61 @@
     margin-bottom: 12px;
 }
 
+/* Màu sắc cho phân loại: Luyện tập (Practice) */
 .badge-practice {
     background: #e0f2fe;
     color: #0369a1;
 }
 
+/* Màu sắc cho phân loại: Cuộc họp (Meeting) */
 .badge-meeting {
     background: #fef3c7;
     color: #d97706;
 }
 
+/* Màu sắc cho phân loại: Biểu diễn (Show) */
 .badge-show {
     background: #fee2e2;
     color: #dc2626;
 }
 
+/* Màu sắc cho phân loại: Sự kiện chung (Event) */
 .badge-event {
     background: #f3e8ff;
     color: #7e22ce;
 }
 
+/* Định dạng nội dung văn bản thông tin bên trong sự kiện */
 .event-info p {
     margin: 4px 0;
     font-size: 13px;
     color: #4b5563;
 }
 
-/* Buttons */
+/* Nút xóa sự kiện dạng dấu X ở góc trên bên phải thẻ Card */
+.delete-event-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    font-weight: bold;
+    color: #dc3545;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 5px;
+    transition: color 0.2s;
+}
+
+.delete-event-btn:hover {
+    color: #b91c1c;
+}
+
+/* ==========================================================================
+   4. HỆ THỐNG NÚT BẤM (Buttons)
+   Các kiểu định dạng nút bấm tương tác chung cho toàn hệ thống.
+   ========================================================================== */
 .btn {
     padding: 8px 16px;
     font-size: 14px;
@@ -121,15 +171,17 @@
     transition: background 0.2s;
 }
 
+/* Nút hành động chính (Primary) */
 .btn-primary {
-    background: #4f46e5;
+    background: #c70c0c;
     color: #fff;
 }
 
 .btn-primary:hover {
-    background: #4338ca;
+    background: #c70c0c;
 }
 
+/* Nút hành động thành công/Xác nhận (Success) */
 .btn-success {
     background: #16a34a;
     color: #fff;
@@ -139,6 +191,7 @@
     background: #15803d;
 }
 
+/* Nút viền khung (Outline) */
 .btn-outline {
     background: #fff;
     border: 1px solid #d1d5db;
@@ -149,12 +202,16 @@
     background: #f9fafb;
 }
 
+/* Lớp bổ trợ mở rộng chiều rộng nút full 100% */
 .w-100 {
     width: 100%;
     margin-top: 10px;
 }
 
-/* Modal thuần CSS */
+/* ==========================================================================
+   5. HỆ THỐNG MODAL (Hộp thoại popup thuần CSS)
+   Lớp phủ màn hình (Overlay) và khung chứa nội dung popup.
+   ========================================================================== */
 .custom-modal {
     display: none;
     position: fixed;
@@ -168,10 +225,12 @@
     justify-content: center;
 }
 
+/* Trạng thái hiển thị modal */
 .custom-modal.active {
     display: flex;
 }
 
+/* Khung nội dung chính bên trong modal */
 .modal-content {
     background: #fff;
     padding: 24px;
@@ -183,10 +242,17 @@
     overflow-y: auto;
 }
 
+/* Biến thể modal kích thước lớn (Dùng cho ma trận When2meet & Báo cáo) */
 .modal-large {
-    max-width: 800px;
+    max-width: 850px !important;
+    width: 95% !important;
+    max-height: 85vh;
+    /* Giới hạn chiều cao tổng thể không bị tràn màn hình */
+    display: flex;
+    flex-direction: column;
 }
 
+/* Nút đóng modal hình dấu nhân (X) góc trên bên phải */
 .close-btn {
     position: absolute;
     right: 16px;
@@ -196,6 +262,13 @@
     color: #9ca3af;
 }
 
+.close-btn:hover {
+    color: #374151;
+}
+
+/* ==========================================================================
+   6. FORM NHẬP LIỆU TRONG MODAL
+   ========================================================================== */
 .form-group {
     margin-bottom: 14px;
 }
@@ -227,18 +300,26 @@
     flex: 1;
 }
 
-/* Ma trận When2meet (Table CSS) */
+/* ==========================================================================
+   7. MA TRẬN WHEN2MEET & BẢNG THỜI GIAN
+   ========================================================================== */
 .matrix-scroll-container {
     overflow-x: auto;
-    max-height: 400px;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
+    overflow-y: auto;
+    max-height: 800px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
     margin-top: 10px;
+    margin-bottom: 15px;
+    position: relative;
+    background: #fff;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .w2m-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
     text-align: center;
     font-size: 12px;
     user-select: none;
@@ -247,18 +328,58 @@
 .w2m-table th,
 .w2m-table td {
     border: 1px solid #e5e7eb;
-    padding: 6px;
+    padding: 6px 8px;
 }
 
 .w2m-table th {
     background: #f9fafb;
     position: sticky;
-    top: 0;
-    z-index: 10;
+    z-index: 20;
+    box-shadow: inset 0 -1px 0 #e5e7eb;
+}
+
+.w2m-table tr:nth-child(1) th {
+    top: 0px;
+    background: #f3f4f6;
+    z-index: 22;
+}
+
+.w2m-table tr:nth-child(2) th {
+    top: 27px;
+    background: #f9fafb;
+    z-index: 21;
+}
+
+.w2m-table th.time-col-header {
+    left: 0;
+    z-index: 25;
+}
+
+.w2m-table td.time-label-cell {
+    position: sticky;
+    left: 0;
+    vertical-align: middle;
+    text-align: right;
+    padding-right: 8px;
+    background: #ffffff;
+    font-size: 11px;
+    font-weight: 600;
+    color: #333;
+    border-right: 2px solid #b0b0b0;
+    white-space: nowrap;
+    z-index: 15;
+}
+
+.w2m-table td.time-slot-cell.slot-full-hour {
+    border-top: 1px solid #b0b0b0;
+}
+
+.w2m-table td.time-slot-cell.slot-half-hour {
+    border-top: 1px dotted #d1d5db;
 }
 
 .time-slot-cell {
-    width: 40px;
+    width: 90px;
     height: 24px;
     background: #fff;
     cursor: pointer;
@@ -269,7 +390,15 @@
     background: #22c55e !important;
 }
 
-/* Màu xanh khi chọn rảnh */
+.w2m-table td.time-slot-cell.selected {
+    background: #4f46e5 !important;
+    color: #fff !important;
+    font-weight: bold;
+}
+
+/* ==========================================================================
+   8. HEATMAP REPORT & TỐI ƯU GIAO DIỆN BÁO CÁO (KHÔNG BỊ CLUMSY)
+   ========================================================================== */
 .time-slot-cell.heatmap-low {
     background: #dcfce7;
 }
@@ -284,16 +413,65 @@
     font-weight: bold;
 }
 
-.modal-actions {
-    margin-top: 20px;
-    text-align: right;
-}
-
 .report-stats {
     display: flex;
     gap: 20px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     color: #4b5563;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+}
+
+/* Tùy chỉnh riêng cho phần báo cáo tổng hợp */
+#reportModal .modal-content {
+    max-width: 800px;
+    width: 90%;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+#reportMatrixTableContainer,
+.report-table-wrapper {
+    max-height: 350px;
+    overflow-y: auto;
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+#reportMatrixTable th,
+#reportMatrixTable td {
+    padding: 6px 8px !important;
+    font-size: 13px;
+    text-align: center;
+}
+
+.split-matrix-wrapper {
+    display: flex;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.time-sidebar-table {
+    background-color: #fff;
+    z-index: 5;
+}
+
+.time-sidebar-table td.time-label-cell {
+    height: 30px;
+    /* Khớp với chiều cao dòng của bảng dữ liệu */
+    vertical-align: middle;
+    text-align: center;
+    padding: 0 10px;
+    white-space: nowrap;
+    font-weight: 500;
 }

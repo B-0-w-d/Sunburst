@@ -1,19 +1,13 @@
-/* CSS hỗ trợ hiệu ứng chuyển bước mượt mà */
+/* ==========================================================================
+   CSS HỖ TRỢ HIỆU ỨNG CHUYỂN BƯỚC MƯỢT MÀ & DRAG & DROP INSTRUMENTS
+   ========================================================================== */
+
+/* Hiệu ứng chuyển bước mượt mà */
 .step-section {
     transition: all 0.35s ease-in-out;
     max-height: 400px;
     opacity: 1;
     overflow: hidden;
-}
-
-/* --- Khối chứa thanh tiến trình (Step Indicator Container) --- */
-.step-indicator {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 24px;
-    width: 100%;
 }
 
 .step-section.hidden-step {
@@ -24,11 +18,14 @@
     pointer-events: none;
 }
 
+/* --- Khối chứa thanh tiến trình (Step Indicator Container) --- */
 .step-indicator {
     display: flex;
+    align-items: center;
     justify-content: center;
-    gap: 6px;
-    margin-bottom: 15px;
+    gap: 8px;
+    margin-bottom: 24px;
+    width: 100%;
 }
 
 /* --- Định dạng từng chấm trạng thái --- */
@@ -47,7 +44,9 @@
     border-radius: 4px;
 }
 
-/* --- DRAG & DROP INSTRUMENTS (LIGHT MODE) --- */
+/* ==========================================================================
+   DRAG & DROP INSTRUMENTS (LIGHT MODE)
+   ========================================================================== */
 .instruments-component {
     display: flex;
     flex-direction: column;

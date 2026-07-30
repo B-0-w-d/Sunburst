@@ -50,3 +50,21 @@ body {
     color: #1e293b;
     margin: 0;
 }
+
+/* CSS hỗ trợ hiệu ứng chuyển bước mượt mà */
+.step-section {
+    transition: all 0.35s ease-in-out;
+    max-height: 400px;
+    opacity: 1;
+    overflow: hidden;
+}
+
+.step-section.hidden-step,
+.form-group.hidden-step {
+    max-height: 0;
+    opacity: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    pointer-events: none;
+    overflow: hidden;
+}

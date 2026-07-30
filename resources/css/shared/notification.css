@@ -1,3 +1,7 @@
+/* ==========================================================================
+   NOTIFICATION DROPDOWN & ACTIVITY TABLE CARD STYLES
+   ========================================================================== */
+
 .notification-wrapper {
     position: relative;
     display: inline-block;
@@ -144,7 +148,10 @@
     margin: 0;
 }
 
-/* Activity Table Card */
+/* ==========================================================================
+   ACTIVITY TABLE CARD
+   ========================================================================== */
+
 .activity-card {
     background-color: #ffffff;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
