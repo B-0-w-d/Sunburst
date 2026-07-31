@@ -22,23 +22,39 @@ class CalendarController extends Controller
             $query->where('status', $request->query('status'));
         }
 
-        if ($currentUser->role !== 'admin' && (method_exists($currentUser, 'isManagementTier') && !$currentUser->isManagementTier())) {
+        // Lọc sự kiện cho member thường
+        if ($currentUser->role !== 'admin' && (!method_exists($currentUser, 'isManagementTier') || !$currentUser->isManagementTier())) {
             $userId = (string) $currentUser->_id;
-            // Dùng regex để tìm ID nằm bên trong chuỗi target_member_ids hiện tại của bạn
             $query->where('target_member_ids', 'like', "%{$userId}%");
         }
 
+        $events = $query->get();
+
+        // Đính kèm trạng thái xem member này đã điền lịch rảnh cho sự kiện POLL này chưa
+        $isManager = $currentUser->role === 'admin' || (method_exists($currentUser, 'isManagementTier') && $currentUser->isManagementTier());
+
+        $events->transform(function ($event) use ($currentUser, $isManager) {
+            if ($event->status === 'POLL') {
+                $hasSubmitted = MemberAvailability::where('event_id', (string) $event->_id)
+                    ->where('member_id', (string) $currentUser->_id)
+                    ->exists();
+                $event->has_submitted_availability = $hasSubmitted;
+            }
+            $event->is_manager = $isManager;
+            return $event;
+        });
+
         return response()->json([
             'status' => 'success',
-            'count' => $query->count(),
-            'data' => $query->get()
+            'count' => $events->count(),
+            'data' => $events
         ], 200);
     }
 
     public function store(Request $request)
     {
         $currentUser = Auth::user();
-        if (!$currentUser || (method_exists($currentUser, 'isManagementTier') && !$currentUser->isManagementTier())) {
+        if (!$currentUser || (method_exists($currentUser, 'isManagementTier') && !$currentUser->isManagementTier() && $currentUser->role !== 'admin')) {
             return response()->json(['status' => 'error', 'message' => 'Unauthorized action.'], 403);
         }
 
@@ -111,7 +127,9 @@ class CalendarController extends Controller
     public function getPollReport($eventId)
     {
         $currentUser = Auth::user();
-        if (!$currentUser) {
+        $isManager = $currentUser && ($currentUser->role === 'admin' || (method_exists($currentUser, 'isManagementTier') && $currentUser->isManagementTier()));
+
+        if (!$isManager) {
             return response()->json(['status' => 'error', 'message' => 'Unauthorized action.'], 403);
         }
 
@@ -142,7 +160,9 @@ class CalendarController extends Controller
     public function confirmPoll(Request $request, $eventId)
     {
         $currentUser = Auth::user();
-        if (!$currentUser) {
+        $isManager = $currentUser && ($currentUser->role === 'admin' || (method_exists($currentUser, 'isManagementTier') && $currentUser->isManagementTier()));
+
+        if (!$isManager) {
             return response()->json(['status' => 'error', 'message' => 'Unauthorized action.'], 403);
         }
 
@@ -168,7 +188,9 @@ class CalendarController extends Controller
     public function destroy($eventId)
     {
         $currentUser = Auth::user();
-        if (!$currentUser) {
+        $isManager = $currentUser && ($currentUser->role === 'admin' || (method_exists($currentUser, 'isManagementTier') && $currentUser->isManagementTier()));
+
+        if (!$isManager) {
             return response()->json(['status' => 'error', 'message' => 'Unauthorized action.'], 403);
         }
 
