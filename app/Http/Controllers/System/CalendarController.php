@@ -22,8 +22,10 @@ class CalendarController extends Controller
             $query->where('status', $request->query('status'));
         }
 
-        if (method_exists($currentUser, 'isManagementTier') && !$currentUser->isManagementTier()) {
-            $query->where('target_member_ids', (string) $currentUser->_id);
+        if ($currentUser->role !== 'admin' && (method_exists($currentUser, 'isManagementTier') && !$currentUser->isManagementTier())) {
+            $userId = (string) $currentUser->_id;
+            // Dùng regex để tìm ID nằm bên trong chuỗi target_member_ids hiện tại của bạn
+            $query->where('target_member_ids', 'like', "%{$userId}%");
         }
 
         return response()->json([
@@ -52,7 +54,7 @@ class CalendarController extends Controller
             'title' => $request->title,
             'type' => $request->type,
             'status' => $request->status,
-            'target_member_ids' => $request->target_member_ids,
+            'target_member_ids' => array_values((array) $request->target_member_ids),
         ];
 
         if ($request->status === 'POLL') {
