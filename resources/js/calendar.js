@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ---------------------------------------------------------------------
-    // Xử lý Sự kiện Nút "Chọn tất cả thành viên" (Đã bổ sung)
+    // Xử lý Sự kiện Nút "Chọn tất cả thành viên"
     // ---------------------------------------------------------------------
     document.getElementById('selectAllMembersBtn')?.addEventListener('click', function () {
         const availableZone = document.getElementById('availableMembersZone');
@@ -229,12 +229,11 @@ document.addEventListener('DOMContentLoaded', function () {
             let eventId = ev._id || ev.id || (ev._id && ev._id.$oid);
             let actionBtn = '';
 
-            // Escape chuỗi JSON an toàn tránh gãy attribute HTML
             let pollConfigStr = ev.poll_config ? JSON.stringify(ev.poll_config).replace(/'/g, "&apos;") : '{}';
 
             if (ev.status === 'POLL') {
                 actionBtn = `<button class="btn btn-primary w-100 fill-poll-btn" data-id="${eventId}" data-config='${pollConfigStr}'>Điền Lịch Rảnh</button>`;
-                actionBtn += `<button class="btn btn-outline w-100 mt-2 view-report-btn" data-id="${eventId}" data-title="${ev.title}">Xem Báo Cáo & Chốt Lịch</button>`;
+                actionBtn += `<button class="btn btn-outline w-100 mt-2 view-report-btn" data-id="${eventId}" data-title="${ev.title}" data-config='${pollConfigStr}'>Xem Báo Cáo & Chốt Lịch</button>`;
             }
 
             const deleteBtnHtml = `<button class="delete-event-btn" data-id="${eventId}" title="Xóa sự kiện" style="position: absolute; top: 12px; right: 12px; background: transparent; border: none; font-size: 20px; font-weight: bold; color: #dc3545; cursor: pointer; line-height: 1; padding: 0 5px;">&times;</button>`;
@@ -255,9 +254,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Gắn sự kiện cho các nút động trong danh sách
     function bindEventListeners() {
-        // Nút "Điền Lịch Rảnh"
         document.querySelectorAll('.fill-poll-btn').forEach(btn => {
             btn.addEventListener('click', async function () {
                 activeEventId = this.getAttribute('data-id');
@@ -293,11 +290,19 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
-        // Nút "Xem Báo Cáo"
         document.querySelectorAll('.view-report-btn').forEach(btn => {
             btn.addEventListener('click', async function () {
                 activeEventId = this.getAttribute('data-id');
                 const title = this.getAttribute('data-title');
+
+                // 1. Lấy config từ nút bấm
+                let config = {};
+                try {
+                    config = JSON.parse(this.getAttribute('data-config'));
+                } catch (err) {
+                    console.error("Lỗi parse config:", err);
+                }
+
                 const reportTitle = document.getElementById('reportTitle');
                 if (reportTitle) reportTitle.innerText = `Báo Cáo: ${title}`;
 
@@ -308,9 +313,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     document.getElementById('statTargetCount').innerText = `Tổng mục tiêu: ${json.target_count || 0}`;
                     document.getElementById('statSubmittedCount').innerText = `Đã phản hồi: ${json.submitted_count || 0}`;
 
-                    buildHeatmapMatrix(json.slot_statistics || {}, json.target_count || 0);
+                    // 2. Truyền config thật vào hàm dựng bảng báo cáo
+                    buildHeatmapMatrix(config, json.slot_statistics || {}, json.target_count || 0);
                     toggleModal('reportModal', true);
                 } catch (e) {
+                    console.error(e);
                     alert('Không thể tải báo cáo khảo sát.');
                 }
             });
@@ -367,8 +374,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         let timeSlots = [];
-        let totalMinutesStart = 6 * 60; // 06:00
-        let totalMinutesEnd = 24 * 60;   // 24:00
+        let totalMinutesStart = 6 * 60;
+        let totalMinutesEnd = 24 * 60;
         for (let m = totalMinutesStart; m < totalMinutesEnd; m += step) {
             let hh = String(Math.floor(m / 60)).padStart(2, '0');
             let mm = String(m % 60).padStart(2, '0');
@@ -479,14 +486,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function buildHeatmapMatrix(slotStats, targetCount) {
-        let sampleConfig = {
-            start_date: new Date().toISOString().split('T')[0],
-            end_date: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            step_minutes: 30
-        };
-        buildPollMatrix(sampleConfig, 'reportMatrixTable', true, slotStats);
-    }
+    function buildHeatmapMatrix(config, slotStats, targetCount) {
+            buildPollMatrix(config, 'reportMatrixTable', true, slotStats);
+        }
 
     // ---------------------------------------------------------------------
     // 4. Gửi lịch rảnh cá nhân lên máy chủ
