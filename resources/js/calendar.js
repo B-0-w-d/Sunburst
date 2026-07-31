@@ -1,64 +1,200 @@
 // =========================================================================
+// HÀM TIỆN ÍCH DÙNG CHUNG (GLOBAL UTILITY)
+// =========================================================================
+function formatDateTime(isoString) {
+    if (!isoString) return '';
+    try {
+        const date = new Date(isoString);
+        if (isNaN(date.getTime())) return isoString;
+
+        const pad = (n) => String(n).padStart(2, '0');
+        const hours = pad(date.getHours());
+        const minutes = pad(date.getMinutes());
+        const day = pad(date.getDate());
+        const month = pad(date.getMonth() + 1);
+        const year = date.getFullYear();
+
+        return `${hours}:${minutes} - ${day}/${month}/${year}`;
+    } catch (e) {
+        return isoString;
+    }
+}
+
+// =========================================================================
 // CẤU HÌNH BAN ĐẦU & XÁC THỰC API
 // =========================================================================
-// Lấy token xác thực từ localStorage và thiết lập headers mặc định cho các request fetch API
 const token = localStorage.getItem('access_token');
-
 const headers = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
     'Authorization': `Bearer ${token}`
 };
 
-// Đảm bảo DOM đã tải xong hoàn toàn trước khi thực thi mã JavaScript
+// =========================================================================
+// QUẢN LÝ KÉO THẢ THÀNH VIÊN (DRAG & DROP MEMBERS) - GLOBAL SCOPE
+// =========================================================================
+let draggedMemberElement = null;
+
+window.handleMemberDragStart = function(e) {
+    draggedMemberElement = e.currentTarget;
+    e.dataTransfer.setData('text/plain', e.currentTarget.dataset.id);
+};
+
+window.handleMemberDrop = function(e, targetZoneType) {
+    e.preventDefault();
+    if (!draggedMemberElement) return;
+
+    const targetZone = targetZoneType === 'selected'
+        ? document.getElementById('selectedMembersZone')
+        : document.getElementById('availableMembersZone');
+
+    if (!targetZone) return;
+
+    if (targetZoneType === 'selected' && !draggedMemberElement.querySelector('.btn-remove-chip')) {
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'btn-remove-chip';
+        removeBtn.innerHTML = '&times;';
+        removeBtn.onclick = function() { window.removeMemberChip(this); };
+        draggedMemberElement.appendChild(removeBtn);
+    } else if (targetZoneType === 'available') {
+        const btn = draggedMemberElement.querySelector('.btn-remove-chip');
+        if (btn) btn.remove();
+    }
+
+    targetZone.appendChild(draggedMemberElement);
+    window.updateMemberHiddenInput();
+    draggedMemberElement = null;
+};
+
+window.removeMemberChip = function(btn) {
+    const chip = btn.closest('.member-chip');
+    const availableZone = document.getElementById('availableMembersZone');
+    if (chip && availableZone) {
+        btn.remove();
+        availableZone.appendChild(chip);
+        window.updateMemberHiddenInput();
+    }
+};
+
+window.updateMemberHiddenInput = function() {
+    const selectedZone = document.getElementById('selectedMembersZone');
+    if (!selectedZone) return;
+    const chips = selectedZone.querySelectorAll('.member-chip');
+    const ids = Array.from(chips).map(chip => chip.dataset.id);
+
+    const hiddenInput = document.getElementById('targetMemberIds');
+    if (hiddenInput) {
+        hiddenInput.value = ids.join(',');
+    }
+};
+
+// =========================================================================
+// KHỞI TẠO DOM CONTENT LOADED
+// =========================================================================
 document.addEventListener('DOMContentLoaded', function () {
-    // Khai báo chính xác 2 container chứa danh sách Lịch đã chốt và Khảo sát đang mở
     const confirmedContainer = document.getElementById('confirmedEventList');
     const pollContainer = document.getElementById('pollEventList');
 
-    // Nếu không tìm thấy các container này trên trang thì dừng lại để tránh lỗi script
-    if (!confirmedContainer || !pollContainer) return;
+    let activeEventId = null;
+    let isMouseDown = false;
+    let isSelecting = true;
 
-    // Các biến trạng thái toàn cục trong scope
-    let activeEventId = null;     // ID sự kiện đang được chọn thao tác (điền lịch hoặc xem báo cáo)
-    let isMouseDown = false;      // Trạng thái giữ chuột để kéo bôi đen ma trận thời gian
-    let isSelecting = true;       // Trạng thái đang chọn hay bỏ chọn khi kéo chuột
-
-    // Gọi hàm tải toàn bộ dữ liệu sự kiện ngay khi vừa load trang
+    // Tải dữ liệu ban đầu
     fetchAllEvents();
 
-    // =====================================================================
-    // QUẢN LÝ MODAL (Đóng/Mở các cửa sổ Pop-up)
-    // =====================================================================
+    // ---------------------------------------------------------------------
+    // Quản lý Bật/Tắt Modal
+    // ---------------------------------------------------------------------
     function toggleModal(modalId, show = true) {
-        document.getElementById(modalId)?.classList.toggle('active', show);
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            if (show) {
+                modal.classList.add('active');
+                modal.style.display = 'flex'; // Đảm bảo đè CSS ẩn
+            } else {
+                modal.classList.remove('active');
+                modal.style.display = 'none';
+            }
+        }
     }
 
-    // Sự kiện mở modal tạo sự kiện mới khi bấm nút
     document.getElementById('openCreateModalBtn')?.addEventListener('click', () => toggleModal('createEventModal', true));
 
-    // Sự kiện đóng modal khi bấm nút chữ X hoặc nút đóng
     document.querySelectorAll('.close-btn').forEach(btn => {
         btn.addEventListener('click', function () {
-            toggleModal(this.getAttribute('data-modal'), false);
+            const modalId = this.getAttribute('data-modal');
+            toggleModal(modalId, false);
         });
     });
 
-    // Thay đổi giao diện form tạo sự kiện tùy thuộc vào việc chọn Loại sự kiện hay Khảo sát (POLL)
-    document.getElementById('eventStatus')?.addEventListener('change', function () {
-        const isPoll = this.value === 'POLL';
-        const pollSec = document.getElementById('pollConfigSection');
-        const confSec = document.getElementById('confirmedConfigSection');
-        if (pollSec) pollSec.style.display = isPoll ? 'block' : 'none';
-        if (confSec) confSec.style.display = isPoll ? 'none' : 'block';
+    // ---------------------------------------------------------------------
+    // Xử lý Sự kiện Nút "Chọn tất cả thành viên" (Đã bổ sung)
+    // ---------------------------------------------------------------------
+    document.getElementById('selectAllMembersBtn')?.addEventListener('click', function () {
+        const availableZone = document.getElementById('availableMembersZone');
+        const selectedZone = document.getElementById('selectedMembersZone');
+
+        if (!availableZone || !selectedZone) return;
+
+        const availableChips = availableZone.querySelectorAll('.member-chip');
+        availableChips.forEach(chip => {
+            if (!chip.querySelector('.btn-remove-chip')) {
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'btn-remove-chip';
+                removeBtn.innerHTML = '&times;';
+                removeBtn.onclick = function() { window.removeMemberChip(this); };
+                chip.appendChild(removeBtn);
+            }
+            selectedZone.appendChild(chip);
+        });
+        window.updateMemberHiddenInput();
     });
 
-    // =====================================================================
-    // 1. TẢI ĐỒNG THỜI DANH SÁCH LỊCH ĐÃ CHỐT & KHẢO SÁT
-    // =====================================================================
+    // ---------------------------------------------------------------------
+    // Thay đổi cấu hình Form theo Trạng thái (POLL / CONFIRMED)
+    // ---------------------------------------------------------------------
+    const eventStatusSelect = document.getElementById('eventStatus');
+    if (eventStatusSelect) {
+        eventStatusSelect.addEventListener('change', function () {
+            const isPoll = this.value === 'POLL';
+            const pollSec = document.getElementById('pollConfigSection');
+            const confSec = document.getElementById('confirmedConfigSection');
+            if (pollSec) pollSec.style.display = isPoll ? 'block' : 'none';
+            if (confSec) confSec.style.display = isPoll ? 'none' : 'block';
+        });
+    }
+
+    // ---------------------------------------------------------------------
+    // Checkbox chọn "Cả ngày"
+    // ---------------------------------------------------------------------
+    const allDayCheckbox = document.getElementById('allDayEventCheckbox');
+    if (allDayCheckbox) {
+        allDayCheckbox.addEventListener('change', function () {
+            const startTimeInput = document.getElementById('startTime');
+            const endTimeInput = document.getElementById('endTime');
+            if (!startTimeInput || !endTimeInput) return;
+
+            if (this.checked) {
+                const today = new Date().toISOString().split('T')[0];
+                let startVal = startTimeInput.value ? startTimeInput.value.split('T')[0] : today;
+                let endVal = endTimeInput.value ? endTimeInput.value.split('T')[0] : startVal;
+
+                startTimeInput.value = `${startVal}T00:00`;
+                endTimeInput.value = `${endVal}T23:59`;
+            } else {
+                startTimeInput.value = '';
+                endTimeInput.value = '';
+            }
+        });
+    }
+
+    // ---------------------------------------------------------------------
+    // API 1: Tải danh sách Sự kiện & Khảo sát
+    // ---------------------------------------------------------------------
     async function fetchAllEvents() {
         try {
-            // Gọi song song 2 API lấy dữ liệu trạng thái CONFIRMED và POLL cùng một lúc
             const [resConfirmed, resPoll] = await Promise.all([
                 fetch('/api/calendar?status=CONFIRMED', { headers: headers }),
                 fetch('/api/calendar?status=POLL', { headers: headers })
@@ -67,11 +203,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const resultConfirmed = await resConfirmed.json();
             const resultPoll = await resPoll.json();
 
-            // Đổ dữ liệu vào các container tương ứng
-            renderEventList(confirmedContainer, resultConfirmed.data, 'confirmed');
-            renderEventList(pollContainer, resultPoll.data, 'poll');
+            if (confirmedContainer) renderEventList(confirmedContainer, resultConfirmed.data || [], 'confirmed');
+            if (pollContainer) renderEventList(pollContainer, resultPoll.data || [], 'poll');
 
-            // Gắn lại sự kiện tương tác cho các nút chức năng trên card
             bindEventListeners();
             bindDeleteEventListeners();
         } catch (err) {
@@ -79,7 +213,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Hàm render danh sách các thẻ sự kiện card chung
     function renderEventList(targetContainer, data, type) {
         targetContainer.innerHTML = '';
 
@@ -88,32 +221,32 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Duyệt qua từng bản ghi sự kiện để tạo thẻ card HTML
         data.forEach(ev => {
             const card = document.createElement('div');
             card.className = 'event-card';
-            card.style.position = 'relative'; // Định vị tuyệt đối cho nút xóa ở góc
+            card.style.position = 'relative';
 
             let eventId = ev._id || ev.id || (ev._id && ev._id.$oid);
             let actionBtn = '';
 
-            // Nếu là dạng khảo sát (POLL), thêm các nút chức năng "Điền Lịch Rảnh" và "Xem Báo Cáo"
+            // Escape chuỗi JSON an toàn tránh gãy attribute HTML
+            let pollConfigStr = ev.poll_config ? JSON.stringify(ev.poll_config).replace(/'/g, "&apos;") : '{}';
+
             if (ev.status === 'POLL') {
-                actionBtn = `<button class="btn btn-primary w-100 fill-poll-btn" data-id="${eventId}" data-config='${JSON.stringify(ev.poll_config)}'>Điền Lịch Rảnh</button>`;
+                actionBtn = `<button class="btn btn-primary w-100 fill-poll-btn" data-id="${eventId}" data-config='${pollConfigStr}'>Điền Lịch Rảnh</button>`;
                 actionBtn += `<button class="btn btn-outline w-100 mt-2 view-report-btn" data-id="${eventId}" data-title="${ev.title}">Xem Báo Cáo & Chốt Lịch</button>`;
             }
 
-            // Giao diện nút xóa sự kiện (dấu X đỏ góc phải card)
             const deleteBtnHtml = `<button class="delete-event-btn" data-id="${eventId}" title="Xóa sự kiện" style="position: absolute; top: 12px; right: 12px; background: transparent; border: none; font-size: 20px; font-weight: bold; color: #dc3545; cursor: pointer; line-height: 1; padding: 0 5px;">&times;</button>`;
 
             card.innerHTML = `
                 ${deleteBtnHtml}
                 <div>
-                    <span class="badge badge-${ev.type.toLowerCase()}">${ev.type}</span>
+                    <span class="badge badge-${(ev.type || '').toLowerCase()}">${ev.type || 'N/A'}</span>
                     <h4>${ev.title}</h4>
                     <div class="event-info">
                         <p><strong>Trạng thái:</strong> ${ev.status}</p>
-                        ${ev.start_time ? `<p><strong>Bắt đầu:</strong> ${ev.start_time}</p>` : ''}
+                        ${ev.start_time ? `<p><strong>Bắt đầu:</strong> ${formatDateTime(ev.start_time)}</p>` : ''}
                     </div>
                 </div>
                 <div style="margin-top: 15px;">${actionBtn}</div>
@@ -122,17 +255,45 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Gắn sự kiện click mở modal điền lịch rảnh hoặc xem báo cáo
+    // Gắn sự kiện cho các nút động trong danh sách
     function bindEventListeners() {
+        // Nút "Điền Lịch Rảnh"
         document.querySelectorAll('.fill-poll-btn').forEach(btn => {
-            btn.addEventListener('click', function () {
+            btn.addEventListener('click', async function () {
                 activeEventId = this.getAttribute('data-id');
-                const config = JSON.parse(this.getAttribute('data-config'));
-                buildPollMatrix(config, 'w2mMatrixTable', false); // Xây dựng bảng điền lịch tương tác
+
+                let config = {};
+                try {
+                    config = JSON.parse(this.getAttribute('data-config'));
+                } catch (err) {
+                    console.error("Lỗi parse cấu hình poll:", err);
+                }
+
+                buildPollMatrix(config, 'w2mMatrixTable', false);
+
+                try {
+                    const res = await fetch(`/api/calendar/my-latest-availability`, { headers: headers });
+                    if (res.ok) {
+                        const data = await res.json();
+                        const savedSlots = data.available_slots || [];
+
+                        if (savedSlots.length > 0) {
+                            const table = document.getElementById('w2mMatrixTable');
+                            savedSlots.forEach(slotISO => {
+                                const cell = table.querySelector(`.time-slot-cell[data-slot="${slotISO}"]`);
+                                if (cell) cell.classList.add('selected');
+                            });
+                        }
+                    }
+                } catch (e) {
+                    console.log('Không thể tải lịch rảnh cũ, hiển thị bảng trống.', e);
+                }
+
                 toggleModal('pollMatrixModal', true);
             });
         });
 
+        // Nút "Xem Báo Cáo"
         document.querySelectorAll('.view-report-btn').forEach(btn => {
             btn.addEventListener('click', async function () {
                 activeEventId = this.getAttribute('data-id');
@@ -141,26 +302,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (reportTitle) reportTitle.innerText = `Báo Cáo: ${title}`;
 
                 try {
-                    // Gọi API lấy dữ liệu thống kê báo cáo khảo sát
-                    const res = await fetch(`/api/calendar/${activeEventId}/poll-report`, {
-                        headers: headers
-                    });
+                    const res = await fetch(`/api/calendar/${activeEventId}/poll-report`, { headers: headers });
                     const json = await res.json();
-                    document.getElementById('statTargetCount').innerText = `Tổng mục tiêu: ${json.target_count}`;
-                    document.getElementById('statSubmittedCount').innerText = `Đã phản hồi: ${json.submitted_count}`;
 
-                    buildHeatmapMatrix(json.slot_statistics, json.target_count); // Xây dựng biểu đồ nhiệt báo cáo
+                    document.getElementById('statTargetCount').innerText = `Tổng mục tiêu: ${json.target_count || 0}`;
+                    document.getElementById('statSubmittedCount').innerText = `Đã phản hồi: ${json.submitted_count || 0}`;
+
+                    buildHeatmapMatrix(json.slot_statistics || {}, json.target_count || 0);
                     toggleModal('reportModal', true);
                 } catch (e) {
-                    alert('Không thể tải báo cáo.');
+                    alert('Không thể tải báo cáo khảo sát.');
                 }
             });
         });
     }
 
-    // =====================================================================
-    // HÀM XỬ LÝ SỰ KIỆN XÓA SỰ KIỆN
-    // =====================================================================
     function bindDeleteEventListeners() {
         document.querySelectorAll('.delete-event-btn').forEach(btn => {
             if (btn.dataset.deleteListenerAttached) return;
@@ -168,44 +324,41 @@ document.addEventListener('DOMContentLoaded', function () {
 
             btn.addEventListener('click', async function () {
                 const eventId = this.getAttribute('data-id');
-
-                if (!confirm('Bạn có chắc chắn muốn xóa sự kiện/poll này không?')) return;
+                if (!confirm('Bạn có chắc chắn muốn xóa mục này không?')) return;
 
                 try {
                     const res = await fetch(`/api/calendar/${eventId}`, {
                         method: 'DELETE',
                         headers: headers
                     });
-
                     const result = await res.json();
 
                     if (res.ok) {
                         alert('Đã xóa thành công!');
-                        fetchAllEvents(); // Tải lại toàn bộ dữ liệu 2 bảng sau khi xóa
+                        fetchAllEvents();
                     } else {
-                        alert(result.message || 'Không thể xóa sự kiện.');
+                        alert(result.message || 'Không thể xóa.');
                     }
                 } catch (e) {
                     console.error(e);
-                    alert('Lỗi kết nối đến server.');
+                    alert('Lỗi kết nối máy chủ.');
                 }
             });
         });
     }
 
-    // =====================================================================
-    // 2. KHỞI TẠO BẢNG MA TRẬN KHẢO SÁT LỊCH (W2M MATRIX)
-    // =====================================================================
+    // ---------------------------------------------------------------------
+    // 2. Dựng bảng ma trận khảo sát (W2M Matrix)
+    // ---------------------------------------------------------------------
     function buildPollMatrix(config, tableId, isReadonly = false, slotStats = null) {
         const table = document.getElementById(tableId);
         if (!table) return;
         table.innerHTML = '';
 
-        const startDate = new Date(config.start_date);
-        const endDate = new Date(config.end_date);
+        const startDate = config.start_date ? new Date(config.start_date) : new Date();
+        const endDate = config.end_date ? new Date(config.end_date) : new Date();
         const step = config.step_minutes || 30;
 
-        // Tạo mảng danh sách các ngày trong khoảng thời gian khảo sát
         let dates = [];
         let curr = new Date(startDate);
         while (curr <= endDate) {
@@ -213,10 +366,9 @@ document.addEventListener('DOMContentLoaded', function () {
             curr.setDate(curr.getDate() + 1);
         }
 
-        // Tạo các khung giờ trong ngày dựa trên bước nhảy (mặc định từ 6h sáng đến 24h)
         let timeSlots = [];
-        let totalMinutesStart = 6 * 60;
-        let totalMinutesEnd = 24 * 60;
+        let totalMinutesStart = 6 * 60; // 06:00
+        let totalMinutesEnd = 24 * 60;   // 24:00
         for (let m = totalMinutesStart; m < totalMinutesEnd; m += step) {
             let hh = String(Math.floor(m / 60)).padStart(2, '0');
             let mm = String(m % 60).padStart(2, '0');
@@ -224,7 +376,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         timeSlots.push("24:00");
 
-        // Tạo tiêu đề bảng ma trận 2 dòng (Thứ và Ngày/Tháng)
         let headerRow1 = '<tr><th class="time-col-header" rowspan="2">Thời gian</th>';
         let headerRow2 = '<tr>';
 
@@ -238,7 +389,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 headerRow2 += `<th>
                     <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
                         <span>${dayMonth}</span>
-                        <button type="button" class="select-col-btn" data-col-index="${index}" title="Chọn toàn bộ ngày này" style="font-size: 11px; padding: 2px 6px; cursor: pointer; border: 1px solid #ccc; border-radius: 4px; background: #f8f9fa;">Chọn cả ngày</button>
+                        <button type="button" class="select-col-btn" data-col-index="${index}" style="font-size: 11px; padding: 2px 6px; cursor: pointer; border: 1px solid #ccc; border-radius: 4px; background: #f8f9fa;">Chọn cả ngày</button>
                     </div>
                 </th>`;
             } else {
@@ -249,7 +400,6 @@ document.addEventListener('DOMContentLoaded', function () {
         headerRow2 += '</tr>';
         table.innerHTML += headerRow1 + headerRow2;
 
-        // Duyệt qua từng khung giờ để vẽ các hàng trong bảng
         for (let i = 0; i < timeSlots.length; i++) {
             let time = timeSlots[i];
             let row = '<tr>';
@@ -264,7 +414,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 row += `<td class="time-label-cell"><span>${timeFormatted}</span></td>`;
             }
 
-            // Vẽ các ô tương tác chọn lịch hoặc hiển thị thống kê heatmap
             dates.forEach((d, index) => {
                 let dateStr = d.toISOString().split('T')[0];
                 let slotISO = `${dateStr}T${time === "24:00" ? "00:00" : time}:00`;
@@ -283,7 +432,6 @@ document.addEventListener('DOMContentLoaded', function () {
             table.innerHTML += row;
         }
 
-        // Sự kiện nút "Chọn cả ngày" cho từng cột ngày
         if (!isReadonly) {
             table.querySelectorAll('.select-col-btn').forEach(btn => {
                 btn.addEventListener('click', function (e) {
@@ -294,9 +442,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const selectedCount = Array.from(colCells).filter(c => c.classList.contains('selected')).length;
                     const shouldSelect = selectedCount < colCells.length;
 
-                    colCells.forEach(cell => {
-                        cell.classList.toggle('selected', shouldSelect);
-                    });
+                    colCells.forEach(cell => cell.classList.toggle('selected', shouldSelect));
 
                     this.innerText = shouldSelect ? 'Bỏ chọn' : 'Chọn cả ngày';
                     this.style.background = shouldSelect ? '#007bff' : '#f8f9fa';
@@ -305,13 +451,12 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-        // Khởi tạo tính năng kéo chuột bôi đen ô lịch
         initDragSelection(table);
     }
 
-    // =====================================================================
-    // 3. TÍNH NĂNG KÉO CHUỘT BÔI ĐEN (DRAG SELECTION)
-    // =====================================================================
+    // ---------------------------------------------------------------------
+    // 3. Kéo chuột bôi đen các ô
+    // ---------------------------------------------------------------------
     function initDragSelection(table) {
         const cells = table.querySelectorAll('.time-slot-cell');
         cells.forEach(cell => {
@@ -336,16 +481,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function buildHeatmapMatrix(slotStats, targetCount) {
         let sampleConfig = {
-            start_date: "2026-08-01",
-            end_date: "2026-08-05",
+            start_date: new Date().toISOString().split('T')[0],
+            end_date: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
             step_minutes: 30
         };
         buildPollMatrix(sampleConfig, 'reportMatrixTable', true, slotStats);
     }
 
-    // =====================================================================
-    // 4. GỬI LỊCH RẢNH LÊN SERVER
-    // =====================================================================
+    // ---------------------------------------------------------------------
+    // 4. Gửi lịch rảnh cá nhân lên máy chủ
+    // ---------------------------------------------------------------------
     document.getElementById('saveAvailabilityBtn')?.addEventListener('click', async function () {
         const selectedCells = document.querySelectorAll('#w2mMatrixTable .time-slot-cell.selected');
         const availableSlots = Array.from(selectedCells).map(c => c.getAttribute('data-slot'));
@@ -365,12 +510,13 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         } catch (e) {
             console.error(e);
+            alert('Lỗi kết nối máy chủ.');
         }
     });
 
-    // =====================================================================
-    // 5. TẠO SỰ KIỆN / KHẢO SÁT MỚI
-    // =====================================================================
+    // ---------------------------------------------------------------------
+    // 5. Submit Tạo Sự Kiện Mới
+    // ---------------------------------------------------------------------
     const createEventForm = document.getElementById('createEventForm');
     if (createEventForm && !createEventForm.dataset.listenerAttached) {
         createEventForm.dataset.listenerAttached = "true";
@@ -378,8 +524,6 @@ document.addEventListener('DOMContentLoaded', function () {
         let isCreating = false;
         createEventForm.addEventListener('submit', async function (e) {
             e.preventDefault();
-            e.stopImmediatePropagation();
-
             if (isCreating) return;
             isCreating = true;
 
@@ -387,13 +531,13 @@ document.addEventListener('DOMContentLoaded', function () {
             if (submitBtn) submitBtn.disabled = true;
 
             const statusVal = document.getElementById('eventStatus').value;
+            const targetMembersVal = document.getElementById('targetMemberIds')?.value || '';
 
-            // Thu thập dữ liệu từ form tạo sự kiện
             let payload = {
                 title: document.getElementById('eventTitle').value,
                 type: document.getElementById('eventType').value,
                 status: statusVal,
-                target_member_ids: document.getElementById('targetMemberIds').value.split(',').map(s => s.trim()).filter(Boolean)
+                target_member_ids: targetMembersVal.split(',').map(s => s.trim()).filter(Boolean)
             };
 
             if (statusVal === 'POLL') {
@@ -415,20 +559,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     headers: headers,
                     body: JSON.stringify(payload)
                 });
-
                 const result = await res.json();
 
                 if (res.ok) {
                     alert('Tạo thành công!');
                     toggleModal('createEventModal', false);
                     createEventForm.reset();
-                    fetchAllEvents(); // Tải lại đồng thời cả 2 bảng
+                    fetchAllEvents();
                 } else {
                     alert(result.message || 'Lỗi tạo sự kiện.');
                 }
             } catch (ex) {
                 console.error(ex);
-                alert('Lỗi kết nối đến server.');
+                alert('Lỗi kết nối máy chủ.');
             } finally {
                 isCreating = false;
                 if (submitBtn) submitBtn.disabled = false;
@@ -436,9 +579,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // =====================================================================
-    // 6. CHỐT LỊCH TỪ BÁO CÁO KHẢO SÁT
-    // =====================================================================
+    // ---------------------------------------------------------------------
+    // 6. Chốt lịch chính thức từ Báo cáo
+    // ---------------------------------------------------------------------
     document.getElementById('confirmPollBtn')?.addEventListener('click', async function () {
         if (!activeEventId) {
             alert('Không tìm thấy ID sự kiện.');
@@ -447,7 +590,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const selectedCells = document.querySelectorAll('#reportMatrixTable .time-slot-cell.selected');
         if (selectedCells.length === 0) {
-            alert('Vui lòng chọn khung giờ trên bảng báo cáo.');
+            alert('Vui lòng bôi đen chọn khung giờ chốt trên bảng báo cáo.');
             return;
         }
 
@@ -478,111 +621,13 @@ document.addEventListener('DOMContentLoaded', function () {
             if (res.ok) {
                 alert('Đã chốt lịch thành công!');
                 toggleModal('reportModal', false);
-                fetchAllEvents(); // Làm mới lại cả 2 danh sách
+                fetchAllEvents();
             } else {
                 alert(result.message || 'Lỗi chốt lịch.');
             }
         } catch (e) {
             console.error(e);
-            alert('Lỗi kết nối đến server.');
+            alert('Lỗi kết nối máy chủ.');
         }
     });
-});
-
-// =========================================================================
-// QUẢN LÝ KÉO THẢ THÀNH VIÊN (DRAG & DROP MEMBERS)
-// =========================================================================
-let draggedMemberElement = null;
-
-window.handleMemberDragStart = function(e) {
-    draggedMemberElement = e.currentTarget;
-    e.dataTransfer.setData('text/plain', e.currentTarget.dataset.id);
-}
-
-window.handleMemberDrop = function(e, targetZoneType) {
-    e.preventDefault();
-    if (!draggedMemberElement) return;
-
-    const targetZone = targetZoneType === 'selected'
-        ? document.getElementById('selectedMembersZone')
-        : document.getElementById('availableMembersZone');
-
-    if (targetZoneType === 'selected' && !draggedMemberElement.querySelector('.btn-remove-chip')) {
-        const removeBtn = document.createElement('button');
-        removeBtn.type = 'button';
-        removeBtn.className = 'btn-remove-chip';
-        removeBtn.innerHTML = '&times;';
-        removeBtn.onclick = function() { window.removeMemberChip(this); };
-        draggedMemberElement.appendChild(removeBtn);
-    }
-    else if (targetZoneType === 'available') {
-        const btn = draggedMemberElement.querySelector('.btn-remove-chip');
-        if (btn) btn.remove();
-    }
-
-    targetZone.appendChild(draggedMemberElement);
-    window.updateMemberHiddenInput();
-    draggedMemberElement = null;
-}
-
-window.removeMemberChip = function(btn) {
-    const chip = btn.closest('.member-chip');
-    const availableZone = document.getElementById('availableMembersZone');
-    btn.remove();
-    availableZone.appendChild(chip);
-    window.updateMemberHiddenInput();
-}
-
-window.updateMemberHiddenInput = function() {
-    const selectedZone = document.getElementById('selectedMembersZone');
-    const chips = selectedZone.querySelectorAll('.member-chip');
-    const ids = Array.from(chips).map(chip => chip.dataset.id);
-
-    const hiddenInput = document.getElementById('targetMemberIds');
-    if (hiddenInput) {
-        hiddenInput.value = ids.join(',');
-    }
-}
-document.addEventListener('DOMContentLoaded', function () {
-    // =====================================================================
-    // THAY ĐỔI GIAO DIỆN KHI CHỌN TRẠNG THÁI KHỞI TẠO (POLL / CONFIRMED)
-    // =====================================================================
-    const eventStatusSelect = document.getElementById('eventStatus');
-    if (eventStatusSelect) {
-        eventStatusSelect.addEventListener('change', function () {
-            const isPoll = this.value === 'POLL';
-            const pollSec = document.getElementById('pollConfigSection');
-            const confSec = document.getElementById('confirmedConfigSection');
-            if (pollSec) pollSec.style.display = isPoll ? 'block' : 'none';
-            if (confSec) confSec.style.display = isPoll ? 'none' : 'block';
-        });
-    }
-
-    // =====================================================================
-    // XỬ LÝ CHỌN "CẢ NGÀY" (ALL-DAY) CHO LỊCH CỐ ĐỊNH (CONFIRMED)
-    // =====================================================================
-    const allDayCheckbox = document.getElementById('allDayEventCheckbox');
-    if (allDayCheckbox) {
-        allDayCheckbox.addEventListener('change', function () {
-            const startTimeInput = document.getElementById('startTime');
-            const endTimeInput = document.getElementById('endTime');
-
-            if (this.checked) {
-                // Lấy ngày hiện tại dạng YYYY-MM-DD làm mặc định nếu ô input chưa chọn ngày
-                const today = new Date().toISOString().split('T')[0];
-
-                // Giữ nguyên phần ngày nếu người dùng đã chọn trước đó, nếu chưa thì lấy ngày hiện tại
-                let startVal = startTimeInput.value ? startTimeInput.value.split('T')[0] : today;
-                let endVal = endTimeInput.value ? endTimeInput.value.split('T')[0] : startVal;
-
-                // Tự động gán khung giờ bắt đầu từ 00:00 và kết thúc vào 23:59 của ngày đó
-                startTimeInput.value = `${startVal}T00:00`;
-                endTimeInput.value = `${endVal}T23:59`;
-            } else {
-                // Nếu bỏ chọn "Cả ngày", làm trống lại để người dùng tự nhập
-                startTimeInput.value = '';
-                endTimeInput.value = '';
-            }
-        });
-    }
 });

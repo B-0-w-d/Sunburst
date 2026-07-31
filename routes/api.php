@@ -46,12 +46,16 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Calendar & Arrange Management
     Route::prefix('calendar')->group(function () {
-        Route::get('/', [CalendarController::class, 'index']);                             // Lấy danh sách lịch / khảo sát
-        Route::post('/', [CalendarController::class, 'store']);                             // Admin tạo lịch hoặc tạo khảo sát POLL
+        Route::get('/', [CalendarController::class, 'index']);                                     // Lấy danh sách lịch / khảo sát
+        Route::post('/', [CalendarController::class, 'store']);                                    // Admin tạo lịch hoặc tạo khảo sát POLL
+
+        // 🟢 ĐẶT ROUTE NÀY LÊN TRÊN CÁC ROUTE CÓ {eventId}
+        Route::get('/my-latest-availability', [CalendarController::class, 'myLatestAvailability']);
+
         Route::post('/{eventId}/availability', [CalendarController::class, 'submitAvailability']); // Thành viên điền lịch rảnh When2meet
         Route::get('/{eventId}/poll-report', [CalendarController::class, 'getPollReport']); // Admin xem báo cáo tổng hợp rảnh/bận
         Route::post('/{eventId}/confirm-poll', [CalendarController::class, 'confirmPoll']); // Admin chốt lịch từ khảo sát
-        Route::delete('/{id}', [CalendarController::class, 'destroy']);                     // <--- THÊM DÒNG NÀY VÀO ĐÂY
+        Route::delete('/{id}', [CalendarController::class, 'destroy']);                            // Xóa lịch / khảo sát
     });
 
     // Notifications

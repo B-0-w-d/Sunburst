@@ -10,7 +10,7 @@
     <title>Sign In | Sunburst Dashboard</title>
 
     {{-- Tích hợp các file tài nguyên CSS và JS chính thông qua Vite --}}
-    @vite(['resources/css/app.css', 'resources/css/login.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
 <body>

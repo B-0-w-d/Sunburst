@@ -272,4 +272,24 @@ class CalendarController extends Controller
             'message' => 'Event deleted successfully.'
         ], 200);
     }
+    /**
+     * Lấy lịch rảnh gần đây nhất của thành viên để hỗ trợ pre-fill
+     */
+    public function myLatestAvailability(Request $request)
+    {
+        /** @var \App\Models\Member $currentUser */
+        $currentUser = Auth::user();
+        if (!$currentUser) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 401);
+        }
+
+        $latestAvailability = MemberAvailability::where('member_id', (string) $currentUser->_id)
+            ->latest('updated_at')
+            ->first();
+
+        return response()->json([
+            'status' => 'success',
+            'available_slots' => $latestAvailability ? $latestAvailability->available_slots : []
+        ]);
+    }
 }

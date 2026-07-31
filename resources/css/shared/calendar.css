@@ -183,7 +183,7 @@
 
 /* Nút hành động thành công/Xác nhận (Success) */
 .btn-success {
-    background: #16a34a;
+    background: #c70c0c;
     color: #fff;
 }
 
@@ -391,7 +391,7 @@
 }
 
 .w2m-table td.time-slot-cell.selected {
-    background: #4f46e5 !important;
+    background: #22c55e !important;
     color: #fff !important;
     font-weight: bold;
 }

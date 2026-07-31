@@ -103,12 +103,13 @@
 
                     <!-- Component chọn thành viên tham gia -->
                     <div class="form-group">
-                        <label>Thành viên tham gia (Kéo thả hoặc bấm vào tên để thêm)</label>
                         <x-memberSelect
                             id="eventMemberSelector"
                             :members="$allMembers"
                             :selected="[]"
                         />
+                        <button type="button" id="selectAllMembersBtn" style="font-size: 12px; padding: 2px 8px; cursor: pointer; border: 1px solid #007bff; border-radius: 4px; background: #e7f1ff; color: #007bff;">Chọn tất cả</button>
+
                     </div>
 
                     <button type="submit" class="btn btn-success w-100">Xác Nhận Tạo</button>

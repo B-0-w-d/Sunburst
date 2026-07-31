@@ -11,21 +11,23 @@
         "laravel/tinker": "^3.0",
         "mongodb/laravel-mongodb": "^5.8"
     },
-        "require-dev": {
-            "fakerphp/faker": "^1.23",
-            "laravel/pint": "^1.13",
-            "laravel/sail": "^1.26",
-            "mockery/mockery": "^1.6",
-            "nunomaduro/collision": "^8.0",
-            "phpunit/phpunit": "^12.0",
-            "spatie/laravel-ignition": "^2.4"
-        },
+    "require-dev": {
+        "fakerphp/faker": "^1.23",
+        "laravel/pint": "^1.13",
+        "laravel/sail": "^1.26",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.0",
+        "phpunit/phpunit": "^12.0",
+        "spatie/laravel-ignition": "^2.4"
+    },
     "autoload": {
         "psr-4": {
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "files": [
+            "app/Services/NotificationHelper.php"        ]
     },
     "autoload-dev": {
         "psr-4": {
@@ -49,7 +51,6 @@
             "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
             "@php artisan migrate --ansi"
         ]
-
     },
     "extra": {
         "branch-alias": {
