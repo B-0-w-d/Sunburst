@@ -3,26 +3,52 @@
 // =========================================================================
 
 /**
- * Định dạng chuỗi thời gian ISO thành định dạng hiển thị dễ đọc (HH:mm - DD/MM/YYYY)
- * @param {string} isoString - Chuỗi thời gian định dạng ISO
- * @returns {string} - Thời gian sau khi định dạng hoặc chuỗi gốc nếu lỗi
+ * Định dạng khoảng thời gian hiển thị:
+ * - Nếu cùng ngày: "HH:mm - HH:mm, DD/MM/YYYY"
+ * - Nếu khác ngày: "HH:mm, DD/MM/YYYY - HH:mm, DD/MM/YYYY"
+ * @param {string} startIso - Thời gian bắt đầu dạng ISO string
+ * @param {string} endIso - Thời gian kết thúc dạng ISO string
+ * @returns {string} Chuỗi thời gian đã được định dạng chuẩn tiếng Việt
  */
-function formatDateTime(isoString) {
-    if (!isoString) return '';
+function formatEventDateTime(startIso, endIso) {
+    if (!startIso) return '';
     try {
-        const date = new Date(isoString);
-        if (isNaN(date.getTime())) return isoString;
+        const startDate = new Date(startIso);
+        if (isNaN(startDate.getTime())) return startIso;
 
         const pad = (n) => String(n).padStart(2, '0');
-        const hours = pad(date.getHours());
-        const minutes = pad(date.getMinutes());
-        const day = pad(date.getDate());
-        const month = pad(date.getMonth() + 1);
-        const year = date.getFullYear();
+        const startHours = pad(startDate.getHours());
+        const startMinutes = pad(startDate.getMinutes());
+        const startDay = pad(startDate.getDate());
+        const startMonth = pad(startDate.getMonth() + 1);
+        const startYear = startDate.getFullYear();
 
-        return `${hours}:${minutes} - ${day}/${month}/${year}`;
+        // Nếu không có end_time, trả về định dạng chỉ ngày giờ bắt đầu
+        if (!endIso) {
+            return `${startHours}:${startMinutes} - ${startDay}/${startMonth}/${startYear}`;
+        }
+
+        const endDate = new Date(endIso);
+        if (isNaN(endDate.getTime())) {
+            return `${startHours}:${startMinutes} - ${startDay}/${startMonth}/${startYear}`;
+        }
+
+        const endHours = pad(endDate.getHours());
+        const endMinutes = pad(endDate.getMinutes());
+        const endDay = pad(endDate.getDate());
+        const endMonth = pad(endDate.getMonth() + 1);
+        const endYear = endDate.getFullYear();
+
+        // Kiểm tra xem có cùng ngày hay không
+        const isSameDay = startDay === endDay && startMonth === endMonth && startYear === endYear;
+
+        if (isSameDay) {
+            return `${startHours}:${startMinutes} - ${endHours}:${endMinutes}, ${startDay}/${startMonth}/${startYear}`;
+        } else {
+            return `${startHours}:${startMinutes}, ${startDay}/${startMonth}/${startYear} - ${endHours}:${endMinutes}, ${endDay}/${endMonth}/${endYear}`;
+        }
     } catch (e) {
-        return isoString;
+        return startIso;
     }
 }
 
@@ -44,7 +70,8 @@ const headers = {
 let draggedMemberElement = null;
 
 /**
- * Xử lý sự kiện khi bắt đầu kéo (drag start) một thành viên
+ * Xử lý sự kiện khi bắt đầu kéo (drag start) một thẻ thành viên
+ * @param {DragEvent} e
  */
 window.handleMemberDragStart = function(e) {
     draggedMemberElement = e.currentTarget;
@@ -52,19 +79,22 @@ window.handleMemberDragStart = function(e) {
 };
 
 /**
- * Xử lý sự kiện khi thả (drop) thành viên vào vùng mục tiêu (đã chọn hoặc khả dụng)
+ * Xử lý sự kiện khi thả (drop) thành viên vào vùng mục tiêu (vùng đã chọn hoặc vùng khả dụng)
+ * @param {DragEvent} e
+ * @param {string} targetZoneType - Loại vùng đích ('selected' hoặc 'available')
  */
 window.handleMemberDrop = function(e, targetZoneType) {
     e.preventDefault();
     if (!draggedMemberElement) return;
 
+    // Xác định container đích dựa theo tham số truyền vào
     const targetZone = targetZoneType === 'selected'
         ? document.getElementById('selectedMembersZone')
         : document.getElementById('availableMembersZone');
 
     if (!targetZone) return;
 
-    // Thêm nút xóa (chip) nếu chuyển vào vùng 'selected', ngược lại thì gỡ bỏ
+    // Thêm nút xóa (chip) nếu chuyển vào vùng 'selected', ngược lại thì gỡ bỏ nút xóa
     if (targetZoneType === 'selected' && !draggedMemberElement.querySelector('.btn-remove-chip')) {
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
@@ -77,13 +107,15 @@ window.handleMemberDrop = function(e, targetZoneType) {
         if (btn) btn.remove();
     }
 
+    // Di chuyển phần tử vào vùng đích và cập nhật lại input ẩn
     targetZone.appendChild(draggedMemberElement);
     window.updateMemberHiddenInput();
     draggedMemberElement = null;
 };
 
 /**
- * Xóa một thành viên khỏi danh sách đã chọn thông qua nút "x" trên chip
+ * Xóa một thành viên khỏi danh sách đã chọn thông qua nút "x" trên chip và trả về danh sách khả dụng
+ * @param {HTMLElement} btn - Nút 'x' được click
  */
 window.removeMemberChip = function(btn) {
     const chip = btn.closest('.member-chip');
@@ -96,7 +128,7 @@ window.removeMemberChip = function(btn) {
 };
 
 /**
- * Cập nhật giá trị ID của các thành viên được chọn vào thẻ input ẩn để gửi form
+ * Cập nhật giá trị ID của các thành viên được chọn vào thẻ input ẩn để chuẩn bị gửi form
  */
 window.updateMemberHiddenInput = function() {
     const selectedZone = document.getElementById('selectedMembersZone');
@@ -121,12 +153,17 @@ document.addEventListener('DOMContentLoaded', function () {
     let isMouseDown = false;
     let isSelecting = true;
 
-    // Tải toàn bộ danh sách sự kiện và khảo sát ngay khi trang được tải
+    // Tải toàn bộ danh sách sự kiện và khảo sát ngay khi trang được tải xong
     fetchAllEvents();
 
     // ---------------------------------------------------------------------
     // Quản lý Bật/Tắt Modal (Popup)
     // ---------------------------------------------------------------------
+    /**
+     * Hàm điều khiển hiển thị hoặc ẩn hộp thoại modal
+     * @param {string} modalId - ID của modal cần thay đổi trạng thái
+     * @param {boolean} show - True để hiển thị, false để ẩn
+     */
     function toggleModal(modalId, show = true) {
         const modal = document.getElementById(modalId);
         if (modal) {
@@ -140,10 +177,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Sự kiện mở modal tạo sự kiện mới
+    // Sự kiện mở modal tạo sự kiện mới khi click vào nút tương ứng
     document.getElementById('openCreateModalBtn')?.addEventListener('click', () => toggleModal('createEventModal', true));
 
-    // Sự kiện đóng modal qua nút có class 'close-btn'
+    // Sự kiện đóng modal khi người dùng bấm vào các nút có class 'close-btn'
     document.querySelectorAll('.close-btn').forEach(btn => {
         btn.addEventListener('click', function () {
             const modalId = this.getAttribute('data-modal');
@@ -160,6 +197,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (!availableZone || !selectedZone) return;
 
+        // Lấy tất cả các thành viên đang có ở vùng khả dụng và chuyển sang vùng đã chọn
         const availableChips = availableZone.querySelectorAll('.member-chip');
         availableChips.forEach(chip => {
             if (!chip.querySelector('.btn-remove-chip')) {
@@ -184,6 +222,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const isPoll = this.value === 'POLL';
             const pollSec = document.getElementById('pollConfigSection');
             const confSec = document.getElementById('confirmedConfigSection');
+            // Nếu chọn khảo sát (POLL) thì hiển thị cấu hình poll, ngược lại hiển thị cấu hình lịch cố định
             if (pollSec) pollSec.style.display = isPoll ? 'block' : 'none';
             if (confSec) confSec.style.display = isPoll ? 'none' : 'block';
         });
@@ -200,6 +239,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (!startTimeInput || !endTimeInput) return;
 
+            // Nếu check "Cả ngày", chuyển kiểu input từ datetime-local sang date
             if (this.checked) {
                 startTimeInput.type = 'date';
                 endTimeInput.type = 'date';
@@ -211,6 +251,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 startTimeInput.value = startVal;
                 endTimeInput.value = endVal;
             } else {
+                // Ngược lại, đưa về kiểu chọn ngày giờ chi tiết
                 startTimeInput.type = 'datetime-local';
                 endTimeInput.type = 'datetime-local';
 
@@ -221,13 +262,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ---------------------------------------------------------------------
-    // Bật/Tắt nhóm cài đặt thông báo nhắc nhở (Tích hợp notificationController)
+    // Bật/Tắt nhóm cài đặt thông báo nhắc nhở
     // ---------------------------------------------------------------------
     const enableNotificationCheckbox = document.getElementById('enableNotification');
     const notifSettingsGroup = document.getElementById('notificationSettingsGroup');
 
     if (enableNotificationCheckbox && notifSettingsGroup) {
         enableNotificationCheckbox.addEventListener('change', function() {
+            // Ẩn/hiện các tùy chọn mốc thời gian nhắc nhở dựa vào trạng thái checkbox bật thông báo
             notifSettingsGroup.style.display = this.checked ? 'block' : 'none';
         });
     }
@@ -237,6 +279,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ---------------------------------------------------------------------
     async function fetchAllEvents() {
         try {
+            // Gọi song song 2 API lấy lịch đã chốt (CONFIRMED) và lịch khảo sát (POLL)
             const [resConfirmed, resPoll] = await Promise.all([
                 fetch('/api/calendar?status=CONFIRMED', { headers: headers }),
                 fetch('/api/calendar?status=POLL', { headers: headers })
@@ -245,9 +288,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const resultConfirmed = await resConfirmed.json();
             const resultPoll = await resPoll.json();
 
+            // Đổ dữ liệu ra các container tương ứng trên giao diện
             if (confirmedContainer) renderEventList(confirmedContainer, resultConfirmed.data || [], 'confirmed');
             if (pollContainer) renderEventList(pollContainer, resultPoll.data || [], 'poll');
 
+            // Gắn lại các trình lắng nghe sự kiện cho các nút vừa render
             bindEventListeners();
             bindDeleteEventListeners();
         } catch (err) {
@@ -257,6 +302,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /**
      * Render danh sách sự kiện/khảo sát vào container tương ứng trên giao diện
+     * @param {HTMLElement} targetContainer - Vùng chứa danh sách trên HTML
+     * @param {Array} data - Mảng dữ liệu sự kiện
+     * @param {string} type - Loại danh sách ('confirmed' hoặc 'poll')
      */
     function renderEventList(targetContainer, data, type) {
         targetContainer.innerHTML = '';
@@ -275,6 +323,7 @@ document.addEventListener('DOMContentLoaded', function () {
             let actionBtn = '';
             let pollConfigStr = ev.poll_config ? JSON.stringify(ev.poll_config).replace(/'/g, "&apos;") : '{}';
 
+            // Xây dựng nút hành động dựa trên trạng thái khảo sát và quyền hạn người dùng (Quản lý hay Thành viên)
             if (ev.status === 'POLL') {
                 if (ev.is_manager) {
                     actionBtn = `<button class="btn btn-primary w-100 fill-poll-btn" data-id="${eventId}" data-config='${pollConfigStr}'>Điền Lịch Rảnh</button>`;
@@ -288,9 +337,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
 
+            // Nút xóa sự kiện hiển thị riêng cho tài khoản quản lý
             let deleteBtnHtml = '';
             if (ev.is_manager) {
                 deleteBtnHtml = `<button class="delete-event-btn" data-id="${eventId}" title="Xóa sự kiện" style="position: absolute; top: 12px; right: 12px; background: transparent; border: none; font-size: 20px; font-weight: bold; color: #dc3545; cursor: pointer; line-height: 1; padding: 0 5px;">&times;</button>`;
+            }
+
+            let timeDisplayHtml = '';
+            if (ev.start_time) {
+                timeDisplayHtml = `<p><strong>Thời gian:</strong> ${formatEventDateTime(ev.start_time, ev.end_time)}</p>`;
             }
 
             card.innerHTML = `
@@ -300,7 +355,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <h4>${ev.title}</h4>
                     <div class="event-info">
                         <p><strong>Trạng thái:</strong> ${ev.status}</p>
-                        ${ev.start_time ? `<p><strong>Bắt đầu:</strong> ${formatDateTime(ev.start_time)}</p>` : ''}
+                        ${timeDisplayHtml}
                     </div>
                 </div>
                 <div style="margin-top: 15px;">${actionBtn}</div>
@@ -313,6 +368,7 @@ document.addEventListener('DOMContentLoaded', function () {
      * Gắn sự kiện click cho các nút Điền Lịch Rảnh và Xem Báo Cáo
      */
     function bindEventListeners() {
+        // Sự kiện mở bảng điền lịch rảnh
         document.querySelectorAll('.fill-poll-btn').forEach(btn => {
             btn.addEventListener('click', async function () {
                 activeEventId = this.getAttribute('data-id');
@@ -324,8 +380,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     console.error("Lỗi parse cấu hình poll:", err);
                 }
 
+                // Xây dựng bảng ma trận thời gian cho khảo sát
                 buildPollMatrix(config, 'w2mMatrixTable', false);
 
+                // Tải lịch rảnh cá nhân đã lưu trước đó (nếu có) để đánh dấu lại trên bảng
                 try {
                     const res = await fetch(`/api/calendar/my-latest-availability`, { headers: headers });
                     if (res.ok) {
@@ -348,6 +406,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
+        // Sự kiện mở modal xem báo cáo thống kê khảo sát dành cho quản lý
         document.querySelectorAll('.view-report-btn').forEach(btn => {
             btn.addEventListener('click', async function () {
                 activeEventId = this.getAttribute('data-id');
@@ -370,6 +429,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     document.getElementById('statTargetCount').innerText = `Tổng mục tiêu: ${json.target_count || 0}`;
                     document.getElementById('statSubmittedCount').innerText = `Đã phản hồi: ${json.submitted_count || 0}`;
 
+                    // Dựng bảng heatmap thống kê mức độ rảnh rỗi của các thành viên
                     buildHeatmapMatrix(config, json.slot_statistics || {}, json.target_count || 0);
                     toggleModal('reportModal', true);
                 } catch (e) {
@@ -381,7 +441,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     /**
-     * Gắn sự kiện xóa sự kiện cho quản lý
+     * Gắn sự kiện xóa sự kiện cho tài khoản quản lý
      */
     function bindDeleteEventListeners() {
         document.querySelectorAll('.delete-event-btn').forEach(btn => {
@@ -401,7 +461,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     if (res.ok) {
                         alert('Đã xóa thành công!');
-                        fetchAllEvents();
+                        fetchAllEvents(); // Tải lại danh sách sau khi xóa
                     } else {
                         alert(result.message || 'Không thể xóa.');
                     }
@@ -416,6 +476,13 @@ document.addEventListener('DOMContentLoaded', function () {
     // ---------------------------------------------------------------------
     // 2. Dựng bảng ma trận khảo sát (W2M Matrix - When2Meet style)
     // ---------------------------------------------------------------------
+    /**
+     * Tạo bảng lưới thời gian cho khảo sát hoặc báo cáo thống kê
+     * @param {Object} config - Cấu hình thời gian khảo sát
+     * @param {string} tableId - ID của thẻ table trên HTML
+     * @param {boolean} isReadonly - Chế độ chỉ đọc (dùng cho báo cáo) hay chế độ tương tác (dùng để điền lịch)
+     * @param {Object} slotStats - Dữ liệu thống kê số lượng người rảnh theo từng ô (nếu có)
+     */
     function buildPollMatrix(config, tableId, isReadonly = false, slotStats = null) {
         const table = document.getElementById(tableId);
         if (!table) return;
@@ -425,6 +492,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const endDate = config.end_date ? new Date(config.end_date) : new Date();
         const step = config.step_minutes || 30;
 
+        // Tạo mảng danh sách các ngày từ ngày bắt đầu đến ngày kết thúc
         let dates = [];
         let curr = new Date(startDate);
         while (curr <= endDate) {
@@ -432,9 +500,10 @@ document.addEventListener('DOMContentLoaded', function () {
             curr.setDate(curr.getDate() + 1);
         }
 
+        // Tạo mảng các mốc thời gian trong ngày dựa theo bước nhảy (step_minutes)
         let timeSlots = [];
-        let totalMinutesStart = 6 * 60;
-        let totalMinutesEnd = 24 * 60;
+        let totalMinutesStart = 6 * 60; // Bắt đầu từ 06:00 sáng
+        let totalMinutesEnd = 24 * 60;   // Kết thúc lúc 24:00 đêm
         for (let m = totalMinutesStart; m < totalMinutesEnd; m += step) {
             let hh = String(Math.floor(m / 60)).padStart(2, '0');
             let mm = String(m % 60).padStart(2, '0');
@@ -445,6 +514,7 @@ document.addEventListener('DOMContentLoaded', function () {
         let headerRow1 = '<tr><th class="time-col-header" rowspan="2">Thời gian</th>';
         let headerRow2 = '<tr>';
 
+        // Xây dựng dòng tiêu đề các ngày trong tuần
         dates.forEach((d, index) => {
             let dayName = d.toLocaleDateString('vi-VN', { weekday: 'short' });
             let dayMonth = `${d.getDate()}/${d.getMonth() + 1}`;
@@ -452,6 +522,7 @@ document.addEventListener('DOMContentLoaded', function () {
             headerRow1 += `<th>${dayName}</th>`;
 
             if (!isReadonly) {
+                // Thêm nút "Chọn cả ngày" cho từng cột ngày ở chế độ điền lịch
                 headerRow2 += `<th>
                     <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
                         <span>${dayMonth}</span>
@@ -466,6 +537,7 @@ document.addEventListener('DOMContentLoaded', function () {
         headerRow2 += '</tr>';
         table.innerHTML += headerRow1 + headerRow2;
 
+        // Vẽ các dòng thời gian và các ô ô chọn (slot) tương ứng với từng ngày
         for (let i = 0; i < timeSlots.length; i++) {
             let time = timeSlots[i];
             let row = '<tr>';
@@ -485,10 +557,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 let slotISO = `${dateStr}T${time === "24:00" ? "00:00" : time}:00`;
 
                 if (isReadonly) {
+                    // Chế độ xem báo cáo: Hiển thị số lượng người rảnh và tô màu heatmap tương ứng
                     let count = slotStats ? (slotStats[slotISO] || 0) : 0;
                     let heatmapClass = count > 0 ? (count > 2 ? 'heatmap-high' : 'heatmap-mid') : '';
                     row += `<td class="time-slot-cell ${heatmapClass}" data-slot="${slotISO}">${count}</td>`;
                 } else {
+                    // Chế độ điền lịch: Tạo ô trống có hỗ trợ bôi đen chọn lịch
                     let borderClass = (time !== "24:00" && time.endsWith('30')) ? 'slot-half-hour' : 'slot-full-hour';
                     row += `<td class="time-slot-cell ${borderClass}" data-col-index="${index}" data-slot="${slotISO}"></td>`;
                 }
@@ -498,6 +572,7 @@ document.addEventListener('DOMContentLoaded', function () {
             table.innerHTML += row;
         }
 
+        // Gắn sự kiện cho nút "Chọn cả ngày" trên từng cột
         if (!isReadonly) {
             table.querySelectorAll('.select-col-btn').forEach(btn => {
                 btn.addEventListener('click', function (e) {
@@ -517,12 +592,17 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
+        // Kích hoạt tính năng kéo chuột bôi đen chọn nhiều ô
         initDragSelection(table);
     }
 
     // ---------------------------------------------------------------------
     // 3. Tính năng kéo chuột bôi đen/chọn các ô thời gian (Drag selection)
     // ---------------------------------------------------------------------
+    /**
+     * Xây dựng cơ chế kéo thả chuột mượt mà (kiểu When2Meet) để bôi đen chọn khung giờ rảnh
+     * @param {HTMLElement} table - Thẻ bảng ma trận
+     */
     function initDragSelection(table) {
         const cells = table.querySelectorAll('.time-slot-cell');
         cells.forEach(cell => {
@@ -553,6 +633,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // 4. Gửi lịch rảnh cá nhân lên máy chủ (Submit Availability)
     // ---------------------------------------------------------------------
     document.getElementById('saveAvailabilityBtn')?.addEventListener('click', async function () {
+        // Thu thập toàn bộ các ô thời gian đang được bôi đen chọn
         const selectedCells = document.querySelectorAll('#w2mMatrixTable .time-slot-cell.selected');
         const availableSlots = Array.from(selectedCells).map(c => c.getAttribute('data-slot'));
 
@@ -566,7 +647,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (res.ok) {
                 alert('Đã gửi lịch rảnh thành công!');
                 toggleModal('pollMatrixModal', false);
-                fetchAllEvents();
+                fetchAllEvents(); // Tải lại danh sách sự kiện sau khi gửi
             } else {
                 alert(result.message || 'Lỗi gửi lịch rảnh.');
             }
@@ -577,10 +658,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ---------------------------------------------------------------------
-    // 5. Submit Tạo Sự Kiện / Khảo Sát Mới (Đã tích hợp notification_settings)
+    // 5. Submit Tạo Sự Kiện / Khảo Sát Mới
     // ---------------------------------------------------------------------
-    // 5. Submit Tạo Sự Kiện / Khảo Sát Mới (Đã hỗ trợ chọn nhiều nhắc nhở)
-    // 5. Submit Tạo Sự Kiện / Khảo Sát Mới (Hỗ trợ danh sách nhắc nhở trực tiếp)
     const createEventForm = document.getElementById('createEventForm');
     if (createEventForm && !createEventForm.dataset.listenerAttached) {
         createEventForm.dataset.listenerAttached = "true";
@@ -597,21 +676,23 @@ document.addEventListener('DOMContentLoaded', function () {
             const statusVal = document.getElementById('eventStatus').value;
             const targetMembersVal = document.getElementById('targetMemberIds')?.value || '';
 
-            // Thu thập tất cả các mốc thời gian được tích chọn vào một mảng (Array)
+            // Thu thập tất cả các mốc thời gian nhắc nhở thông báo được tích chọn vào một mảng (Array)
             const selectedRemindCheckboxes = document.querySelectorAll('input[name="remindMinutes"]:checked');
             const remindMinutesArray = Array.from(selectedRemindCheckboxes).map(cb => parseInt(cb.value, 10));
 
+            // Xây dựng đối tượng payload chứa thông tin sự kiện mới
             let payload = {
                 title: document.getElementById('eventTitle').value,
                 type: document.getElementById('eventType').value,
                 status: statusVal,
                 target_member_ids: targetMembersVal.split(',').map(s => s.trim()).filter(Boolean),
                 notification_settings: {
-                    enabled: remindMinutesArray.length > 0, // Tự động bật nếu người dùng có chọn ít nhất 1 mốc
-                    remind_before_minutes: remindMinutesArray // Mảng chứa các mốc thời gian
+                    enabled: remindMinutesArray.length > 0, // Tự động bật thông báo nếu có chọn ít nhất 1 mốc
+                    remind_before_minutes: remindMinutesArray // Mảng chứa các mốc thời gian trước sự kiện
                 }
             };
 
+            // Phân tách dữ liệu cấu hình theo loại (Khảo sát POLL hay Lịch cố định CONFIRMED)
             if (statusVal === 'POLL') {
                 payload.poll_config = {
                     start_date: document.getElementById('pollStartDate').value,
@@ -637,7 +718,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     alert('Tạo thành công!');
                     toggleModal('createEventModal', false);
                     createEventForm.reset();
-                    fetchAllEvents();
+                    fetchAllEvents(); // Tải lại danh sách sự kiện sau khi tạo thành công
                 } else {
                     alert(result.message || 'Lỗi tạo sự kiện.');
                 }
@@ -660,6 +741,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        // Lấy các khung giờ được quản lý bôi đen trực tiếp trên bảng báo cáo thống kê
         const selectedCells = document.querySelectorAll('#reportMatrixTable .time-slot-cell.selected');
         if (selectedCells.length === 0) {
             alert('Vui lòng bôi đen chọn khung giờ chốt trên bảng báo cáo.');
@@ -672,11 +754,12 @@ document.addEventListener('DOMContentLoaded', function () {
             if (slot) slots.push(new Date(slot));
         });
 
+        // Sắp xếp các mốc thời gian để tìm ra thời điểm bắt đầu sớm nhất và kết thúc muộn nhất
         slots.sort((a, b) => a - b);
 
         let startTimeObj = slots[0];
         let endTimeObj = new Date(slots[slots.length - 1]);
-        endTimeObj.setMinutes(endTimeObj.getMinutes() + 30);
+        endTimeObj.setMinutes(endTimeObj.getMinutes() + 30); // Tự động cộng thêm 30 phút cho khoảng thời gian cuối
 
         const formatDate = (date) => {
             let pad = (n) => String(n).padStart(2, '0');
@@ -693,7 +776,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (res.ok) {
                 alert('Đã chốt lịch thành công!');
                 toggleModal('reportModal', false);
-                fetchAllEvents();
+                fetchAllEvents(); // Tải lại danh sách sau khi chốt lịch
             } else {
                 alert(result.message || 'Lỗi chốt lịch.');
             }
