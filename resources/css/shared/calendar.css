@@ -1,6 +1,5 @@
 /* ==========================================================================
    1. CONTAINER CHÍNH & HEADER
-   Khung chứa toàn bộ giao diện lịch, căn giữa màn hình và thiết lập font chữ chung.
    ========================================================================== */
 .calendar-container {
     flex: 1;
@@ -10,7 +9,6 @@
     box-sizing: border-box;
 }
 
-/* Thanh tiêu đề chính của lịch (bao gồm tên tiêu đề và nút chức năng chung) */
 .calendar-header {
     display: flex;
     flex-direction: column;
@@ -20,7 +18,6 @@
     gap: 15px;
 }
 
-/* Tiêu đề cấp 2 (Heading 2) của header */
 .calendar-header h2 {
     margin: 0 0 5px 0;
     font-size: 24px;
@@ -28,23 +25,14 @@
     color: #212529;
 }
 
-/* Phụ đề hiển thị bên dưới tiêu đề chính */
 .calendar-header .subtitle {
     margin: 0;
     color: #6c757d;
     font-size: 14px;
 }
 
-.event-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
-    margin-top: 10px;
-}
-
 /* ==========================================================================
    2. THANH TABS CHUYỂN ĐỔI (Lịch đã chốt / Khảo sát)
-   Khu vực điều hướng dạng tab để chuyển đổi qua lại giữa các góc nhìn dữ liệu.
    ========================================================================== */
 .calendar-tabs {
     display: flex;
@@ -54,7 +42,6 @@
     padding-bottom: 10px;
 }
 
-/* Nút bấm chuyển tab mặc định (chưa kích hoạt) */
 .tab-btn {
     background: none;
     border: none;
@@ -67,23 +54,22 @@
     transition: all 0.2s;
 }
 
-/* Trạng thái khi tab được bấm chọn (active) */
+/* Đồng bộ tab active sang tông màu đỏ chủ đạo */
 .tab-btn.active {
-    background: #4f46e5;
+    background: #dc3545;
     color: #fff;
 }
 
 /* ==========================================================================
    3. GRID & CARD HIỂN THỊ DANH SÁCH SỰ KIỆN
-   Bố cục lưới (Grid) dùng để hiển thị danh sách các sự kiện dạng thẻ (Card).
    ========================================================================== */
 .event-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 16px;
+    margin-top: 10px;
 }
 
-/* Thẻ card bao bọc thông tin chi tiết của từng sự kiện */
 .event-card {
     background: #fff;
     border: 1px solid #e5e7eb;
@@ -94,19 +80,15 @@
     flex-direction: column;
     justify-content: space-between;
     position: relative;
-    /* Quan trọng để định vị nút xóa dạng dấu X tuyệt đối bên trong */
 }
 
-/* Tiêu đề sự kiện nằm trong card */
 .event-card h4 {
     margin: 0 0 8px 0;
     font-size: 18px;
     color: #111827;
     padding-right: 20px;
-    /* Tránh text bị đè vào nút dấu X ở góc trên bên phải */
 }
 
-/* Thẻ nhãn (Badge) phân loại sự kiện (Practice, Meeting, Show, Event) */
 .badge {
     display: inline-block;
     padding: 2px 8px;
@@ -116,38 +98,32 @@
     margin-bottom: 12px;
 }
 
-/* Màu sắc cho phân loại: Luyện tập (Practice) */
 .badge-practice {
     background: #e0f2fe;
     color: #0369a1;
 }
 
-/* Màu sắc cho phân loại: Cuộc họp (Meeting) */
 .badge-meeting {
     background: #fef3c7;
     color: #d97706;
 }
 
-/* Màu sắc cho phân loại: Biểu diễn (Show) */
 .badge-show {
     background: #fee2e2;
     color: #dc2626;
 }
 
-/* Màu sắc cho phân loại: Sự kiện chung (Event) */
 .badge-event {
     background: #f3e8ff;
     color: #7e22ce;
 }
 
-/* Định dạng nội dung văn bản thông tin bên trong sự kiện */
 .event-info p {
     margin: 4px 0;
     font-size: 13px;
     color: #4b5563;
 }
 
-/* Nút xóa sự kiện dạng dấu X ở góc trên bên phải thẻ Card */
 .delete-event-btn {
     position: absolute;
     top: 12px;
@@ -169,7 +145,6 @@
 
 /* ==========================================================================
    4. HỆ THỐNG NÚT BẤM (Buttons)
-   Các kiểu định dạng nút bấm tương tác chung cho toàn hệ thống.
    ========================================================================== */
 .btn {
     padding: 8px 16px;
@@ -181,27 +156,24 @@
     transition: background 0.2s;
 }
 
-/* Nút hành động chính (Primary) */
 .btn-primary {
-    background: #c70c0c;
+    background: #dc3545;
     color: #fff;
 }
 
 .btn-primary:hover {
-    background: #c70c0c;
+    background: #b91c1c;
 }
 
-/* Nút hành động thành công/Xác nhận (Success) */
 .btn-success {
-    background: #c70c0c;
+    background: #dc3545;
     color: #fff;
 }
 
 .btn-success:hover {
-    background: #15803d;
+    background: #b91c1c;
 }
 
-/* Nút viền khung (Outline) */
 .btn-outline {
     background: #fff;
     border: 1px solid #d1d5db;
@@ -212,7 +184,6 @@
     background: #f9fafb;
 }
 
-/* Lớp bổ trợ mở rộng chiều rộng nút full 100% */
 .w-100 {
     width: 100%;
     margin-top: 10px;
@@ -226,8 +197,7 @@
 }
 
 /* ==========================================================================
-   5. HỆ THỐNG MODAL (Hộp thoại popup thuần CSS)
-   Lớp phủ màn hình (Overlay) và khung chứa nội dung popup.
+   5. HỆ THỐNG MODAL & LAYOUT NGANG (2 CỘT)
    ========================================================================== */
 .custom-modal {
     display: none;
@@ -242,12 +212,10 @@
     justify-content: center;
 }
 
-/* Trạng thái hiển thị modal */
 .custom-modal.active {
     display: flex;
 }
 
-/* Khung nội dung chính bên trong modal */
 .modal-content {
     background: #fff;
     padding: 24px;
@@ -259,17 +227,30 @@
     overflow-y: auto;
 }
 
-/* Biến thể modal kích thước lớn (Dùng cho ma trận When2meet & Báo cáo) */
+/* Tối ưu hóa modal ngang cho việc tạo sự kiện */
+.modal-content.modal-horizontal {
+    max-width: 950px !important;
+    width: 95% !important;
+}
+
+.modal-grid-layout {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 20px;
+    align-items: start;
+    max-height: 68vh;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
 .modal-large {
     max-width: 850px !important;
     width: 95% !important;
     max-height: 85vh;
-    /* Giới hạn chiều cao tổng thể không bị tràn màn hình */
     display: flex;
     flex-direction: column;
 }
 
-/* Nút đóng modal hình dấu nhân (X) góc trên bên phải */
 .close-btn {
     position: absolute;
     right: 16px;
@@ -287,7 +268,7 @@
    6. FORM NHẬP LIỆU TRONG MODAL
    ========================================================================== */
 .form-group {
-    margin-bottom: 14px;
+    margin-bottom: 12px;
 }
 
 .form-group label {
@@ -315,6 +296,22 @@
 
 .form-row .form-group {
     flex: 1;
+}
+
+.config-section {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.config-section h4 {
+    font-size: 13px;
+    color: #495057;
+    margin-top: 0;
+    margin-bottom: 8px;
 }
 
 /* ==========================================================================
@@ -403,29 +400,26 @@
     transition: background 0.1s;
 }
 
-.time-slot-cell.selected {
-    background: #22c55e !important;
-}
-
+.time-slot-cell.selected,
 .w2m-table td.time-slot-cell.selected {
-    background: #22c55e !important;
+    background: #dc3545 !important;
     color: #fff !important;
     font-weight: bold;
 }
 
 /* ==========================================================================
-   8. HEATMAP REPORT & TỐI ƯU GIAO DIỆN BÁO CÁO (KHÔNG BỊ CLUMSY)
+   8. HEATMAP REPORT & BÁO CÁO TỔNG HỢP
    ========================================================================== */
 .time-slot-cell.heatmap-low {
-    background: #dcfce7;
+    background: #fde8e8;
 }
 
 .time-slot-cell.heatmap-mid {
-    background: #86efac;
+    background: #f8b4b4;
 }
 
 .time-slot-cell.heatmap-high {
-    background: #22c55e;
+    background: #dc3545;
     color: #fff;
     font-weight: bold;
 }
@@ -448,7 +442,6 @@
     border-top: 1px solid #f1f5f9;
 }
 
-/* Tùy chỉnh riêng cho phần báo cáo tổng hợp */
 #reportModal .modal-content {
     max-width: 800px;
     width: 90%;
@@ -485,7 +478,6 @@
 
 .time-sidebar-table td.time-label-cell {
     height: 30px;
-    /* Khớp với chiều cao dòng của bảng dữ liệu */
     vertical-align: middle;
     text-align: center;
     padding: 0 10px;
@@ -493,14 +485,14 @@
     font-weight: 500;
 }
 
-/* ========================================================================= */
-/* TÙY CHỈNH GIAO DIỆN LƯỚI NHẮC NHỞ (REMINDER CHIPS GRID)                    */
-/* ========================================================================= */
+/* =========================================================================
+   9. LƯỚI NHẮC NHỞ (REMINDER CHIPS GRID)
+   ========================================================================= */
 .reminder-chip-label {
     display: flex !important;
     align-items: center !important;
     gap: 8px !important;
-    padding: 10px 12px !important;
+    padding: 8px 10px !important;
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
     border-radius: 6px !important;
@@ -513,22 +505,27 @@
 }
 
 .reminder-chip-label:hover {
-    background: #e9ecef;
+    background: #f1f3f5;
     border-color: #ced4da;
 }
 
 .reminder-chip-label input[type="checkbox"] {
     accent-color: #dc3545;
-    /* Đồng bộ tông màu đỏ chủ đạo của Sunburst Dashboard */
     width: 16px;
     height: 16px;
     cursor: pointer;
 }
 
-/* Hiệu ứng khi thẻ nhắc nhở được tích chọn */
 .reminder-chip-label:has(input:checked) {
     background: #fff5f5;
     border-color: #dc3545;
     color: #dc3545;
-    font-weight: 500;
+    font-weight: 600;
+}
+
+/* Responsive phụ cho thiết bị di động */
+@media (max-width: 768px) {
+    .modal-grid-layout {
+        grid-template-columns: 1fr;
+    }
 }

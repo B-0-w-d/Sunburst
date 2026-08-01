@@ -67,80 +67,96 @@
 
             <!-- MODAL: TẠO SỰ KIỆN HOẶC KHẢO SÁT MỚI -->
             <div id="createEventModal" class="custom-modal">
-                <div class="modal-content">
+                <div class="modal-content modal-horizontal"> <!-- Thêm class modal-horizontal -->
                     <span class="close-btn" data-modal="createEventModal">&times;</span>
                     <h3>Tạo Sự Kiện Hoặc Khảo Sát Mới</h3>
+
                     <form id="createEventForm">
-                        <div class="form-group">
-                            <label>Tiêu đề sự kiện</label>
-                            <input type="text" id="eventTitle" required placeholder="Ví dụ: Khảo sát lịch tập band...">
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Phân loại (Type)</label>
-                                <select id="eventType">
-                                    <option value="PRACTICE">PRACTICE (Lịch tập)</option>
-                                    <option value="MEETING">MEETING (Lịch họp)</option>
-                                    <option value="SHOW">SHOW (Show diễn)</option>
-                                    <option value="EVENT">EVENT (Nội bộ)</option>
-                                </select>
+                        <!-- Dùng một div bọc để chia 2 cột (Trái: Form thông tin, Phải: Chọn thành viên) -->
+                        <div class="modal-grid-layout">
+
+                            <!-- CỘT TRÁI: THÔNG TIN SỰ KIỆN & CẤU HÌNH THỜI GIAN -->
+                            <div class="modal-col-left">
+                                <div class="form-group">
+                                    <label>Tiêu đề sự kiện</label>
+                                    <input type="text" id="eventTitle" required placeholder="Ví dụ: Khảo sát lịch tập band...">
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Phân loại (Type)</label>
+                                        <select id="eventType">
+                                            <option value="PRACTICE">PRACTICE (Lịch tập)</option>
+                                            <option value="MEETING">MEETING (Lịch họp)</option>
+                                            <option value="SHOW">SHOW (Show diễn)</option>
+                                            <option value="EVENT">EVENT (Nội bộ)</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Trạng thái khởi tạo</label>
+                                        <select id="eventStatus">
+                                            <option value="POLL">POLL (Khảo sát thời gian)</option>
+                                            <option value="CONFIRMED">CONFIRMED (Chốt lịch luôn)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Cấu hình thời gian cho Khảo Sát (POLL) -->
+                                <div id="pollConfigSection" class="config-section">
+                                    <h4>Cấu hình thời gian khảo sát</h4>
+                                    <div class="form-row">
+                                        <div class="form-group"><label>Ngày bắt đầu</label><input type="date" id="pollStartDate"></div>
+                                        <div class="form-group"><label>Ngày kết thúc</label><input type="date" id="pollEndDate"></div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group"><label>Giờ mở đầu ngày</label><input type="time" id="dailyStartTime" value="06:00"></div>
+                                        <div class="form-group"><label>Giờ kết thúc ngày</label><input type="time" id="dailyEndTime" value="23:59"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Cấu hình thời gian cho Lịch Cố Định (CONFIRMED) -->
+                                <div id="confirmedConfigSection" class="config-section" style="display: none;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <h4 style="margin: 0;">Thời gian diễn ra sự kiện</h4>
+                                        <label style="font-size: 13px; font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                                            <input type="checkbox" id="allDayEventCheckbox" style="cursor: pointer;"> Cả ngày
+                                        </label>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group"><label>Bắt đầu</label><input type="datetime-local" id="startTime"></div>
+                                        <div class="form-group"><label>Kết thúc</label><input type="datetime-local" id="endTime"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Cài đặt thông báo nhắc nhở -->
+                                <div class="form-group" style="margin-top: 15px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Thời điểm nhắc nhở trước:</label>
+                                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                                        <label class="reminder-chip-label"><input type="checkbox" name="remindMinutes" value="30" checked><span>30 phút</span></label>
+                                        <label class="reminder-chip-label"><input type="checkbox" name="remindMinutes" value="60"><span>1 tiếng</span></label>
+                                        <label class="reminder-chip-label"><input type="checkbox" name="remindMinutes" value="360"><span>6 tiếng</span></label>
+                                        <label class="reminder-chip-label"><input type="checkbox" name="remindMinutes" value="720"><span>12 tiếng</span></label>
+                                        <label class="reminder-chip-label"><input type="checkbox" name="remindMinutes" value="1440"><span>1 ngày</span></label>
+                                        <label class="reminder-chip-label"><input type="checkbox" name="remindMinutes" value="2880"><span>2 ngày</span></label>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label>Trạng thái khởi tạo</label>
-                                <select id="eventStatus">
-                                    <option value="POLL">POLL (Khảo sát thời gian)</option>
-                                    <option value="CONFIRMED">CONFIRMED (Chốt lịch luôn)</option>
-                                </select>
+
+                            <!-- CỘT PHẢI: CHỌN THÀNH VIÊN KÉO THẢ -->
+                            <div class="modal-col-right">
+                                <div class="form-group" style="height: 100%; display: flex; flex-direction: column;">
+                                    <label style="font-weight: 600; margin-bottom: 8px;">Thành viên tham gia</label>
+                                    <div style="flex: 1; min-height: 300px;">
+                                        <x-memberSelect id="eventMemberSelector" :members="$allMembers" :selected="[]" />
+                                    </div>
+                                    <button type="button" id="selectAllMembersBtn" class="btn" style="margin-top: 10px;">Chọn tất cả</button>
+                                </div>
                             </div>
+
                         </div>
 
-                        <!-- Cấu hình thời gian cho Khảo Sát (POLL) -->
-                        <div id="pollConfigSection" class="config-section">
-                            <h4>Cấu hình thời gian khảo sát</h4>
-                            <div class="form-row">
-                                <div class="form-group"><label>Ngày bắt đầu</label><input type="date" id="pollStartDate"></div>
-                                <div class="form-group"><label>Ngày kết thúc</label><input type="date" id="pollEndDate"></div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group"><label>Giờ mở đầu ngày</label><input type="time" id="dailyStartTime" value="18:00"></div>
-                                <div class="form-group"><label>Giờ kết thúc ngày</label><input type="time" id="dailyEndTime" value="22:00"></div>
-                            </div>
-                        </div>
-
-                        <!-- Cấu hình thời gian cho Lịch Cố Định (CONFIRMED) -->
-                        <div id="confirmedConfigSection" class="config-section" style="display: none;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <h4 style="margin: 0;">Thời gian diễn ra sự kiện</h4>
-                                <label style="font-size: 13px; font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                                    <input type="checkbox" id="allDayEventCheckbox" style="cursor: pointer;"> Cả ngày
-                                </label>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group"><label>Bắt đầu</label><input type="datetime-local" id="startTime"></div>
-                                <div class="form-group"><label>Kết thúc</label><input type="datetime-local" id="endTime"></div>
-                            </div>
-                        </div>
-
-                        <!-- Component chọn thành viên tham gia -->
-                        <div class="form-group">
-                            <x-memberSelect id="eventMemberSelector" :members="$allMembers" :selected="[]" />
-                            <button type="button" id="selectAllMembersBtn" class="btn">Chọn tất cả</button>
-                        </div>
-
-                        <!-- Cài đặt thông báo nhắc nhở -->
-                        <div class="form-group" style="margin-top: 15px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Thời điểm nhắc nhở trước:</label>
-                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
-                                <label class="reminder-chip-label"><input type="checkbox" name="remindMinutes" value="30" checked><span>30 phút</span></label>
-                                <label class="reminder-chip-label"><input type="checkbox" name="remindMinutes" value="60"><span>1 tiếng</span></label>
-                                <label class="reminder-chip-label"><input type="checkbox" name="remindMinutes" value="360"><span>6 tiếng</span></label>
-                                <label class="reminder-chip-label"><input type="checkbox" name="remindMinutes" value="720"><span>12 tiếng</span></label>
-                                <label class="reminder-chip-label"><input type="checkbox" name="remindMinutes" value="1440"><span>1 ngày</span></label>
-                                <label class="reminder-chip-label"><input type="checkbox" name="remindMinutes" value="2880"><span>2 ngày</span></label>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="btn btn-success w-100" style="margin-top: 15px;">Xác Nhận Tạo</button>
+                        <!-- Nút submit nằm ở dưới cùng, trải dài -->
+                        <button type="submit" class="btn btn-success w-100" style="margin-top: 20px;">Xác Nhận Tạo</button>
                     </form>
                 </div>
             </div>
