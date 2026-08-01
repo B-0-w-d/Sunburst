@@ -11,11 +11,9 @@
 
 .calendar-header {
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
     align-items: center;
-    text-align: center;
     margin-bottom: 25px;
-    gap: 15px;
 }
 
 .calendar-header h2 {
@@ -54,7 +52,6 @@
     transition: all 0.2s;
 }
 
-/* Đồng bộ tab active sang tông màu đỏ chủ đạo */
 .tab-btn.active {
     background: #dc3545;
     color: #fff;
@@ -227,7 +224,6 @@
     overflow-y: auto;
 }
 
-/* Tối ưu hóa modal ngang cho việc tạo sự kiện */
 .modal-content.modal-horizontal {
     max-width: 950px !important;
     width: 95% !important;
@@ -528,4 +524,12 @@
     .modal-grid-layout {
         grid-template-columns: 1fr;
     }
+}
+
+#currentWeekTitle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
 }

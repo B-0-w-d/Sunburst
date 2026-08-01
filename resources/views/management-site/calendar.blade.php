@@ -3,9 +3,37 @@
     <div style="display: flex; width: 100%; min-height: calc(100vh - 70px); align-items: stretch; margin: 0; padding: 0;">
 
         <!-- ===================================================================== -->
-        <!-- SIDEBAR BÊN TRÁI -->
+        <!-- 1. SIDEBAR BÊN TRÁI: ĐIỀU HƯỚNG, TIÊU ĐỀ, NÚT TẠO VÀ LỊCH NHỎ -->
         <!-- ===================================================================== -->
-        <aside style="width: 260px; background-color: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; flex-shrink: 0;">
+        <aside style="width: 280px; background-color: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; flex-shrink: 0; overflow-y: auto;">
+            <!-- Lịch tháng nhỏ điều hướng -->
+            <div id="miniCalendarWidget" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h4 id="miniCalendarMonthYear" style="font-size: 14px; font-weight: 700; color: #1e293b; margin: 0;">Tháng 8, 2026</h4>
+                    <div style="display: flex; gap: 4px;">
+                        <button type="button" id="miniPrevBtn" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #64748b; font-weight: bold;">‹</button>
+                        <button type="button" id="miniNextBtn" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #64748b; font-weight: bold;">›</button>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 11px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">
+                    <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+                </div>
+                <div id="miniCalendarGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; font-size: 12px;">
+                    <!-- Render bằng JavaScript -->
+                </div>
+            </div>
+
+            <!-- Khu vực Tiêu đề & Nút Tạo Lịch/Khảo Sát -->
+            <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #f1f5f9;">
+                <h2 style="font-size: 16px; font-weight: 700; color: #1e293b; margin: 0 0 6px 0;">Quản Lý Lịch & Khảo Sát CLB</h2>
+                <p class="subtitle" style="color: #64748b; font-size: 12px; margin: 0 0 12px 0; line-height: 1.4;">Hệ thống lịch trình và khảo sát thời gian rảnh trực tuyến</p>
+
+                @if(auth()->user()->isManagementTier())
+                    <button id="openCreateModalBtn" class="btn btn-primary" style="width: 100%; font-size: 13px; padding: 8px 12px; justify-content: center;">+ Tạo Lịch / Khảo Sát</button>
+                @endif
+            </div>
+
+            <!-- Menu liên kết (Upcoming Shows / Danh mục) -->
             <div style="margin-bottom: 25px;">
                 <div style="margin-bottom: 12px;">
                     <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; font-weight: 700;">Upcoming Shows</span>
@@ -23,6 +51,9 @@
                 </div>
             </div>
 
+
+
+            <!-- Khối thông tin bổ sung / Tip ở chân sidebar -->
             <div class="card promo-card-sidebar" style="margin-top: auto; background: #fdf2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 15px; box-sizing: border-box;">
                 <span class="promo-tag" style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #dc2626; background: #fee2e2; padding: 2px 6px; border-radius: 4px;">Unobvious Tips</span>
                 <h4 class="promo-title" style="font-size: 13px; font-weight: 700; color: #1e293b; margin: 8px 0 4px 0; line-height: 1.4;">DEO BIET NEN LAM GI O DAY</h4>
@@ -34,48 +65,54 @@
         </aside>
 
         <!-- ===================================================================== -->
-        <!-- KHUNG NỘI DUNG CHÍNH BÊN PHẢI -->
+        <!-- 2. KHUNG NỘI DUNG CHÍNH BÊN PHẢI: LỊCH ĐÃ CHỐT & KHẢO SÁT ĐANG MỞ -->
         <!-- ===================================================================== -->
         <main class="calendar-container" style="flex: 1; padding: 30px; background-color: #f8fafc; box-sizing: border-box; overflow-y: auto;">
 
-            <!-- Thanh tiêu đề chính -->
-            <div class="calendar-header">
-                <div>
-                    <h2>Quản Lý Lịch & Khảo Sát CLB</h2>
-                    <p class="subtitle">Hệ thống lịch trình và khảo sát thời gian rảnh trực tuyến</p>
+            <!-- Phần 2.1: Khối Lịch Đã Chốt (Nền trắng, bo góc, đổ bóng nhẹ) -->
+            <div style="background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 40px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 id="currentWeekTitle" style="font-size: 16px; font-weight: 700; color: #1e293b; margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #10b981;"></span> Lịch Đã Chốt (Theo Tuần)
+                    </h3>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button type="button" id="weekTodayBtn" class="btn" style="padding: 6px 12px; font-size: 12px; border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; cursor: pointer;">Hôm nay</button>
+                        <div style="display: inline-flex; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff;">
+                            <button type="button" id="weekPrevBtn" style="padding: 6px 12px; background: #fff; border: none; cursor: pointer; font-weight: bold; font-size: 14px; line-height: 1;">‹</button>
+                            <button type="button" id="weekNextBtn" style="padding: 6px 12px; background: #fff; border: none; border-left: 1px solid #cbd5e1; cursor: pointer; font-weight: bold; font-size: 14px; line-height: 1;">›</button>
+                        </div>
+                    </div>
                 </div>
-                @if(auth()->user()->isManagementTier())
-                    <button id="openCreateModalBtn" class="btn btn-primary">+ Tạo Lịch / Khảo Sát</button>
-                @endif
+
+                <!-- Lưới lịch tuần (Time-Grid View) -->
+                <div style="overflow-x: auto;">
+                    <div id="weeklyCalendarGrid" style="min-width: 200px; display: grid; grid-template-columns: 20px repeat(7, 1fr); border-top: 1px solid #e2e8f0;">
+                        <!-- Render bằng JavaScript -->
+                    </div>
+                </div>
             </div>
 
-            <!-- 1. KHU VỰC LỊCH ĐÃ CHỐT (Ở TRÊN) -->
-            <div style="margin-bottom: 15px;">
-                <h3 style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 0; display: flex; align-items: center; gap: 8px;">
-                    <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #10b981;"></span> Lịch Đã Chốt
-                </h3>
-            </div>
-            <div class="event-grid" id="confirmedEventList" style="margin-bottom: 40px;"></div>
-
-            <!-- 2. KHU VỰC KHẢO SÁT ĐANG MỞ (Ở DƯỚI) -->
-            <div style="margin-bottom: 15px; border-top: 1px solid #e2e8f0; padding-top: 30px;">
-                <h3 style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 0; display: flex; align-items: center; gap: 8px;">
+            <!-- Phần 2.2: Khu vực danh sách Khảo Sát Đang Mở -->
+            <div style="margin-bottom: 15px; border-top: 1px solid #e2e8f0; padding-top: 25px;">
+                <h3 style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px;">
                     <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #3b82f6;"></span> Khảo Sát Đang Mở
                 </h3>
             </div>
             <div class="event-grid" id="pollEventList"></div>
 
-            <!-- MODAL: TẠO SỰ KIỆN HOẶC KHẢO SÁT MỚI -->
+            <!-- ===================================================================== -->
+            <!-- 3. CÁC MODAL (HỘP THOẠI TƯƠNG TÁC) -->
+            <!-- ===================================================================== -->
+
+            <!-- Modal: Tạo Sự Kiện Hoặc Khảo Sát Mới -->
             <div id="createEventModal" class="custom-modal">
-                <div class="modal-content modal-horizontal"> <!-- Thêm class modal-horizontal -->
+                <div class="modal-content modal-horizontal">
                     <span class="close-btn" data-modal="createEventModal">&times;</span>
                     <h3>Tạo Sự Kiện Hoặc Khảo Sát Mới</h3>
 
                     <form id="createEventForm">
-                        <!-- Dùng một div bọc để chia 2 cột (Trái: Form thông tin, Phải: Chọn thành viên) -->
                         <div class="modal-grid-layout">
-
-                            <!-- CỘT TRÁI: THÔNG TIN SỰ KIỆN & CẤU HÌNH THỜI GIAN -->
+                            <!-- Cột trái cấu hình sự kiện -->
                             <div class="modal-col-left">
                                 <div class="form-group">
                                     <label>Tiêu đề sự kiện</label>
@@ -101,7 +138,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Cấu hình thời gian cho Khảo Sát (POLL) -->
                                 <div id="pollConfigSection" class="config-section">
                                     <h4>Cấu hình thời gian khảo sát</h4>
                                     <div class="form-row">
@@ -114,7 +150,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Cấu hình thời gian cho Lịch Cố Định (CONFIRMED) -->
                                 <div id="confirmedConfigSection" class="config-section" style="display: none;">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                         <h4 style="margin: 0;">Thời gian diễn ra sự kiện</h4>
@@ -128,7 +163,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Cài đặt thông báo nhắc nhở -->
                                 <div class="form-group" style="margin-top: 15px;">
                                     <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Thời điểm nhắc nhở trước:</label>
                                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
@@ -142,7 +176,7 @@
                                 </div>
                             </div>
 
-                            <!-- CỘT PHẢI: CHỌN THÀNH VIÊN KÉO THẢ -->
+                            <!-- Cột phải chọn thành viên tham gia -->
                             <div class="modal-col-right">
                                 <div class="form-group" style="height: 100%; display: flex; flex-direction: column;">
                                     <label style="font-weight: 600; margin-bottom: 8px;">Thành viên tham gia</label>
@@ -152,16 +186,14 @@
                                     <button type="button" id="selectAllMembersBtn" class="btn" style="margin-top: 10px;">Chọn tất cả</button>
                                 </div>
                             </div>
-
                         </div>
 
-                        <!-- Nút submit nằm ở dưới cùng, trải dài -->
                         <button type="submit" class="btn btn-success w-100" style="margin-top: 20px;">Xác Nhận Tạo</button>
                     </form>
                 </div>
             </div>
 
-            <!-- MODAL: ĐIỀN LỊCH RẢNH (WHENTOFAST/WHEN2MEET) -->
+            <!-- Modal: Điền Lịch Rảnh Cá Nhân -->
             <div id="pollMatrixModal" class="custom-modal">
                 <div class="modal-content modal-large">
                     <span class="close-btn" data-modal="pollMatrixModal">&times;</span>
@@ -178,7 +210,7 @@
                 </div>
             </div>
 
-            <!-- MODAL: BÁO CÁO TỔNG HỢP & CHỐT LỊCH -->
+            <!-- Modal: Báo Cáo Tổng Hợp & Chốt Lịch -->
             <div id="reportModal" class="custom-modal">
                 <div class="modal-content modal-large">
                     <span class="close-btn" data-modal="reportModal">&times;</span>
@@ -202,7 +234,7 @@
     </div>
 </x-navbar>
 
-{{-- Push CSS và JS --}}
+{{-- Khai báo CSS và JS đính kèm --}}
 @push('styles')
     <link rel="stylesheet" href="{{ asset('app.css') }}">
 @endpush

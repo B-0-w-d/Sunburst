@@ -292,6 +292,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (confirmedContainer) renderEventList(confirmedContainer, resultConfirmed.data || [], 'confirmed');
             if (pollContainer) renderEventList(pollContainer, resultPoll.data || [], 'poll');
 
+            cachedConfirmedEvents = resultConfirmed.data || [];
+            renderWeeklyCalendar();
+            renderMiniCalendar();
             // Gắn lại các trình lắng nghe sự kiện cho các nút vừa render
             bindEventListeners();
             bindDeleteEventListeners();
@@ -785,4 +788,265 @@ document.addEventListener('DOMContentLoaded', function () {
             alert('Lỗi kết nối máy chủ.');
         }
     });
+
+    // =====================================================================
+        // 7. QUẢN LÝ LỊCH THÁNG NHỎ VÀ LỊCH TUẦN LỚN (UI CALENDAR VIEW - REWRITTEN)
+        // =====================================================================
+        let currentWeekStartDate = new Date();
+        // Đưa về ngày thứ Hai đầu tuần
+        let dayOfWeek = currentWeekStartDate.getDay();
+        let diffToMonday = currentWeekStartDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+        currentWeekStartDate.setDate(diffToMonday);
+        currentWeekStartDate.setHours(0, 0, 0, 0);
+
+        let currentMiniMonthDate = new Date();
+        let cachedConfirmedEvents = [];
+
+        // --- RENDER LỊCH THÁNG NHỎ (SIDEBAR) ---
+        function renderMiniCalendar() {
+            const grid = document.getElementById('miniCalendarGrid');
+            const label = document.getElementById('miniCalendarMonthYear');
+            if (!grid || !label) return;
+
+            grid.innerHTML = '';
+            let year = currentMiniMonthDate.getFullYear();
+            let month = currentMiniMonthDate.getMonth();
+
+            label.innerText = `Tháng ${month + 1}, ${year}`;
+
+            let firstDayIndex = new Date(year, month, 1).getDay();
+            firstDayIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1; // Chuẩn Thứ 2 - Chủ Nhật
+            let totalDays = new Date(year, month + 1, 0).getDate();
+
+            // Ô trống đầu tháng
+            for (let i = 0; i < firstDayIndex; i++) {
+                grid.innerHTML += `<span></span>`;
+            }
+
+            let todayStr = new Date().toISOString().split('T')[0];
+            for (let d = 1; d <= totalDays; d++) {
+                let dateObj = new Date(year, month, d);
+                let dateStr = dateObj.toISOString().split('T')[0];
+                let isToday = dateStr === todayStr;
+
+                let hasEvent = cachedConfirmedEvents.some(ev => ev.start_time && ev.start_time.startsWith(dateStr));
+
+                let style = `padding: 4px 0; text-align: center; border-radius: 4px; cursor: pointer; position: relative; font-size: 12px;`;
+                if (isToday) {
+                    style += ` background: #3b82f6; color: #fff; font-weight: bold;`;
+                } else {
+                    style += ` color: #334155;`;
+                }
+
+                let dot = hasEvent ? `<span style="position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background: ${isToday ? '#fff' : '#10b981'}; border-radius: 50%;"></span>` : '';
+
+                let cell = document.createElement('div');
+                cell.className = 'mini-day-cell';
+                cell.style.cssText = style;
+                cell.innerHTML = `${d}${dot}`;
+                cell.dataset.date = dateStr;
+                grid.appendChild(cell);
+            }
+
+            // Click ngày ở lịch nhỏ -> chuyển tuần tương ứng ở lịch lớn
+            grid.querySelectorAll('.mini-day-cell').forEach(cell => {
+                cell.addEventListener('click', function() {
+                    let clickedDate = new Date(this.getAttribute('data-date'));
+                    let day = clickedDate.getDay();
+                    let diff = clickedDate.getDate() - day + (day === 0 ? -6 : 1);
+                    currentWeekStartDate = new Date(clickedDate.setDate(diff));
+                    currentWeekStartDate.setHours(0, 0, 0, 0);
+                    renderWeeklyCalendar();
+                });
+            });
+        }
+
+        document.getElementById('miniPrevBtn')?.addEventListener('click', () => {
+            currentMiniMonthDate.setMonth(currentMiniMonthDate.getMonth() - 1);
+            renderMiniCalendar();
+        });
+        document.getElementById('miniNextBtn')?.addEventListener('click', () => {
+            currentMiniMonthDate.setMonth(currentMiniMonthDate.getMonth() + 1);
+            renderMiniCalendar();
+        });
+
+
+        // --- RENDER LỊCH TUẦN LỚN (00:00 ĐẾN 23:00 + NHÃN 24:00 Ở CUỐI) ---
+            function renderWeeklyCalendar() {
+                const grid = document.getElementById('weeklyCalendarGrid');
+                const titleLabel = document.getElementById('currentWeekTitle');
+                if (!grid) return;
+
+                grid.innerHTML = '';
+
+                let weekDays = [];
+                let tempDate = new Date(currentWeekStartDate);
+                for (let i = 0; i < 7; i++) {
+                    weekDays.push(new Date(tempDate));
+                    tempDate.setDate(tempDate.getDate() + 1);
+                }
+
+                let startStr = `${weekDays[0].getDate()}/${weekDays[0].getMonth() + 1}`;
+                let endStr = `${weekDays[6].getDate()}/${weekDays[6].getMonth() + 1}/${weekDays[6].getFullYear()}`;
+                if (titleLabel) {
+                    titleLabel.innerHTML = `<span style="width: 10px; height: 10px; border-radius: 50%; background-color: #10b981; display: inline-block; margin-right: 6px;"></span> Lịch Đã Chốt (${startStr} - ${endStr})`;
+                }
+
+                // Chỉ tạo 24 mốc giờ từ 0 đến 23 (bỏ hàng 24)
+                let hours = [];
+                for (let h = 0; h < 24; h++) {
+                    hours.push(h);
+                }
+
+                grid.style.display = 'grid';
+                grid.style.gridTemplateColumns = '60px repeat(7, 1fr)';
+                // 24 hàng giờ + 1 hàng phụ đáy để hiển thị vạch đóng và nhãn 24:00
+                grid.style.gridTemplateRows = `45px repeat(24, 45px) 20px`;
+
+                // 1. Header Cột Ngày (Hàng 1)
+                let headerTime = document.createElement('div');
+                headerTime.style.cssText = `border-right: 1px solid #e2e8f0; background: #f8fafc; grid-row: 1; grid-column: 1;`;
+                grid.appendChild(headerTime);
+
+                weekDays.forEach((d, idx) => {
+                    let dayNames = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'];
+                    let isToday = new Date().toDateString() === d.toDateString();
+                    let headerDay = document.createElement('div');
+                    headerDay.style.cssText = `padding: 6px; text-align: center; border-right: 1px solid #e2e8f0; border-bottom: 2px solid #cbd5e1; background: ${isToday ? '#eff6ff' : '#f8fafc'}; grid-row: 1; grid-column: ${idx + 2};`;
+                    headerDay.innerHTML = `
+                        <div style="font-size: 11px; color: #64748b; font-weight: 600;">${dayNames[idx]}</div>
+                        <div style="font-size: 14px; font-weight: 700; color: ${isToday ? '#2563eb' : '#1e293b'};">${d.getDate()}/${d.getMonth()+1}</div>
+                    `;
+                    grid.appendChild(headerDay);
+                });
+
+                // 2. Render Khung Lưới Từ 00:00 đến 23:00
+                let dayCellMatrix = [];
+
+                hours.forEach((hour, hIndex) => {
+                    let rowIndex = hIndex + 2;
+                    let timeLabelText = `${String(hour).padStart(2, '0')}:00`;
+
+                    let timeLabelDiv = document.createElement('div');
+                    timeLabelDiv.style.cssText = `padding: 4px 6px; font-size: 11px; color: #94a3b8; text-align: right; border-right: 1px solid #e2e8f0; border-top: 1px solid #f1f5f9; grid-row: ${rowIndex}; grid-column: 1;`;
+                    timeLabelDiv.innerText = timeLabelText;
+                    grid.appendChild(timeLabelDiv);
+
+                    weekDays.forEach((d, colIndex) => {
+                        let cellDiv = document.createElement('div');
+                        cellDiv.style.cssText = `
+                            border-right: 1px solid #e2e8f0;
+                            border-top: 1px solid #f1f5f9;
+                            grid-column: ${colIndex + 2};
+                            grid-row: ${rowIndex};
+                            position: relative;
+                            box-sizing: border-box;
+                            background: transparent;
+                        `;
+                        grid.appendChild(cellDiv);
+
+                        if (!dayCellMatrix[colIndex]) dayCellMatrix[colIndex] = [];
+                        dayCellMatrix[colIndex][hour] = cellDiv;
+                    });
+                });
+
+                // 3. Thêm dòng đáy chứa nhãn "24:00" ngay dưới vạch 23:00
+                let bottomRowIndex = hours.length + 2;
+                let footerTimeDiv = document.createElement('div');
+                footerTimeDiv.style.cssText = `padding: 2px 6px; font-size: 11px; color: #94a3b8; text-align: right; border-right: 1px solid #e2e8f0; border-top: 1px solid #f1f5f9; grid-row: ${bottomRowIndex}; grid-column: 1;`;
+                footerTimeDiv.innerText = '24:00';
+                grid.appendChild(footerTimeDiv);
+
+                weekDays.forEach((d, colIndex) => {
+                    let footerCellDiv = document.createElement('div');
+                    footerCellDiv.style.cssText = `
+                        border-right: 1px solid #e2e8f0;
+                        border-top: 1px solid #f1f5f9;
+                        grid-column: ${colIndex + 2};
+                        grid-row: ${bottomRowIndex};
+                        background: transparent;
+                    `;
+                    grid.appendChild(footerCellDiv);
+                });
+
+                // 4. Đổ dữ liệu sự kiện vào lịch
+                cachedConfirmedEvents.forEach(ev => {
+                    if (!ev.start_time) return;
+                    let evStart = new Date(ev.start_time);
+                    let evEnd = ev.end_time ? new Date(ev.end_time) : new Date(evStart.getTime() + 60 * 60 * 1000);
+
+                    weekDays.forEach((d, colIndex) => {
+                        let dateStr = d.toISOString().split('T')[0];
+                        let dayStart = new Date(d);
+                        dayStart.setHours(0, 0, 0, 0);
+                        let dayEnd = new Date(d);
+                        dayEnd.setHours(23, 59, 59, 999);
+
+                        if (evEnd >= dayStart && evStart <= dayEnd) {
+                            let actualStart = evStart < dayStart ? dayStart : evStart;
+                            let actualEnd = evEnd > dayEnd ? dayEnd : evEnd;
+
+                            let startHour = actualStart.getHours();
+                            let startMinute = actualStart.getMinutes();
+
+                            let endTotalMinutes = actualEnd.getHours() * 60 + actualEnd.getMinutes();
+                            if (evEnd > dayEnd && dateStr === evStart.toISOString().split('T')[0]) {
+                                endTotalMinutes = 24 * 60;
+                            }
+                            let startTotalMinutes = startHour * 60 + startMinute;
+                            let durationMinutes = endTotalMinutes - startTotalMinutes;
+                            if (durationMinutes < 15) durationMinutes = 15;
+
+                            let targetCell = dayCellMatrix[colIndex] ? dayCellMatrix[colIndex][startHour] : null;
+                            if (!targetCell) return;
+
+                            let topPx = (startMinute / 60) * 45;
+                            let heightPx = (durationMinutes / 60) * 45 - 2;
+
+                            let eventCard = document.createElement('div');
+                            eventCard.style.cssText = `
+                                position: absolute;
+                                top: ${topPx}px;
+                                left: 2px;
+                                right: 2px;
+                                height: ${heightPx}px;
+                                background: #e0f2fe;
+                                border-left: 3px solid #0284c7;
+                                padding: 4px 6px;
+                                border-radius: 4px;
+                                font-size: 11px;
+                                overflow: hidden;
+                                z-index: 5;
+                                box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                                box-sizing: border-box;
+                            `;
+                            eventCard.innerHTML = `
+                                <strong style="color: #0369a1; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${ev.title}</strong>
+                                <span style="color: #64748b; font-size: 10px;">${formatEventDateTime(ev.start_time, ev.end_time)}</span>
+                            `;
+                            targetCell.appendChild(eventCard);
+                        }
+                    });
+                });
+            }
+
+            // --- ĐIỀU HƯỚNG TUẦN (Đảm bảo đủ 3 nút: Prev, Next, Today) ---
+                document.getElementById('weekPrevBtn')?.addEventListener('click', () => {
+                    currentWeekStartDate.setDate(currentWeekStartDate.getDate() - 7);
+                    renderWeeklyCalendar();
+                });
+
+                document.getElementById('weekNextBtn')?.addEventListener('click', () => {
+                    currentWeekStartDate.setDate(currentWeekStartDate.getDate() + 7);
+                    renderWeeklyCalendar();
+                });
+
+                document.getElementById('weekTodayBtn')?.addEventListener('click', () => {
+                    currentWeekStartDate = new Date();
+                    let day = currentWeekStartDate.getDay();
+                    let diff = currentWeekStartDate.getDate() - day + (day === 0 ? -6 : 1);
+                    currentWeekStartDate.setDate(diff);
+                    currentWeekStartDate.setHours(0, 0, 0, 0);
+                    renderWeeklyCalendar();
+                });
 });
