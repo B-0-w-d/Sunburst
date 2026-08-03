@@ -1,10 +1,12 @@
 // =========================================================================
-// QUẢN LÝ SỰ KIỆN, GỬI DỮ LIỆU, LỊCH THÁNG VÀ LỊCH TUẦN
+// FILE CHÍNH: ĐIỀU PHỐI SỰ KIỆN & QUẢN LÝ GIAO DIỆN LỊCH
 // =========================================================================
 
-import { headers, formatEventDateTime } from './utils.js';
+import { headers, formatEventDateTime, parseLocalDateTime } from './utils.js';
 import { buildPollMatrix, buildHeatmapMatrix } from './poll.js';
 import { removeMemberChip } from './addMember.js';
+import { renderMiniCalendar, initMiniCalendarNav, currentMiniMonthDate } from './miniCalendar.js';
+import { renderWeeklyCalendar, initWeeklyCalendarNav, currentWeekStartDate } from './weeklyCalendar.js';
 
 document.addEventListener('DOMContentLoaded', function () {
     const confirmedContainer = document.getElementById('confirmedEventList');
@@ -12,19 +14,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let activeEventId = null;
     let cachedConfirmedEvents = [];
-    let currentWeekStartDate = new Date();
-    let dayOfWeek = currentWeekStartDate.getDay();
-    let diffToMonday = currentWeekStartDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-    currentWeekStartDate.setDate(diffToMonday);
-    currentWeekStartDate.setHours(0, 0, 0, 0);
 
-    let currentMiniMonthDate = new Date();
-
+    // Tải toàn bộ danh sách sự kiện khi khởi động
     fetchAllEvents();
 
+    // Khởi tạo điều hướng cho lịch tháng mini và lịch tuần
+    initMiniCalendarNav(() => renderMiniCalendar(cachedConfirmedEvents, handleMiniDateClick));
+    initWeeklyCalendarNav(() => renderWeeklyCalendar(cachedConfirmedEvents));
+
+    // Xử lý khi click vào một ngày trên lịch mini để nhảy lịch tuần sang tuần đó
+    function handleMiniDateClick(dateStr) {
+        let clickedDate = new Date(dateStr);
+        let day = clickedDate.getDay();
+        let diff = clickedDate.getDate() - day + (day === 0 ? -6 : 1);
+        currentWeekStartDate.setTime(new Date(clickedDate.setDate(diff)).setHours(0, 0, 0, 0));
+        renderWeeklyCalendar(cachedConfirmedEvents);
+    }
+
+    // Nút mở modal tạo sự kiện
     document.getElementById('openCreateModalBtn')?.addEventListener('click', () => window.openModal('createEventModal'));
 
-    // Nút chọn tất cả thành viên
+    // Nút chọn tất cả thành viên trong form tạo sự kiện
     document.getElementById('selectAllMembersBtn')?.addEventListener('click', function () {
         const availableZone = document.getElementById('availableMembersZone');
         const selectedZone = document.getElementById('selectedMembersZone');
@@ -50,6 +60,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (hiddenInput) hiddenInput.value = ids.join(',');
     });
 
+    // Thay đổi giao diện form theo loại trạng thái (Khảo sát hay Đã chốt)
     const eventStatusSelect = document.getElementById('eventStatus');
     if (eventStatusSelect) {
         eventStatusSelect.addEventListener('change', function () {
@@ -61,6 +72,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Xử lý checkbox sự kiện "Cả ngày"
     const allDayCheckbox = document.getElementById('allDayEventCheckbox');
     const startTimeInput = document.getElementById('startTime');
     const endTimeInput = document.getElementById('endTime');
@@ -72,7 +84,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 endTimeInput.type = 'date';
                 const today = new Date().toISOString().split('T')[0];
                 startTimeInput.value = startTimeInput.value ? startTimeInput.value.split('T')[0] : today;
-                endTimeInput.value = startTimeInput.value; // Tự động đồng bộ kết thúc bằng bắt đầu khi tick Cả ngày
+                endTimeInput.value = startTimeInput.value;
             } else {
                 startTimeInput.type = 'datetime-local';
                 endTimeInput.type = 'datetime-local';
@@ -81,7 +93,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // Tự động kéo / đồng bộ thời gian kết thúc nếu nó trống hoặc sớm hơn thời gian bắt đầu
         startTimeInput.addEventListener('change', function () {
             if (!this.value) return;
             if (!endTimeInput.value || endTimeInput.value < this.value) {
@@ -98,6 +109,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Bật/tắt cài đặt thông báo
     const enableNotificationCheckbox = document.getElementById('enableNotification');
     const notifSettingsGroup = document.getElementById('notificationSettingsGroup');
     if (enableNotificationCheckbox && notifSettingsGroup) {
@@ -106,6 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Lấy toàn bộ sự kiện từ API
     async function fetchAllEvents() {
         try {
             const [resConfirmed, resPoll] = await Promise.all([
@@ -121,8 +134,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             cachedConfirmedEvents = resultConfirmed.data || [];
             renderUpcomingEvents(cachedConfirmedEvents);
-            renderWeeklyCalendar();
-            renderMiniCalendar();
+            renderWeeklyCalendar(cachedConfirmedEvents);
+            renderMiniCalendar(cachedConfirmedEvents, handleMiniDateClick);
             bindEventListeners();
             bindDeleteEventListeners();
         } catch (err) {
@@ -130,6 +143,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // Render danh sách thẻ sự kiện ở sidebar/tab quản lý
     function renderEventList(targetContainer, data, type) {
         targetContainer.innerHTML = '';
         if (!data || data.length === 0) {
@@ -178,6 +192,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Gắn sự kiện cho các nút điền lịch rảnh và xem báo cáo khảo sát
     function bindEventListeners() {
         document.querySelectorAll('.fill-poll-btn').forEach(btn => {
             btn.addEventListener('click', async function () {
@@ -243,6 +258,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Gắn sự kiện xóa sự kiện
     function bindDeleteEventListeners() {
         document.querySelectorAll('.delete-event-btn').forEach(btn => {
             if (btn.dataset.deleteListenerAttached) return;
@@ -269,6 +285,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Lưu lịch rảnh cá nhân khi người dùng submit form khảo sát
     document.getElementById('saveAvailabilityBtn')?.addEventListener('click', async function () {
         const selectedCells = document.querySelectorAll('#w2mMatrixTable .time-slot-cell.selected');
         const availableSlots = Array.from(selectedCells).map(c => c.getAttribute('data-slot'));
@@ -293,6 +310,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // Xử lý submit form tạo mới sự kiện
     const createEventForm = document.getElementById('createEventForm');
     if (createEventForm && !createEventForm.dataset.listenerAttached) {
         createEventForm.dataset.listenerAttached = "true";
@@ -371,6 +389,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Chốt lịch chính thức từ bảng báo cáo khảo sát
     document.getElementById('confirmPollBtn')?.addEventListener('click', async function () {
         if (!activeEventId) {
             alert('Không tìm thấy ID sự kiện.');
@@ -424,312 +443,73 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    function renderMiniCalendar() {
-            const grid = document.getElementById('miniCalendarGrid');
-            const label = document.getElementById('miniCalendarMonthYear');
-            if (!grid || !label) return;
-
-            grid.innerHTML = '';
-            let year = currentMiniMonthDate.getFullYear();
-            let month = currentMiniMonthDate.getMonth();
-            label.innerText = `Tháng ${month + 1}, ${year}`;
-
-            let firstDayIndex = new Date(year, month, 1).getDay();
-            firstDayIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
-            let totalDays = new Date(year, month + 1, 0).getDate();
-
-            for (let i = 0; i < firstDayIndex; i++) {
-                grid.innerHTML += `<span></span>`;
-            }
-
-            let todayStr = new Date().toISOString().split('T')[0];
-
-            // Định nghĩa bảng màu cho từng loại sự kiện
-            const typeColors = {
-                'PRACTICE': '#10b981', // Xanh lá
-                'SHOW': '#ef4444',     // Đỏ
-                'MEETING': '#f59e0b'   // Cam
-            };
-
-            for (let d = 1; d <= totalDays; d++) {
-                let dateObj = new Date(year, month, d);
-                let dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                let isToday = dateStr === todayStr;
-
-                // Tìm sự kiện diễn ra trong ngày này
-                let dayEvent = cachedConfirmedEvents.find(ev => {
-                    if (!ev.start_time) return false;
-                    const cleanStart = ev.start_time.replace(/\.\d+([+-]\d{2}:\d{2}|Z)?$/, '').replace('T', ' ');
-                    return cleanStart.startsWith(dateStr);
-                });
-
-                let style = `padding: 4px 0; text-align: center; border-radius: 4px; cursor: pointer; position: relative; font-size: 12px;`;
-
-                if (isToday) {
-                    style += ` background: #3b82f6; color: #fff; font-weight: bold;`;
-                } else if (dayEvent) {
-                    // Tô màu theo type event, nếu không khớp type nào thì mặc định màu xanh dương nhạt
-                    let bgColor = typeColors[dayEvent.type] || '#3b82f6';
-                    style += ` background: ${bgColor}; color: #fff; font-weight: bold;`;
-                } else {
-                    style += ` color: #334155;`;
-                }
-
-                let cell = document.createElement('div');
-                cell.className = 'mini-day-cell';
-                cell.style.cssText = style;
-                cell.innerHTML = `${d}`;
-                cell.dataset.date = dateStr;
-                grid.appendChild(cell);
-            }
-
-            grid.querySelectorAll('.mini-day-cell').forEach(cell => {
-                cell.addEventListener('click', function() {
-                    let clickedDate = new Date(this.getAttribute('data-date'));
-                    let day = clickedDate.getDay();
-                    let diff = clickedDate.getDate() - day + (day === 0 ? -6 : 1);
-                    currentWeekStartDate = new Date(clickedDate.setDate(diff));
-                    currentWeekStartDate.setHours(0, 0, 0, 0);
-                    renderWeeklyCalendar();
-                });
-            });
-        }
-
-    document.getElementById('miniPrevBtn')?.addEventListener('click', () => {
-        currentMiniMonthDate.setMonth(currentMiniMonthDate.getMonth() - 1);
-        renderMiniCalendar();
-    });
-    document.getElementById('miniNextBtn')?.addEventListener('click', () => {
-        currentMiniMonthDate.setMonth(currentMiniMonthDate.getMonth() + 1);
-        renderMiniCalendar();
-    });
-
-    function renderWeeklyCalendar() {
-        const grid = document.getElementById('weeklyCalendarGrid');
-        const titleLabel = document.getElementById('currentWeekTitle');
-        if (!grid) return;
-
-        grid.innerHTML = '';
-        let weekDays = [];
-        let tempDate = new Date(currentWeekStartDate);
-        for (let i = 0; i < 7; i++) {
-            weekDays.push(new Date(tempDate));
-            tempDate.setDate(tempDate.getDate() + 1);
-        }
-
-        let startStr = `${weekDays[0].getDate()}/${weekDays[0].getMonth() + 1}`;
-        let endStr = `${weekDays[6].getDate()}/${weekDays[6].getMonth() + 1}/${weekDays[6].getFullYear()}`;
-        if (titleLabel) {
-            titleLabel.innerHTML = `<span style="width: 10px; height: 10px; border-radius: 50%; background-color: #10b981; display: inline-block; margin-right: 6px;"></span> Lịch Đã Chốt (${startStr} - ${endStr})`;
-        }
-
-        let hours = [];
-        for (let h = 0; h < 24; h++) hours.push(h);
-
-        const rowHeight = 34;
-        grid.style.display = 'grid';
-        grid.style.gridTemplateColumns = '60px repeat(7, 1fr)';
-        grid.style.gridTemplateRows = `45px repeat(24, ${rowHeight}px) 20px`;
-
-        let headerTime = document.createElement('div');
-        headerTime.style.cssText = `border-right: 1px solid #e2e8f0; background: #f8fafc; grid-row: 1; grid-column: 1;`;
-        grid.appendChild(headerTime);
-
-        weekDays.forEach((d, idx) => {
-            let dayNames = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'];
-            let isToday = new Date().toDateString() === d.toDateString();
-            let headerDay = document.createElement('div');
-            headerDay.style.cssText = `padding: 6px; text-align: center; border-right: 1px solid #e2e8f0; border-bottom: 2px solid #cbd5e1; background: ${isToday ? '#eff6ff' : '#f8fafc'}; grid-row: 1; grid-column: ${idx + 2};`;
-            headerDay.innerHTML = `
-                <div style="font-size: 11px; color: #64748b; font-weight: 600;">${dayNames[idx]}</div>
-                <div style="font-size: 14px; font-weight: 700; color: ${isToday ? '#2563eb' : '#1e293b'};">${d.getDate()}/${d.getMonth()+1}</div>
-            `;
-            grid.appendChild(headerDay);
-        });
-
-        let dayCellMatrix = [];
-        hours.forEach((hour, hIndex) => {
-            let rowIndex = hIndex + 2;
-            let timeLabelText = `${String(hour).padStart(2, '0')}:00`;
-
-            let timeLabelDiv = document.createElement('div');
-            timeLabelDiv.style.cssText = `padding: 4px 6px; font-size: 11px; color: #94a3b8; text-align: right; border-right: 1px solid #e2e8f0; border-top: 1px solid #f1f5f9; grid-row: ${rowIndex}; grid-column: 1;`;
-            timeLabelDiv.innerText = timeLabelText;
-            grid.appendChild(timeLabelDiv);
-
-            weekDays.forEach((d, colIndex) => {
-                let cellDiv = document.createElement('div');
-                cellDiv.style.cssText = `border-right: 1px solid #e2e8f0; border-top: 1px solid #f1f5f9; grid-column: ${colIndex + 2}; grid-row: ${rowIndex}; position: relative; box-sizing: border-box; background: transparent;`;
-                grid.appendChild(cellDiv);
-
-                if (!dayCellMatrix[colIndex]) dayCellMatrix[colIndex] = [];
-                dayCellMatrix[colIndex][hour] = cellDiv;
-            });
-        });
-
-        let bottomRowIndex = hours.length + 2;
-        let footerTimeDiv = document.createElement('div');
-        footerTimeDiv.style.cssText = `padding: 2px 6px; font-size: 11px; color: #94a3b8; text-align: right; border-right: 1px solid #e2e8f0; border-top: 1px solid #f1f5f9; grid-row: ${bottomRowIndex}; grid-column: 1;`;
-        footerTimeDiv.innerText = '24:00';
-        grid.appendChild(footerTimeDiv);
-
-        weekDays.forEach((d, colIndex) => {
-            let footerCellDiv = document.createElement('div');
-            footerCellDiv.style.cssText = `border-right: 1px solid #e2e8f0; border-top: 1px solid #f1f5f9; grid-column: ${colIndex + 2}; grid-row: ${bottomRowIndex}; background: transparent;`;
-            grid.appendChild(footerCellDiv);
-        });
-
-        const parseLocalDateTime = (dateStr) => {
-            if (!dateStr) return new Date();
-            const cleanStr = dateStr.replace('Z', '').replace('T', ' ');
-            const parts = cleanStr.split(' ');
-            const datePart = parts[0];
-            const timePart = parts[1] || '00:00:00';
-
-            const [y, m, d] = datePart.split('-').map(Number);
-            const [h, min, s] = timePart.split(':').map(Number);
-            return new Date(y, m - 1, d, h || 0, min || 0, s || 0);
-        };
-
-        cachedConfirmedEvents.forEach(ev => {
-            if (!ev.start_time) return;
-            let evStart = parseLocalDateTime(ev.start_time);
-            let evEnd = ev.end_time ? parseLocalDateTime(ev.end_time) : new Date(evStart.getTime() + 60 * 60 * 1000);
-
-            let isAllDay = ev.start_time.includes('00:00:00') && ev.end_time && (ev.end_time.includes('23:59:59') || ev.end_time.includes('24:00:00'));
-            let timeTextDisplay = isAllDay ? 'Cả ngày' : formatEventDateTime(ev.start_time, ev.end_time);
-
-            weekDays.forEach((d, colIndex) => {
-                let dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-                let dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
-                let dayEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
-
-                if (evEnd >= dayStart && evStart <= dayEnd) {
-                    let actualStart = evStart < dayStart ? dayStart : evStart;
-                    let actualEnd = evEnd > dayEnd ? dayEnd : evEnd;
-
-                    let startHour = actualStart.getHours();
-                    let startMinute = actualStart.getMinutes();
-                    let endTotalMinutes = actualEnd.getHours() * 60 + actualEnd.getMinutes();
-
-                    let evStartDateStr = `${evStart.getFullYear()}-${String(evStart.getMonth() + 1).padStart(2, '0')}-${String(evStart.getDate()).padStart(2, '0')}`;
-                    if (evEnd > dayEnd && dateStr === evStartDateStr) {
-                        endTotalMinutes = 24 * 60;
-                    }
-                    let startTotalMinutes = startHour * 60 + startMinute;
-                    let durationMinutes = endTotalMinutes - startTotalMinutes;
-                    if (durationMinutes < 15) durationMinutes = 15;
-
-                    let targetCell = dayCellMatrix[colIndex] ? dayCellMatrix[colIndex][startHour] : null;
-                    if (!targetCell) return;
-
-                    let topPx = (startMinute / 60) * rowHeight;
-                    let heightPx = (durationMinutes / 60) * rowHeight - 2;
-
-                    let eventCard = document.createElement('div');
-                    eventCard.style.cssText = `position: absolute; top: ${topPx}px; left: 2px; right: 2px; height: ${heightPx}px; background: #e0f2fe; border-left: 3px solid #0284c7; padding: 4px 6px; border-radius: 4px; font-size: 11px; overflow: hidden; z-index: 5; box-shadow: 0 1px 2px rgba(0,0,0,0.05); box-sizing: border-box;`;
-                    eventCard.innerHTML = `
-                        <strong style="color: #0369a1; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${ev.title}</strong>
-                        <span style="color: #64748b; font-size: 10px;">${timeTextDisplay}</span>
-                    `;
-                    targetCell.appendChild(eventCard);
-                }
-            });
-        });
-    }
-
+    // Render danh sách sự kiện sắp diễn ra ở sidebar
     function renderUpcomingEvents(allEvents) {
-            const container = document.getElementById('upcomingEventsList');
-            if (!container) return;
+        const container = document.getElementById('upcomingEventsList');
+        if (!container) return;
 
-            const now = new Date();
+        const now = new Date();
 
-            const processedEvents = allEvents.map(event => {
-                // Lấy chuỗi và cắt bỏ phần múi giờ (+00:00 hoặc Z) để giữ nguyên vẹn giờ gốc
-                const rawStart = event.start_time || event.start;
-                const cleanStartStr = rawStart ? rawStart.replace(/\.\d+([+-]\d{2}:\d{2}|Z)?$/, '').replace('T', ' ') : new Date();
-                const start = new Date(cleanStartStr.replace(' ', 'T'));
+        const processedEvents = allEvents.map(event => {
+            const start = parseLocalDateTime(event.start_time || event.start);
+            const end = event.end_time ? parseLocalDateTime(event.end_time) : new Date(start.getTime() + 60 * 60 * 1000);
 
-                const rawEnd = event.end_time;
-                const cleanEndStr = rawEnd ? rawEnd.replace(/\.\d+([+-]\d{2}:\d{2}|Z)?$/, '').replace('T', ' ') : null;
-                const end = cleanEndStr ? new Date(cleanEndStr.replace(' ', 'T')) : new Date(start.getTime() + 60 * 60 * 1000);
-
-                let statusType = 'upcoming';
-                if (now >= start && now <= end) {
-                    statusType = 'ongoing';
-                } else if (now > end) {
-                    statusType = 'passed';
-                }
-                return { ...event, startDate: start, endDate: end, statusType };
-            });
-
-            const relevantEvents = processedEvents.filter(event => event.statusType !== 'passed');
-
-            relevantEvents.sort((a, b) => {
-                if (a.statusType === 'ongoing' && b.statusType !== 'ongoing') return -1;
-                if (a.statusType !== 'ongoing' && b.statusType === 'ongoing') return 1;
-                return a.startDate - b.startDate;
-            });
-
-            if (relevantEvents.length === 0) {
-                container.innerHTML = `<p style="font-size: 12px; color: #888; padding: 4px 8px;">Không có sự kiện nào.</p>`;
-                return;
+            let statusType = 'upcoming';
+            if (now >= start && now <= end) {
+                statusType = 'ongoing';
+            } else if (now > end) {
+                statusType = 'passed';
             }
+            return { ...event, startDate: start, endDate: end, statusType };
+        });
 
-            container.innerHTML = relevantEvents.map(event => {
-                const d = event.startDate;
-                const hours = String(d.getHours()).padStart(2, '0');
-                const minutes = String(d.getMinutes()).padStart(2, '0');
-                const day = String(d.getDate()).padStart(2, '0');
-                const month = String(d.getMonth() + 1).padStart(2, '0');
-                const year = d.getFullYear();
-                const formattedDate = `${hours}:${minutes} - ${day}/${month}/${year}`;
+        const relevantEvents = processedEvents.filter(event => event.statusType !== 'passed');
 
-                let dotColor = '#3b82f6';
-                if (event.type === 'PRACTICE') dotColor = '#10b981';
-                else if (event.type === 'SHOW') dotColor = '#ef4444';
-                else if (event.type === 'MEETING') dotColor = '#f59e0b';
+        relevantEvents.sort((a, b) => {
+            if (a.statusType === 'ongoing' && b.statusType !== 'ongoing') return -1;
+            if (a.statusType !== 'ongoing' && b.statusType === 'ongoing') return 1;
+            return a.startDate - b.startDate;
+        });
 
-                const eventId = event.id || event.event_id || event._id;
-
-                const badgeHtml = event.statusType === 'ongoing'
-                    ? `<span style="font-size: 10px; background: #fee2e2; color: #dc2626; padding: 1px 6px; border-radius: 4px; font-weight: 600; margin-bottom: 2px;">Đang diễn ra</span>`
-                    : '';
-
-                return `
-                    <div class="sidebar-nav-item" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: ${event.statusType === 'ongoing' ? '#fff5f5' : '#f9fafb'}; border: ${event.statusType === 'ongoing' ? '1px solid #fecaca' : 'none'}; border-radius: 6px; text-decoration: none; color: inherit; position: relative;">
-                        <a href="#" style="display: flex; flex-direction: column; align-items: flex-start; text-decoration: none; color: inherit; flex-grow: 1; overflow: hidden; margin-right: 8px;">
-                            ${badgeHtml}
-                            <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
-                                <span class="nav-dot" style="background-color: ${dotColor}; flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%;"></span>
-                                <span style="font-weight: 500; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${event.title}</span>
-                            </div>
-                            <span style="font-size: 11px; color: #6b7280; margin-left: 14px; margin-top: 2px;">${formattedDate}</span>
-                        </a>
-                        <button class="delete-event-btn" data-id="${eventId}" title="Xóa sự kiện" style="background: none; border: none; color: #9ca3af; font-size: 16px; cursor: pointer; padding: 0 4px; line-height: 1; border-radius: 4px;" onmouseover="this.style.color='#ef4444'; this.style.backgroundColor='#fee2e2';" onmouseout="this.style.color='#9ca3af'; this.style.backgroundColor='transparent';">&times;</button>
-                    </div>
-                `;
-            }).join('');
-
-            bindDeleteEventListeners();
+        if (relevantEvents.length === 0) {
+            container.innerHTML = `<p style="font-size: 12px; color: #888; padding: 4px 8px;">Không có sự kiện nào.</p>`;
+            return;
         }
 
-    document.getElementById('weekPrevBtn')?.addEventListener('click', () => {
-        currentWeekStartDate.setDate(currentWeekStartDate.getDate() - 7);
-        renderWeeklyCalendar();
-    });
+        container.innerHTML = relevantEvents.map(event => {
+            const d = event.startDate;
+            const hours = String(d.getHours()).padStart(2, '0');
+            const minutes = String(d.getMinutes()).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            const formattedDate = `${hours}:${minutes} - ${day}/${month}/${year}`;
 
-    document.getElementById('weekNextBtn')?.addEventListener('click', () => {
-        currentWeekStartDate.setDate(currentWeekStartDate.getDate() + 7);
-        renderWeeklyCalendar();
-    });
+            let dotColor = '#3b82f6';
+            if (event.type === 'PRACTICE') dotColor = '#10b981';
+            else if (event.type === 'SHOW') dotColor = '#ef4444';
+            else if (event.type === 'MEETING') dotColor = '#f59e0b';
 
-    document.getElementById('weekTodayBtn')?.addEventListener('click', () => {
-        currentWeekStartDate = new Date();
-        let day = currentWeekStartDate.getDay();
-        let diff = currentWeekStartDate.getDate() - day + (day === 0 ? -6 : 1);
-        currentWeekStartDate.setDate(diff);
-        currentWeekStartDate.setHours(0, 0, 0, 0);
-        renderWeeklyCalendar();
-    });
+            const eventId = event.id || event.event_id || event._id;
+
+            const badgeHtml = event.statusType === 'ongoing'
+                ? `<span style="font-size: 10px; background: #fee2e2; color: #dc2626; padding: 1px 6px; border-radius: 4px; font-weight: 600; margin-bottom: 2px;">Đang diễn ra</span>`
+                : '';
+
+            return `
+                <div class="sidebar-nav-item" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: ${event.statusType === 'ongoing' ? '#fff5f5' : '#f9fafb'}; border: ${event.statusType === 'ongoing' ? '1px solid #fecaca' : 'none'}; border-radius: 6px; text-decoration: none; color: inherit; position: relative;">
+                    <a href="#" style="display: flex; flex-direction: column; align-items: flex-start; text-decoration: none; color: inherit; flex-grow: 1; overflow: hidden; margin-right: 8px;">
+                        ${badgeHtml}
+                        <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
+                            <span class="nav-dot" style="background-color: ${dotColor}; flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%;"></span>
+                            <span style="font-weight: 500; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${event.title}</span>
+                        </div>
+                        <span style="font-size: 11px; color: #6b7280; margin-left: 14px; margin-top: 2px;">${formattedDate}</span>
+                    </a>
+                    <button class="delete-event-btn" data-id="${eventId}" title="Xóa sự kiện" style="background: none; border: none; color: #9ca3af; font-size: 16px; cursor: pointer; padding: 0 4px; line-height: 1; border-radius: 4px;" onmouseover="this.style.color='#ef4444'; this.style.backgroundColor='#fee2e2';" onmouseout="this.style.color='#9ca3af'; this.style.backgroundColor='transparent';">&times;</button>
+                </div>
+            `;
+        }).join('');
+        bindDeleteEventListeners();
+    }
 });

@@ -2,10 +2,17 @@
 // DỰNG BẢNG MA TRẬN KHẢO SÁT, HEATMAP VÀ CHỐT LỊCH
 // =========================================================================
 
+/**
+ * Hàm dựng bảng ma trận thời gian cho form điền lịch rảnh hoặc bảng báo cáo chốt lịch
+ * @param {Object} config - Cấu hình khảo sát (ngày bắt đầu, ngày kết thúc, bước nhảy thời gian...)
+ * @param {string} tableId - ID của thẻ table HTML cần render
+ * @param {boolean} isReadonly - Chế độ (false: điền lịch rảnh, true: xem báo cáo heatmap/chốt lịch)
+ * @param {Object} slotStats - Thống kê số lượng phản hồi cho từng khung giờ (dùng cho chế độ báo cáo)
+ */
 export function buildPollMatrix(config, tableId, isReadonly = false, slotStats = null) {
     const table = document.getElementById(tableId);
     if (!table) return;
-    table.innerHTML = '';
+    table.innerHTML = ''; // Làm sạch bảng trước khi render mới
 
     // Hàm phụ parse ngày tháng dạng YYYY-MM-DD theo giờ cục bộ (local time) tránh bị lệch múi giờ UTC
     const parseLocalDate = (dateStr) => {
@@ -15,10 +22,12 @@ export function buildPollMatrix(config, tableId, isReadonly = false, slotStats =
         return new Date(y || new Date().getFullYear(), (m || 1) - 1, d || 1);
     };
 
+    // Xác định ngày bắt đầu, kết thúc và bước nhảy (mặc định 30 phút)
     const startDate = config.start_date ? parseLocalDate(config.start_date) : new Date();
     const endDate = config.end_date ? parseLocalDate(config.end_date) : new Date();
     const step = config.step_minutes || 30;
 
+    // Tạo mảng danh sách các ngày trong khoảng thời gian khảo sát
     let dates = [];
     let curr = new Date(startDate);
     while (curr <= endDate) {
@@ -26,6 +35,7 @@ export function buildPollMatrix(config, tableId, isReadonly = false, slotStats =
         curr.setDate(curr.getDate() + 1);
     }
 
+    // Tạo mảng các khung giờ trong ngày (từ 06:00 sáng đến 24:00 đêm)
     let timeSlots = [];
     let totalMinutesStart = 6 * 60;
     let totalMinutesEnd = 24 * 60;
@@ -36,6 +46,7 @@ export function buildPollMatrix(config, tableId, isReadonly = false, slotStats =
     }
     timeSlots.push("24:00");
 
+    // Xây dựng phần tiêu đề bảng (Header hàng 1: Thứ trong tuần, Header hàng 2: Ngày/Tháng)
     let headerRow1 = '<tr><th class="time-col-header"></th>';
     let headerRow2 = '<tr><th class="time-sub-header">Thời gian</th>';
 
@@ -45,6 +56,7 @@ export function buildPollMatrix(config, tableId, isReadonly = false, slotStats =
 
         headerRow1 += `<th>${dayName}</th>`;
 
+        // Nếu là chế độ điền lịch (không phải readonly), thêm nút "Chọn cả ngày" vào header
         if (!isReadonly) {
             headerRow2 += `<th>
                 <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
@@ -60,10 +72,12 @@ export function buildPollMatrix(config, tableId, isReadonly = false, slotStats =
     headerRow2 += '</tr>';
     table.innerHTML = headerRow1 + headerRow2;
 
+    // Vòng lặp render các hàng thời gian và các ô (cell) giao nhau với từng ngày
     for (let i = 0; i < timeSlots.length; i++) {
         let time = timeSlots[i];
         let row = '<tr>';
 
+        // Định dạng nhãn hiển thị cột thời gian bên trái
         if (time === "24:00") {
             row += `<td class="time-label-cell"><span>12:00 AM</span></td>`;
         } else {
@@ -74,19 +88,21 @@ export function buildPollMatrix(config, tableId, isReadonly = false, slotStats =
             row += `<td class="time-label-cell"><span>${timeFormatted}</span></td>`;
         }
 
+        // Render các ô slot tương ứng với từng ngày trong tuần
         dates.forEach((d, index) => {
-            // Định dạng chuỗi ngày an toàn theo giờ cục bộ (YYYY-MM-DD)
             const pad = (n) => String(n).padStart(2, '0');
             let dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
             let slotISO = `${dateStr}T${time === "24:00" ? "00:00" : time}:00`;
 
             if (isReadonly) {
+                // Chế độ xem báo cáo (Heatmap): Tính toán màu sắc dựa trên số lượng người rảnh
                 let count = slotStats ? (slotStats[slotISO] || 0) : 0;
                 let heatmapClass = count > 0 ? (count >= 3 ? 'heatmap-high' : 'heatmap-mid') : 'heatmap-low';
                 row += `<td class="time-slot-cell ${heatmapClass} selectable-slot" data-slot="${slotISO}">
                             <span style="pointer-events: none; display: block; width: 100%; height: 100%;">${count}</span>
                         </td>`;
             } else {
+                // Chế độ điền lịch rảnh cá nhân: Thêm các class phân chia giờ chẵn/lẻ
                 let borderClass = (time !== "24:00" && time.endsWith('30')) ? 'slot-half-hour' : 'slot-full-hour';
                 row += `<td class="time-slot-cell ${borderClass}" data-col-index="${index}" data-slot="${slotISO}"></td>`;
             }
@@ -97,7 +113,7 @@ export function buildPollMatrix(config, tableId, isReadonly = false, slotStats =
     }
 
     if (!isReadonly) {
-        // Nút chọn cả ngày
+        // Gắn sự kiện click cho nút "Chọn cả ngày" ở mỗi cột ngày
         table.querySelectorAll('.select-col-btn').forEach(btn => {
             btn.addEventListener('click', function (e) {
                 e.stopPropagation();
@@ -107,43 +123,52 @@ export function buildPollMatrix(config, tableId, isReadonly = false, slotStats =
                 const selectedCount = Array.from(colCells).filter(c => c.classList.contains('selected')).length;
                 const shouldSelect = selectedCount < colCells.length;
 
+                // Toggle trạng thái chọn cho toàn bộ ô trong cột
                 colCells.forEach(cell => cell.classList.toggle('selected', shouldSelect));
 
+                // Thay đổi giao diện nút sau khi bấm
                 this.innerText = shouldSelect ? 'Bỏ chọn' : 'Chọn cả ngày';
                 this.style.background = shouldSelect ? '#007bff' : '#f8f9fa';
                 this.style.color = shouldSelect ? '#fff' : '#000';
             });
         });
 
-        // Kích hoạt kéo chuột chọn ô cho bảng khảo sát thông thường
+        // Kích hoạt tính năng kéo chuột bôi đen chọn ô cho bảng điền lịch thông thường
         initTableDragSelection(table, false);
     } else {
-        // Kích hoạt kéo chuột chọn ô cho bảng báo cáo / chốt lịch (isReadonly = true)
+        // Kích hoạt tính năng kéo chuột bôi đen cho bảng báo cáo / chốt lịch
         initTableDragSelection(table, true);
     }
 }
 
-// Cơ chế kéo chuột bôi đen mượt mà cho cả 2 chế độ
+/**
+ * Cơ chế kéo chuột bôi đen mượt mà trên bảng ma trận (Hỗ trợ cả điền lịch và chọn giờ chốt)
+ * @param {HTMLElement} table - Thẻ table áp dụng sự kiện
+ * @param {boolean} isReportMode - Xác định chế độ báo cáo hay điền lịch
+ */
 function initTableDragSelection(table, isReportMode = false) {
     let isMouseDown = false;
     let isSelecting = true;
 
+    // Xóa sự kiện mouseup cũ toàn cục nếu đã tồn tại để tránh bị gán chồng lặp sự kiện
     if (window._globalMouseUpHandler) {
         document.removeEventListener('mouseup', window._globalMouseUpHandler);
     }
 
+    // Lắng nghe sự kiện thả chuột trên toàn bộ document để kết thúc quá trình kéo
     window._globalMouseUpHandler = () => {
         isMouseDown = false;
     };
     document.addEventListener('mouseup', window._globalMouseUpHandler);
 
+    // Bắt đầu nhấn chuột vào một ô thời gian
     table.addEventListener('mousedown', (e) => {
         const cell = e.target.closest('.time-slot-cell');
         if (!cell) return;
 
         isMouseDown = true;
         const checkClass = isReportMode ? 'selected-final-slot' : 'selected';
-        isSelecting = !cell.classList.contains(checkClass);
+        isSelecting = !cell.classList.contains(checkClass); // Quyết định chọn thêm hay bỏ chọn
 
         if (isReportMode) {
             cell.classList.toggle('selected', isSelecting);
@@ -152,9 +177,10 @@ function initTableDragSelection(table, isReportMode = false) {
             cell.classList.toggle('selected', isSelecting);
         }
 
-        e.preventDefault();
+        e.preventDefault(); // Ngăn chặn hành vi bôi đen văn bản mặc định của trình duyệt
     });
 
+    // Kéo chuột qua các ô khác để bôi đen liên tục
     table.addEventListener('mouseover', (e) => {
         if (!isMouseDown) return;
         const cell = e.target.closest('.time-slot-cell');
@@ -169,6 +195,13 @@ function initTableDragSelection(table, isReportMode = false) {
     });
 }
 
+/**
+ * Hàm dựng bảng báo cáo Heatmap dựa trên dữ liệu thống kê khảo sát
+ * @param {Object} config - Cấu hình thời gian khảo sát
+ * @param {Object} slotStats - Dữ liệu thống kê số lượng người rảnh theo từng khung giờ
+ * @param {number} targetCount - Tổng số lượng mục tiêu cần tham gia
+ */
 export function buildHeatmapMatrix(config, slotStats, targetCount) {
+    // Gọi lại hàm buildPollMatrix với chế độ readonly = true để hiển thị số liệu thống kê
     buildPollMatrix(config, 'reportMatrixTable', true, slotStats);
 }
