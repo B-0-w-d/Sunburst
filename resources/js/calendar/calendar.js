@@ -5,7 +5,7 @@
 import { headers, formatEventDateTime, parseLocalDateTime } from './utils.js';
 import { buildPollMatrix, buildHeatmapMatrix } from './poll.js';
 import { removeMemberChip } from './addMember.js';
-import { renderMiniCalendar, initMiniCalendarNav, currentMiniMonthDate } from './miniCalendar.js';
+import { renderMiniCalendar, initMiniCalendarNav, currentMiniMonthDate, typeColors } from './miniCalendar.js';
 import { renderWeeklyCalendar, initWeeklyCalendarNav, currentWeekStartDate } from './weeklyCalendar.js';
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -144,53 +144,84 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Render danh sách thẻ sự kiện ở sidebar/tab quản lý
-    function renderEventList(targetContainer, data, type) {
-        targetContainer.innerHTML = '';
-        if (!data || data.length === 0) {
-            targetContainer.innerHTML = `<p class="subtitle" style="color: #6c757d; font-style: italic;">Không có ${type === 'confirmed' ? 'lịch đã chốt' : 'khảo sát'} nào.</p>`;
-            return;
-        }
-
-        data.forEach(ev => {
-            const card = document.createElement('div');
-            card.className = 'event-card';
-            card.style.position = 'relative';
-
-            let eventId = ev._id || ev.id || (ev._id && ev._id.$oid);
-            let actionBtn = '';
-            let pollConfigStr = ev.poll_config ? JSON.stringify(ev.poll_config).replace(/'/g, "&apos;") : '{}';
-
-            if (ev.status === 'POLL') {
-                if (ev.is_manager) {
-                    actionBtn = `<button class="btn btn-primary w-100 fill-poll-btn" data-id="${eventId}" data-config='${pollConfigStr}'>Điền Lịch Rảnh</button>`;
-                    actionBtn += `<button class="btn btn-outline w-100 mt-2 view-report-btn" data-id="${eventId}" data-title="${ev.title}" data-config='${pollConfigStr}'>Xem Báo Cáo & Chốt Lịch</button>`;
-                } else {
-                    if (ev.has_submitted_availability) {
-                        actionBtn = `<button class="btn w-100 fill-poll-btn" data-id="${eventId}" data-config='${pollConfigStr}' style="background-color: #28a745; color: white;">✓ Đã điền lịch rảnh (Sửa lại)</button>`;
-                    } else {
-                        actionBtn = `<button class="btn btn-primary w-100 fill-poll-btn" data-id="${eventId}" data-config='${pollConfigStr}'>Điền Lịch Rảnh</button>`;
-                    }
-                }
+    // Render danh sách thẻ sự kiện ở sidebar/tab quản lý
+        function renderEventList(targetContainer, data, type) {
+            targetContainer.innerHTML = '';
+            if (!data || data.length === 0) {
+                targetContainer.innerHTML = `<p class="subtitle" style="color: #6c757d; font-style: italic;">Không có ${type === 'confirmed' ? 'lịch đã chốt' : 'khảo sát'} nào.</p>`;
+                return;
             }
 
-            let deleteBtnHtml = ev.is_manager ? `<button class="delete-event-btn" data-id="${eventId}" title="Xóa sự kiện" style="position: absolute; top: 12px; right: 12px; background: transparent; border: none; font-size: 20px; font-weight: bold; color: #dc3545; cursor: pointer; line-height: 1; padding: 0 5px;">&times;</button>` : '';
-            let timeDisplayHtml = ev.start_time ? `<p><strong>Thời gian:</strong> ${formatEventDateTime(ev.start_time, ev.end_time)}</p>` : '';
+            data.forEach(ev => {
+                const card = document.createElement('div');
+                card.className = 'event-card';
+                card.style.position = 'relative';
 
-            card.innerHTML = `
-                ${deleteBtnHtml}
-                <div>
-                    <span class="badge badge-${(ev.type || '').toLowerCase()}">${ev.type || 'N/A'}</span>
-                    <h4>${ev.title}</h4>
-                    <div class="event-info">
-                        <p><strong>Trạng thái:</strong> ${ev.status}</p>
-                        ${timeDisplayHtml}
+                let eventId = ev._id || ev.id || (ev._id && ev._id.$oid);
+                let actionBtn = '';
+                let pollConfigStr = ev.poll_config ? JSON.stringify(ev.poll_config).replace(/'/g, "&apos;") : '{}';
+
+                if (ev.status === 'POLL') {
+                    if (ev.is_manager) {
+                        actionBtn = `<button class="btn btn-primary w-100 fill-poll-btn" data-id="${eventId}" data-config='${pollConfigStr}'>Điền Lịch Rảnh</button>`;
+                        actionBtn += `<button class="btn btn-outline w-100 mt-2 view-report-btn" data-id="${eventId}" data-title="${ev.title}" data-config='${pollConfigStr}'>Xem Báo Cáo & Chốt Lịch</button>`;
+                    } else {
+                        if (ev.has_submitted_availability) {
+                            actionBtn = `
+                                <button class="btn w-100 fill-poll-btn" data-id="${eventId}" data-config='${pollConfigStr}' style="background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 12px; padding: 6px 10px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 4px; border-radius: 4px;">
+                                    <span style="font-size: 13px;">✓</span> Đã điền lịch rảnh <span style="font-size: 11px; opacity: 0.75; font-weight: normal;">(Sửa)</span>
+                                </button>
+                            `;
+                        } else {
+                            actionBtn = `<button class="btn btn-primary w-100 fill-poll-btn" data-id="${eventId}" data-config='${pollConfigStr}'>Điền Lịch Rảnh</button>`;
+                        }
+                    }
+                }
+
+                let deleteBtnHtml = ev.is_manager ? `<button class="delete-event-btn" data-id="${eventId}" title="Xóa sự kiện" style="position: absolute; top: 12px; right: 12px; background: transparent; border: none; font-size: 20px; font-weight: bold; color: #dc3545; cursor: pointer; line-height: 1; padding: 0 5px;">&times;</button>` : '';
+
+                // Xử lý hiển thị thông tin thời gian tùy thuộc vào loại sự kiện (Đã chốt hay Khảo sát)
+                let timeDisplayHtml = '';
+                if (ev.status === 'POLL' && ev.poll_config) {
+                    // Format ngày bắt đầu - kết thúc khảo sát (YYYY-MM-DD -> DD/MM/YYYY)
+                    const formatDate = (dateStr) => {
+                        if (!dateStr) return '';
+                        const [y, m, d] = dateStr.split('-');
+                        return `${d}/${m}/${y}`;
+                    };
+                    const startDateFormatted = formatDate(ev.poll_config.start_date);
+                    const endDateFormatted = formatDate(ev.poll_config.end_date);
+
+                    if (startDateFormatted && endDateFormatted) {
+                        timeDisplayHtml += `<p style="margin: 4px 0; font-size: 13px; color: #4b5563;">📅 <strong>Thời gian:</strong> ${startDateFormatted} - ${endDateFormatted}</p>`;
+                    }
+
+                    // Format hạn chót (deadline)
+                    if (ev.poll_config.deadline) {
+                        const deadlineFormatted = formatDate(ev.poll_config.deadline);
+                        timeDisplayHtml += `<p style="margin: 4px 0; font-size: 13px; color: #dc2626;">⏰ <strong>Hạn chót:</strong> ${deadlineFormatted}</p>`;
+                    } else {
+                        timeDisplayHtml += `<p style="margin: 4px 0; font-size: 13px; color: #059669;">⏰ <strong>Hạn chót:</strong> Không giới hạn</p>`;
+                    }
+                } else if (ev.start_time) {
+                    timeDisplayHtml = `<p><strong>Thời gian:</strong> ${formatEventDateTime(ev.start_time, ev.end_time)}</p>`;
+                }
+
+                card.innerHTML = `
+                    ${deleteBtnHtml}
+                    <div>
+                        <span class="badge badge-${(ev.type || '').toLowerCase()}">${ev.type || 'N/A'}</span>
+                        <h4>${ev.title}</h4>
+                        <div class="event-info">
+                            <p style="margin: 4px 0; font-size: 13px; color: #4b5563;"><strong>Trạng thái:</strong> ${ev.status}</p>
+                            ${timeDisplayHtml}
+                        </div>
                     </div>
-                </div>
-                <div style="margin-top: 15px;">${actionBtn}</div>
-            `;
-            targetContainer.appendChild(card);
-        });
-    }
+                    <div style="margin-top: 15px;">${actionBtn}</div>
+                `;
+                targetContainer.appendChild(card);
+            });
+        }
 
     // Gắn sự kiện cho các nút điền lịch rảnh và xem báo cáo khảo sát
     function bindEventListeners() {
@@ -341,21 +372,31 @@ document.addEventListener('DOMContentLoaded', function () {
             };
 
             if (statusVal === 'POLL') {
-                payload.poll_config = {
-                    start_date: document.getElementById('pollStartDate').value,
-                    end_date: document.getElementById('pollEndDate').value,
-                    daily_start_time: document.getElementById('dailyStartTime').value,
-                    daily_end_time: document.getElementById('dailyEndTime').value,
-                    step_minutes: 30
-                };
-            } else {
-                let startVal = startTimeInput.value;
-                let endVal = endTimeInput.value;
+                            // Tự động tính ngày deadline dựa trên số ngày admin chọn
+                            const daysToAdd = parseInt(document.getElementById('pollDurationDays').value || 7, 10);
+                            const deadlineDate = new Date();
+                            deadlineDate.setDate(deadlineDate.getDate() + daysToAdd);
 
-                if (allDayCheckbox && allDayCheckbox.checked) {
-                    if (!endVal || endVal < startVal) {
-                        endVal = startVal;
-                    }
+                            // Định dạng thành chuỗi YYYY-MM-DD
+                            const pad = (n) => String(n).padStart(2, '0');
+                            const deadlineStr = `${deadlineDate.getFullYear()}-${pad(deadlineDate.getMonth() + 1)}-${pad(deadlineDate.getDate())}`;
+
+                            payload.poll_config = {
+                                start_date: document.getElementById('pollStartDate').value,
+                                end_date: document.getElementById('pollEndDate').value,
+                                deadline: deadlineStr, // Tự động gắn hạn chót tính theo khoảng thời gian
+                                daily_start_time: document.getElementById('dailyStartTime').value,
+                                daily_end_time: document.getElementById('dailyEndTime').value,
+                                step_minutes: 30
+                            };
+                        } else {
+                            let startVal = startTimeInput.value;
+                            let endVal = endTimeInput.value;
+
+                            if (allDayCheckbox && allDayCheckbox.checked) {
+                                if (!endVal || endVal < startVal) {
+                                    endVal = startVal;
+                                }
                     startVal = `${startVal} 00:00:00`;
                     endVal = `${endVal} 23:59:59`;
                 }
