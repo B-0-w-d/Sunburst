@@ -103,13 +103,15 @@
 
             <!-- Modal: Tạo Sự Kiện Hoặc Khảo Sát Mới -->
             <div id="createEventModal" class="custom-modal">
-                <div class="modal-content modal-horizontal">
+                <div class="modal-content modal-horizontal" id="createModalContentContainer">
                     <span class="close-btn" data-modal="createEventModal">&times;</span>
                     <h3>Tạo Sự Kiện Hoặc Khảo Sát Mới</h3>
 
                     <form id="createEventForm">
-                        <div class="modal-grid-layout">
-                            <!-- Cột trái cấu hình sự kiện -->
+                        <!-- Thêm class động để CSS layout tự chuyển đổi 1 cột hoặc 2 cột -->
+                        <div id="modalLayoutWrapper" class="modal-grid-layout single-column-layout">
+
+                            <!-- CỘT TRÁI: Cấu hình chung (Tiêu đề, Loại, Trạng thái, Thời gian) -->
                             <div class="modal-col-left">
                                 <div class="form-group">
                                     <label>Tiêu đề sự kiện</label>
@@ -128,26 +130,51 @@
                                     </div>
                                     <div class="form-group">
                                         <label>Trạng thái khởi tạo</label>
-                                        <select id="eventStatus">
+                                        <select id="eventStatus" onchange="handleEventStatusChange(this)">
                                             <option value="POLL">POLL (Khảo sát thời gian)</option>
-                                            <option value="CONFIRMED">CONFIRMED (Chốt lịch luôn)</option>
+                                            <option value="CONFIRMED" selected>CONFIRMED (Chốt lịch luôn)</option>
                                         </select>
                                     </div>
                                 </div>
 
-                                <div id="pollConfigSection" class="config-section">
+                                <!-- Phần cấu hình dành riêng cho Khảo sát (POLL) -->
+                                <div id="pollConfigSection" class="config-section" style="display: none;">
                                     <h4>Cấu hình thời gian khảo sát</h4>
                                     <div class="form-row">
                                         <div class="form-group"><label>Ngày bắt đầu</label><input type="date" id="pollStartDate"></div>
                                         <div class="form-group"><label>Ngày kết thúc</label><input type="date" id="pollEndDate"></div>
                                     </div>
-                                    <div class="form-row">
+
+                                    <div class="form-row" style="margin-top: 10px;">
                                         <div class="form-group"><label>Giờ mở đầu ngày</label><input type="time" id="dailyStartTime" value="06:00"></div>
                                         <div class="form-group"><label>Giờ kết thúc ngày</label><input type="time" id="dailyEndTime" value="23:59"></div>
                                     </div>
+
+                                    <div class="form-group" style="margin-top: 10px;" id="deadlineConfigSection">
+                                        <label style="display: block; font-weight: 600; margin-bottom: 6px;">Thời hạn cho phép điền lịch</label>
+                                        <div id="deadlineDaysContainer" style="margin-bottom: 8px;">
+                                            <select id="pollDurationDays" class="form-control" style="width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;">
+                                                <option value="1">Trong vòng 1 ngày</option>
+                                                <option value="3">Trong vòng 3 ngày</option>
+                                                <option value="5">Trong vòng 5 ngày</option>
+                                                <option value="7" selected>Trong vòng 7 ngày (Mặc định)</option>
+                                                <option value="10">Trong vòng 10 ngày</option>
+                                                <option value="14">Trong vòng 14 ngày</option>
+                                                <option value="30">Trong vòng 30 ngày</option>
+                                            </select>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 6px;">
+                                            <input type="checkbox" id="noDeadlineCheckbox" onchange="toggleDeadlineInput(this)" style="cursor: pointer; width: 14px; height: 14px;">
+                                            <label for="noDeadlineCheckbox" style="font-size: 13px; cursor: pointer; user-select: none; font-weight: 500; color: #374151;">
+                                                Không giới hạn thời gian khảo sát
+                                            </label>
+                                        </div>
+                                        <small style="color: #6b7280; font-size: 11px; display: block; margin-top: 4px;">Tính từ thời điểm admin bấm tạo khảo sát.</small>
+                                    </div>
                                 </div>
 
-                                <div id="confirmedConfigSection" class="config-section" style="display: none;">
+                                <!-- Phần cấu hình thời gian diễn ra (Dành riêng cho CONFIRMED) -->
+                                <div id="confirmedConfigSection" class="config-section">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                         <h4 style="margin: 0;">Thời gian diễn ra sự kiện</h4>
                                         <label style="font-size: 13px; font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 5px;">
@@ -158,6 +185,33 @@
                                         <div class="form-group"><label>Bắt đầu</label><input type="datetime-local" id="startTime"></div>
                                         <div class="form-group"><label>Kết thúc</label><input type="datetime-local" id="endTime"></div>
                                     </div>
+                                </div>
+                            </div>
+
+                            <!-- CỘT PHẢI: Thành viên & Nhắc nhở (Sẽ tự động ẩn hoặc xếp gọn khi chuyển trạng thái) -->
+                            <div class="modal-col-right" id="modalColRight">
+                                <div class="form-group" style="height: 100%; display: flex; flex-direction: column;">
+                                    <label style="font-weight: 600; margin-bottom: 8px;">Thành viên tham gia</label>
+
+                                    <!-- Ô lọc nhạc cụ -->
+                                    <div style="margin-bottom: 8px;">
+                                        <select id="filterInstrumentSelector" class="form-control" style="width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;" onchange="filterAvailableMembers(this.value)">
+                                            <option value="">-- Lọc theo tất cả nhạc cụ --</option>
+                                            <option value="Vocal">Vocal</option>
+                                            <option value="Ukulele">Ukulele</option>
+                                            <option value="Guitar">Guitar</option>
+                                            <option value="Piano">Piano</option>
+                                            <option value="Drum">Drum</option>
+                                            <option value="Bass">Bass</option>
+                                        </select>
+                                    </div>
+
+                                    <div style="flex: 1; min-height: 220px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; background: #fff;">
+                                        <!-- Dùng component này để nó tự render danh sách thành viên và mảng instrument -->
+                                        <x-memberSelect id="eventMemberSelector" :members="$allMembers" :selected="[]" />
+                                    </div>
+
+                                    <button type="button" id="selectAllMembersBtn" class="btn" style="margin-top: 10px; width: 100%;">Chọn tất cả</button>
                                 </div>
 
                                 <div class="form-group" style="margin-top: 15px;">
@@ -173,22 +227,63 @@
                                 </div>
                             </div>
 
-                            <!-- Cột phải chọn thành viên tham gia -->
-                            <div class="modal-col-right">
-                                <div class="form-group" style="height: 100%; display: flex; flex-direction: column;">
-                                    <label style="font-weight: 600; margin-bottom: 8px;">Thành viên tham gia</label>
-                                    <div style="flex: 1; min-height: 300px;">
-                                        <x-memberSelect id="eventMemberSelector" :members="$allMembers" :selected="[]" />
-                                    </div>
-                                    <button type="button" id="selectAllMembersBtn" class="btn" style="margin-top: 10px;">Chọn tất cả</button>
-                                </div>
-                            </div>
                         </div>
 
                         <button type="submit" class="btn btn-success w-100" style="margin-top: 20px;">Xác Nhận Tạo</button>
                     </form>
                 </div>
             </div>
+
+            <script>
+                function toggleDeadlineInput(checkbox) {
+                    const container = document.getElementById('deadlineDaysContainer');
+                    const select = document.getElementById('pollDurationDays');
+                    if (checkbox.checked) {
+                        container.style.opacity = '0.4';
+                        container.style.pointerEvents = 'none';
+                        select.disabled = true;
+                    } else {
+                        container.style.opacity = '1';
+                        container.style.pointerEvents = 'auto';
+                        select.disabled = false;
+                    }
+                }
+
+                function handleEventStatusChange(selectElem) {
+                    const pollSection = document.getElementById('pollConfigSection');
+                    const confirmedSection = document.getElementById('confirmedConfigSection');
+                    const layoutWrapper = document.getElementById('modalLayoutWrapper');
+
+                    // Không cần lấy colRight ra để ẩn nữa vì mình vẫn cần dùng nó
+                    // const colRight = document.getElementById('modalColRight');
+
+                    if (selectElem.value === 'CONFIRMED') {
+                        // Chốt lịch luôn: Ẩn phần cấu hình khảo sát, hiện phần thời gian sự kiện
+                        pollSection.style.display = 'none';
+                        confirmedSection.style.display = 'block';
+
+                        // Dồn tất cả về 1 cột (Cột thành viên sẽ tự động nhảy xuống dưới cột thời gian)
+                        layoutWrapper.style.gridTemplateColumns = '1fr';
+                        layoutWrapper.style.gap = '20px'; // Thêm chút khoảng cách giữa trên và dưới cho đẹp
+                    } else {
+                        // Khảo sát (POLL): Hiện cấu hình khảo sát, ẩn thời gian cố định
+                        pollSection.style.display = 'block';
+                        confirmedSection.style.display = 'none';
+
+                        // Trả lại giao diện 2 cột (Trái: cấu hình, Phải: thành viên)
+                        layoutWrapper.style.gridTemplateColumns = '1fr 1fr';
+                        layoutWrapper.style.gap = '20px'; // Khoảng cách giữa 2 cột
+                    }
+                }
+
+                // Chạy khi vừa load trang để đồng bộ trạng thái mặc định (CONFIRMED)
+                document.addEventListener("DOMContentLoaded", function() {
+                    const eventStatusSelect = document.getElementById('eventStatus');
+                    if (eventStatusSelect) {
+                        handleEventStatusChange(eventStatusSelect);
+                    }
+                });
+            </script>
 
             <!-- Modal: Điền Lịch Rảnh Cá Nhân -->
             <div id="pollMatrixModal" class="custom-modal">

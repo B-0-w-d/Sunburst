@@ -3,7 +3,13 @@
     <!-- Phần bên trái header: hiển thị tên bảng điều khiển và các nút tab chuyển đổi giao diện -->
     <div class="header-left">
         <!-- Tiêu đề chính định danh trang quản trị Sunburst -->
-        <h2 class="page-title">Sunburst Dashboard</h2>
+        <div class="content-header" style="padding-top: 20px;">
+            <div>
+                <h1 class="content-title">Xin chào, {{ auth()->user()->name }}</h1>
+
+                <p class="content-subtitle">Chào mừng bạn đến với hệ thống quản lý Sunburst!</p>
+            </div>
+        </div>
         <!-- Bộ lọc dạng tab dùng để chuyển đổi giữa các góc nhìn hiển thị (Server hoặc Overview) -->
     </div>
     <!-- Phần bên phải header: căn chỉnh bố cục dạng Flexbox để chứa chuông thông báo và trạng thái kết nối -->

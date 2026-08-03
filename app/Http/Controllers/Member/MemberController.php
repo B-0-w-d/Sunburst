@@ -48,6 +48,7 @@ class MemberController extends Controller
 
         // Đảm bảo tên view trỏ đúng thư mục management-site.register
         return view('management-site.members', ['members' => $list]);
+        return view('management-site.home', ['members' => $list]);
     }
 
     /**

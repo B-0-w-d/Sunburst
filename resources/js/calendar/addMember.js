@@ -1,5 +1,5 @@
 // =========================================================================
-// QUẢN LÝ KÉO THẢ THÀNH VIÊN TRONG FORM TẠO SỰ KIỆN
+// QUẢN LÝ KÉO THẢ VÀ LỌC THÀNH VIÊN TRONG FORM TẠO SỰ KIỆN
 // =========================================================================
 
 // Biến lưu trữ phần tử thành viên đang được kéo (drag)
@@ -36,10 +36,16 @@ export function handleMemberDrop(e, targetZoneType) {
         removeBtn.onclick = function() { removeMemberChip(this); };
         draggedMemberElement.appendChild(removeBtn);
     }
-    // Ngược lại nếu thả về vùng 'available' thì gỡ bỏ nút xóa đi
+    // Ngược lại nếu thả về vùng 'available' thì gỡ bỏ nút xóa đi và kiểm tra lại bộ lọc
     else if (targetZoneType === 'available') {
         const btn = draggedMemberElement.querySelector('.btn-remove-chip');
         if (btn) btn.remove();
+
+        // Kiểm tra xem có đang bật lọc nhạc cụ nào không để ẩn/hiện cho đúng
+        const filterSelect = document.getElementById('filterInstrumentSelector');
+        if (filterSelect && filterSelect.value) {
+            filterAvailableMembers(filterSelect.value);
+        }
     }
 
     // Di chuyển thẻ thành viên sang vùng đích
@@ -58,11 +64,20 @@ export function handleMemberDrop(e, targetZoneType) {
 export function removeMemberChip(btn) {
     const chip = btn.closest('.member-chip'); // Tìm thẻ chứa nút xóa
     const availableZone = document.getElementById('availableMembersZone'); // Vùng danh sách ban đầu
-    if (chip && availableZone) {
-        btn.remove(); // Xóa nút x
-        availableZone.appendChild(chip); // Đưa chip trở lại vùng ban đầu
-        updateMemberHiddenInput(); // Cập nhật lại danh sách ID ẩn
+    if (!chip || !availableZone) return;
+
+    btn.remove(); // Xóa nút x
+    availableZone.appendChild(chip); // Đưa chip trở lại vùng ban đầu
+
+    // Kiểm tra lại bộ lọc nhạc cụ khi chip quay về vùng available
+    const filterSelect = document.getElementById('filterInstrumentSelector');
+    if (filterSelect && filterSelect.value) {
+        filterAvailableMembers(filterSelect.value);
+    } else {
+        chip.style.display = '';
     }
+
+    updateMemberHiddenInput(); // Cập nhật lại danh sách ID ẩn
 }
 
 /**
@@ -82,4 +97,38 @@ export function updateMemberHiddenInput() {
     if (hiddenInput) {
         hiddenInput.value = ids.join(',');
     }
+}
+
+/**
+ * Lọc hiển thị các thẻ chip thành viên ở vùng 'available' dựa trên nhạc cụ
+ */
+export function filterAvailableMembers(selectedInstrument) {
+    const availableZone = document.getElementById('availableMembersZone');
+    if (!availableZone) return;
+
+    const chips = availableZone.querySelectorAll('.member-chip');
+
+    chips.forEach(chip => {
+        // Lấy giá trị instrument từ attribute (nó có thể là chuỗi phân cách bằng dấu phẩy hoặc dạng JSON array)
+        const instrumentsRaw = chip.getAttribute('data-instruments') || '';
+        let instruments = [];
+
+        try {
+            // Thử parse nếu backend render ra dạng JSON array string (ví dụ: '["Vocal", "Ukulele"]')
+            instruments = JSON.parse(instrumentsRaw);
+        } catch (e) {
+            // Nếu không phải JSON thì coi như chuỗi ngăn cách bằng dấu phẩy thông thường
+            instruments = instrumentsRaw.split(',').map(i => i.trim());
+        }
+
+        // Chuẩn hóa tất cả về chữ thường để so sánh không phân biệt hoa thường
+        const normalizedInstruments = instruments.map(i => String(i).trim().toLowerCase());
+
+        if (!selectedInstrument || selectedInstrument === '') {
+            chip.style.display = '';
+        } else {
+            const match = normalizedInstruments.includes(selectedInstrument.trim().toLowerCase());
+            chip.style.display = match ? '' : 'none';
+        }
+    });
 }

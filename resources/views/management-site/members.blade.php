@@ -1,238 +1,298 @@
-{{-- Nhúng thành phần giao diện khung điều hướng chung (Navbar Layout) --}}
+{{-- Khởi tạo component Navbar và nạp tệp JavaScript app.js --}}
 <x-navbar>
-    <div style="display: flex; width: 100%; min-height: calc(100vh - 70px); align-items: stretch; margin: 0; padding: 0;">
+    @vite(['resources/js/app.js'])
+    {{-- Đặt tiêu đề cho trang quản lý thành viên thông qua Slot --}}
+    <x-slot name="title">Members | Sunburst</x-slot>
 
-        <!-- ===================================================================== -->
-        <!-- SIDEBAR BÊN TRÁI -->
-        <!-- ===================================================================== -->
-        <aside style="width: 260px; background-color: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; flex-shrink: 0;">
-            <div style="margin-bottom: 25px;">
-                <div style="margin-bottom: 12px;">
-                    <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; font-weight: 700;">Upcoming Shows</span>
+    {{-- Khung bố cục tổng thể trang dashboard quản lý thành viên --}}
+    <div class="dashboard-layout-wrapper" style="display: flex; gap: 32px; max-width: 100%; max-height: 100%; align-items: flex-start;">
+
+        {{-- Phần Sidebar bên trái chứa các điều hướng và công cụ quản lý nhanh --}}
+        <aside class="nav-sidebar">
+            {{-- Danh sách các dự án hoặc show diễn sắp tới --}}
+            <div class="sidebar-section">
+                <div class="section-header">
+                    <span class="section-title">Upcomming shows</span>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 4px;">
-                    <a href="#" style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; color: #475569; text-decoration: none; font-size: 14px; font-weight: 500;">
-                        <span style="width: 8px; height: 8px; border-radius: 50%; background-color: #3b82f6;"></span> Campaigns
+                <div class="project-list">
+                    <a href="#" class="project-item">
+                        <span class="dot dot-blue"></span> Campaigns
                     </a>
-                    <a href="#" style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; color: #1e293b; text-decoration: none; font-size: 14px; font-weight: 600; background-color: #f8fafc; box-shadow: inset 3px 0 0 #dc2626;">
-                        <span style="width: 8px; height: 8px; border-radius: 50%; background-color: #ef4444;"></span> Publications
+                    <a href="#" class="project-item active">
+                        <span class="dot dot-red"></span> Publications
                     </a>
-                    <a href="#" style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; color: #475569; text-decoration: none; font-size: 14px; font-weight: 500;">
-                        <span style="width: 8px; height: 8px; border-radius: 50%; background-color: #10b981;"></span> Development
+                    <a href="#" class="project-item">
+                        <span class="dot dot-green"></span> Development
                     </a>
                 </div>
             </div>
 
-            <!-- LỊCH THÁNG NHỎ ĐIỀU HƯỚNG -->
-            <div id="miniCalendarWidget" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <h4 id="miniCalendarMonthYear" style="font-size: 14px; font-weight: 700; color: #1e293b; margin: 0;">Tháng 8, 2026</h4>
-                    <div style="display: flex; gap: 4px;">
-                        <button type="button" id="miniPrevBtn" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #64748b; font-weight: bold;">‹</button>
-                        <button type="button" id="miniNextBtn" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #64748b; font-weight: bold;">›</button>
+            {{-- Danh sách thành viên rút gọn và tính năng xuất key đăng ký nhanh --}}
+            <div class="sidebar-section">
+                <div class="section-header">
+                    <span class="section-title">Members</span>
+                    {{-- Nút mở modal thêm thành viên mới --}}
+                    <button class="add-btn" onclick="openModal('addMemberModal')">+</button>
+                </div>
+
+                <div class="member-list">
+                    @forelse ($members as $member)
+                        <div class="member-item">
+                            <x-icons.user />
+                            <span>{{ $member->name ?? 'N/A' }}</span>
+                        </div>
+                    @empty
+                        <div class="member-item" style="color: #64748b; font-size: 0.85rem; justify-content: center;">
+                            No members
+                        </div>
+                    @endforelse
+                </div>
+
+                {{-- Chức năng quản lý key đăng ký, chỉ hiển thị cho tài khoản có quyền Management Tier --}}
+                @if(auth()->user()->isManagementTier())
+                    <div class="management-controls" style="padding: 15px 0 0 0; border-top: 1px solid #e2e8f0; margin-top: 10px;">
+                        <button type="button"
+                                onclick="generateActivationKey()"
+                                class="btn-primary"
+                                style="width: 100%; padding: 8px; font-size: 0.8rem; background: #cc0000; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                Xuất Key Đăng ký
+                        </button>
+
+                        {{-- Ô input hiển thị mã key kích hoạt và nút sao chép (copy) --}}
+                        <div style="margin-top: 10px; display: flex; gap: 5px;">
+                            <input type="text" id="key-display" readonly
+                                   style="flex-grow: 1; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-family: monospace; font-size: 0.9rem;"
+                                   placeholder="">
+                            <button type="button" onclick="copyToClipboard()"
+                                    style="padding: 5px 10px; background: #edf2f7; border: 1px solid #cbd5e0; border-radius: 4px; cursor: pointer;">
+                                <x-icons.copy/>
+                            </button>
+                        </div>
+
+                        {{-- Dòng chữ hiển thị thời gian hết hạn của key --}}
+                        <small id="key-expiry" style="display: block; margin-top: 5px; color: #64748b; font-size: 0.75rem;"></small>
                     </div>
-                </div>
-                <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 11px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">
-                    <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
-                </div>
-                <div id="miniCalendarGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; font-size: 12px;">
-                    <!-- Render bằng JS -->
-                </div>
+                @endif
             </div>
 
-            <div class="card promo-card-sidebar" style="margin-top: auto; background: #fdf2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 15px; box-sizing: border-box;">
-                <span class="promo-tag" style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #dc2626; background: #fee2e2; padding: 2px 6px; border-radius: 4px;">Unobvious Tips</span>
-                <h4 class="promo-title" style="font-size: 13px; font-weight: 700; color: #1e293b; margin: 8px 0 4px 0; line-height: 1.4;">DEO BIET NEN LAM GI O DAY</h4>
-                <p class="promo-meta" style="font-size: 11px; color: #64748b; margin-bottom: 10px;">3 min read</p>
-                <a href="#" class="promo-btn" style="font-size: 12px; font-weight: 600; color: #dc2626; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+            {{-- Thẻ tiện ích thông tin bổ sung (Promo Card) --}}
+            <div class="card">
+                <span class="promo-tag">Unobvious Tips</span>
+                <h4 class="promo-title">DEO BIET NEN LAM GI O DAY</h4>
+                <p class="promo-meta">3 min read</p>
+                <a href="#" class="promo-btn">
                     Read post <span class="arrow">→</span>
                 </a>
             </div>
         </aside>
 
-        <!-- ===================================================================== -->
-        <!-- KHUNG NỘI DUNG CHÍNH BÊN PHẢI -->
-        <!-- ===================================================================== -->
-        <main class="calendar-container">
-
-            <!-- Thanh tiêu đề chính -->
-            <div class="calendar-header">
+        {{-- Khu vực nội dung chính hiển thị bảng danh sách thành viên chi tiết --}}
+        <div class="content-container">
+            <div class="content-header">
                 <div>
-                    <h2>Quản Lý Lịch & Khảo Sát CLB</h2>
-                    <p class="subtitle">Hệ thống lịch trình và khảo sát thời gian rảnh trực tuyến</p>
+                    <h3 class="content-title">Member Lists</h3>
+                    <p class="content-subtitle">Manage and view club member informations</p>
                 </div>
-                @if(auth()->user()->isManagementTier())
-                    <button id="openCreateModalBtn" class="btn btn-primary">+ Tạo Lịch / Khảo Sát</button>
+                {{-- Huy hiệu hiển thị tổng số thành viên đang hoạt động --}}
+                <span class="content-badge-count">
+                    {{ count($members) }} Members Active
+                </span>
+            </div>
+
+            {{-- Thanh lọc (Filter bar) tìm kiếm thành viên theo vai trò và nhạc cụ --}}
+            <div class="filter-bar" style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center;">
+                <div>
+                    <label for="filter-role" style="font-size: 13px; font-weight: 600; margin-right: 5px;">Role:</label>
+                    <select id="filter-role" class="form-input" style="padding: 6px 12px; height: 36px; display: inline-block; width: auto;" onchange="applyFilters()">
+                        <option value="">All Roles</option>
+                        <option value="member" {{ request('role') == 'member' ? 'selected' : '' }}>Member</option>
+                        <option value="manager" {{ request('role') == 'manager' ? 'selected' : '' }}>Manager</option>
+                        <option value="vice-president" {{ request('role') == 'vice-president' ? 'selected' : '' }}>Vice President</option>
+                        <option value="president" {{ request('role') == 'president' ? 'selected' : '' }}>President</option>
+                        <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Admin</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="filter-instrument" style="font-size: 13px; font-weight: 600; margin-right: 5px;">Instrument:</label>
+                    <input type="text" id="filter-instrument" class="form-input" placeholder="e.g. Guitar" value="{{ request('instrument') }}" style="padding: 6px 12px; height: 36px; display: inline-block; width: 180px;" onkeypress="if(event.key === 'Enter') applyFilters()">
+                </div>
+
+                <button type="button" onclick="applyFilters()" style="padding: 6px 14px; background: #dc2626; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">Filter</button>
+
+                @if(request('role') || request('instrument'))
+                    <a href="{{ route('members.index') }}" style="font-size: 13px; color: #cc0000; text-decoration: none;">Reset Filters</a>
                 @endif
             </div>
 
-            <!-- 1. KHU VỰC LỊCH ĐÃ CHỐT (VIEW LỊCH TUẦN LỚN) -->
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
-                    <!-- Tiêu đề lịch -->
-                    <h3 id="currentWeekTitleText" style="font-size: 16px; font-weight: 700; color: #1e293b; margin: 0; display: flex; align-items: center; gap: 8px;">
-                        <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #10b981;"></span> Lịch Đã Chốt (Theo Tuần)
-                    </h3>
-
-                    <!-- Cụm nút điều hướng -->
-                    <div style="display: flex; gap: 8px; align-items: center; flex-shrink: 0;">
-                        <button type="button" id="weekTodayBtn" class="btn btn-outline" style="padding: 6px 14px; font-size: 12px; border-radius: 6px; cursor: pointer; white-space: nowrap;">Hôm nay</button>
-                        <div style="display: flex; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; flex-shrink: 0; background: #fff;">
-                            <button type="button" id="weekPrevBtn" style="padding: 6px 12px; background: #fff; border: none; cursor: pointer; font-weight: bold; font-size: 14px;">&lt;</button>
-                            <button type="button" id="weekNextBtn" style="padding: 6px 12px; background: #fff; border: none; border-left: 1px solid #cbd5e1; cursor: pointer; font-weight: bold; font-size: 14px;">&gt;</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Lưới lịch tuần (Time-Grid View) -->
-                <div style="overflow-x: auto;">
-                    <div id="weeklyCalendarGrid" style="min-width: 700px; display: grid; grid-template-columns: 60px repeat(7, 1fr); border-top: 1px solid #e2e8f0;">
-                        <!-- Render bằng JS -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- 2. KHU VỰC KHẢO SÁT Đang Mở -->
-            <div style="margin-bottom: 15px; border-top: 1px solid #e2e8f0; padding-top: 25px;">
-                <h3 style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px;">
-                    <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #3b82f6;"></span> Khảo Sát Đang Mở
-                </h3>
-            </div>
-            <div class="event-grid" id="pollEventList"></div>
-
-            <!-- MODAL: TẠO SỰ KIỆN HOẶC KHẢO SÁT MỚI -->
-            <div id="createEventModal" class="custom-modal">
-                <div class="modal-content modal-horizontal">
-                    <span class="close-btn" data-modal="createEventModal">&times;</span>
-                    <h3>Tạo Sự Kiện Hoặc Khảo Sát Mới</h3>
-
-                    <form id="createEventForm">
-                        <div class="modal-grid-layout">
-                            <div class="modal-col-left">
-                                <div class="form-group">
-                                    <label>Tiêu đề sự kiện</label>
-                                    <input type="text" id="eventTitle" required placeholder="Ví dụ: Khảo sát lịch tập band...">
-                                </div>
-
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label>Phân loại (Type)</label>
-                                        <select id="eventType">
-                                            <option value="PRACTICE">PRACTICE (Lịch tập)</option>
-                                            <option value="MEETING">MEETING (Lịch họp)</option>
-                                            <option value="SHOW">SHOW (Show diễn)</option>
-                                            <option value="EVENT">EVENT (Nội bộ)</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Trạng thái khởi tạo</label>
-                                        <select id="eventStatus">
-                                            <option value="POLL">POLL (Khảo sát thời gian)</option>
-                                            <option value="CONFIRMED">CONFIRMED (Chốt lịch luôn)</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div id="pollConfigSection" class="config-section">
-                                    <h4>Cấu hình thời gian khảo sát</h4>
-                                    <div class="form-row">
-                                        <div class="form-group"><label>Ngày bắt đầu</label><input type="date" id="pollStartDate"></div>
-                                        <div class="form-group"><label>Ngày kết thúc</label><input type="date" id="pollEndDate"></div>
-                                    </div>
-                                    <div class="form-row">
-                                        <div class="form-group"><label>Giờ mở đầu ngày</label><input type="time" id="dailyStartTime" value="06:00"></div>
-                                        <div class="form-group"><label>Giờ kết thúc ngày</label><input type="time" id="dailyEndTime" value="23:59"></div>
-                                    </div>
-                                </div>
-
-                                <div id="confirmedConfigSection" class="config-section" style="display: none;">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                        <h4 style="margin: 0;">Thời gian diễn ra sự kiện</h4>
-                                        <label style="font-size: 13px; font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                                            <input type="checkbox" id="allDayEventCheckbox" style="cursor: pointer;"> Cả ngày
-                                        </label>
-                                    </div>
-                                    <div class="form-row">
-                                        <div class="form-group"><label>Bắt đầu</label><input type="datetime-local" id="startTime"></div>
-                                        <div class="form-group"><label>Kết thúc</label><input type="datetime-local" id="endTime"></div>
-                                    </div>
-                                </div>
-
-                                <div class="form-group" style="margin-top: 15px;">
-                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Thời điểm nhắc nhở trước:</label>
-                                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
-                                        <label class="reminder-chip-label"><input type="checkbox" name="remindMinutes" value="30" checked><span>30 phút</span></label>
-                                        <label class="reminder-chip-label"><input type="checkbox" name="remindMinutes" value="60"><span>1 tiếng</span></label>
-                                        <label class="reminder-chip-label"><input type="checkbox" name="remindMinutes" value="360"><span>6 tiếng</span></label>
-                                        <label class="reminder-chip-label"><input type="checkbox" name="remindMinutes" value="720"><span>12 tiếng</span></label>
-                                        <label class="reminder-chip-label"><input type="checkbox" name="remindMinutes" value="1440"><span>1 ngày</span></label>
-                                        <label class="reminder-chip-label"><input type="checkbox" name="remindMinutes" value="2880"><span>2 ngày</span></label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="modal-col-right">
-                                <div class="form-group" style="height: 100%; display: flex; flex-direction: column;">
-                                    <label style="font-weight: 600; margin-bottom: 8px;">Thành viên tham gia</label>
-                                    <div style="flex: 1; min-height: 300px;">
-                                        <x-memberSelect id="eventMemberSelector" :members="$allMembers" :selected="[]" />
-                                    </div>
-                                    <button type="button" id="selectAllMembersBtn" class="btn btn-outline" style="margin-top: 10px;">Chọn tất cả</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="btn btn-success w-100" style="margin-top: 20px;">Xác Nhận Tạo</button>
-                    </form>
+            {{-- Bảng hiển thị thông tin chi tiết từng thành viên --}}
+            <div class="content-card">
+                <div class="content-table-wrapper">
+                    <table class="content-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 25%;">Name & Email</th>
+                                <th style="width: 12%;">Role</th>
+                                <th style="width: 23%;">Instruments</th>
+                                <th style="width: 15%;">Birthday</th>
+                                <th style="width: 15%;">Joined Date</th>
+                                <th style="width: 10%; text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($members as $member)
+                                <tr id="member-row-{{ $member->_id }}">
+                                    <td>
+                                        <div class="user-identity">
+                                            <span class="user-name" data-name>{{ $member->name ?? 'N/A' }}</span>
+                                            <span class="user-email" data-email>{{ $member->email ?? 'N/A' }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @php
+                                            $role = strtolower($member->role ?? 'member');
+                                            $badgeClass = 'content-badge-' . $role;
+                                        @endphp
+                                        <span class="content-badge {{ $badgeClass }}" data-role="{{ $role }}">
+                                            {{ ucfirst(str_replace('-', ' ', $role)) }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="instrument-tags" data-instruments-raw="{{ implode(', ', (array)($member->instrument ?? [])) }}">
+                                            @if(!empty($member->instrument))
+                                                @foreach ((array)$member->instrument as $inst)
+                                                    <span class="instrument-tag">{{ trim($inst) }}</span>
+                                                @endforeach
+                                            @else
+                                                <span class="no-instruments">No instruments assigned</span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="content-date" data-birthday-raw="{{ $member->birthday ?? '' }}">
+                                            {{ !empty($member->birthday) ? date('M d, Y', strtotime($member->birthday)) : 'N/A' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="content-date">
+                                            {{ !empty($member->joined_in) ? date('M d, Y', strtotime($member->joined_in)) : 'N/A' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="actions" style="display: flex; justify-content: flex-end; gap: 8px;">
+                                            {{-- Hiển thị nút sửa nếu là chính tài khoản đó hoặc có quyền quản lý --}}
+                                            @if(Auth::id() === $member->_id || Auth::user()->isManagementTier())
+                                                <button onclick="prepareAndOpenEditModal('{{ $member->_id }}')" class="btn-edit" type="button">
+                                                    <x-icons.edit/>
+                                                </button>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 40px 0; color: #64748b;">
+                                        No members found.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
-
-            <!-- MODAL: ĐIỀN LỊCH RẢNH -->
-            <div id="pollMatrixModal" class="custom-modal">
-                <div class="modal-content modal-large">
-                    <span class="close-btn" data-modal="pollMatrixModal">&times;</span>
-                    <h3 id="pollMatrixTitle">Điền Lịch Rảnh</h3>
-                    <p class="subtitle">Kéo chuột bôi đen các ô thời gian bạn rảnh, sau đó bấm Lưu.</p>
-
-                    <div class="matrix-scroll-container">
-                        <table id="w2mMatrixTable" class="w2m-table"></table>
-                    </div>
-
-                    <div class="modal-actions">
-                        <button id="saveAvailabilityBtn" class="btn btn-success">Lưu Lịch Rảnh</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- MODAL: BÁO CÁO TỔNG HỢP & CHỐT LỊCH -->
-            <div id="reportModal" class="custom-modal">
-                <div class="modal-content modal-large">
-                    <span class="close-btn" data-modal="reportModal">&times;</span>
-                    <h3 id="reportTitle">Báo Cáo Tổng Hợp Khảo Sát</h3>
-                    <div class="report-stats">
-                        <span id="statTargetCount">Tổng mục tiêu: 0</span>
-                        <span id="statSubmittedCount">Đã phản hồi: 0</span>
-                    </div>
-
-                    <div class="matrix-scroll-container">
-                        <table id="reportMatrixTable" class="w2m-table"></table>
-                    </div>
-
-                    <div class="modal-actions">
-                        <button id="confirmPollBtn" class="btn btn-primary">Chốt Lịch Này</button>
-                    </div>
-                </div>
-            </div>
-
-        </main>
+        </div>
     </div>
+
+    {{-- ===================================================================== --}}
+    {{-- MODAL 1: THÊM THÀNH VIÊN MỚI                                           --}}
+    {{-- ===================================================================== --}}
+    <x-modal id="addMemberModal" title="Add New Band Member" submitFn="submitAddForm(event)">
+        <div class="form-group">
+            <label class="form-label" for="add-name">Display Name</label>
+            <input type="text" id="add-name" class="form-input" required placeholder="e.g. Ren Nguyen">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="add-email">Email Address</label>
+            <input type="email" id="add-email" class="form-input" required placeholder="e.g. Rendarapper@gmail.com">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="add-birthday">Birthday</label>
+            <input type="date" id="add-birthday" class="form-input">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="add-role">Role Hierarchy</label>
+            <select id="add-role" class="form-input" style="height: 42px;">
+                <option value="member" selected>Member</option>
+                <option value="manager">Manager</option>
+                <option value="vice-president">Vice President</option>
+                <option value="president">President</option>
+                <option value="admin">Admin</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="add-instruments">Instruments (Comma separated)</label>
+            <input type="text" id="add-instruments" class="form-input" placeholder="e.g. Vocal, Bass Guitar">
+        </div>
+
+        <x-slot name="footer">
+            <button type="submit" class="btn-save">Create Member</button>
+        </x-slot>
+    </x-modal>
+
+    {{-- ===================================================================== --}}
+    {{-- MODAL 2: CHỈNH SỬA THÔNG TIN THÀNH VIÊN                                 --}}
+    {{-- ===================================================================== --}}
+    <x-modal id="editMemberModal" title="Edit Band Member" submitFn="submitEditForm(event)">
+        <input type="hidden" id="edit-member-id">
+
+        <div class="form-group">
+            <label class="form-label" for="edit-name">Display Name</label>
+            <input type="text" id="edit-name" class="form-input" required placeholder="e.g. Ren Nguyen">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="edit-email">Email Address</label>
+            <input type="email" id="edit-email" class="form-input" required placeholder="e.g. Rendarapper@gmail.com">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="edit-birthday">Birthday</label>
+            <input type="date" id="edit-birthday" name="birthday" class="form-input">
+        </div>
+
+        @if(auth()->user()->isManagementTier())
+            <div class="form-group">
+                <label class="form-label" for="edit-role">Role</label>
+                <select id="edit-role" class="form-input" style="height: 42px;">
+                    <option value="member">Member</option>
+                    <option value="manager">Manager</option>
+                    <option value="vice-president">Vice President</option>
+                    <option value="president">President</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+        @endif
+
+        <div class="form-group">
+            <label class="form-label" for="edit-instruments">Instruments</label>
+            <input type="text" id="edit-instruments" class="form-input" placeholder="e.g. Vocal, Bass Guitar, Synth">
+        </div>
+
+        <x-slot name="footer">
+            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                {{-- Nút xóa thành viên --}}
+                <button type="button" class="btn-delete" onclick="deleteMember(document.getElementById('edit-member-id').value)" style="display: flex; align-items: center; gap: 5px; padding: 8px 12px; background: #ffeeef; color: #cc0000; border: 1px solid #f9d8db; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background-color 0.2s, border-color 0.2s;">
+                    <x-icons.delete style="width: 10px; height: 10px;" />
+                    <span>Delete</span>
+                </button>
+
+                {{-- Nút lưu thay đổi liên kết với form chỉnh sửa --}}
+                <button type="submit" form="editMemberModalForm" class="btn-save" style="width: auto; padding: 10px 24px;">Save Changes</button>
+            </div>
+        </x-slot>
+    </x-modal>
 </x-navbar>
-
-{{-- Push CSS và JS --}}
-@push('styles')
-    <link rel="stylesheet" href="{{ asset('app.css') }}">
-@endpush
-
-@push('scripts')
-    @vite(['resources/js/calendar.js'])
-@endpush

@@ -221,4 +221,53 @@ class CalendarController extends Controller
             'available_slots' => $latest ? $latest->available_slots : []
         ]);
     }
+    /**
+     * Tự động quét và gửi thông báo cho các sự kiện đang diễn ra ngay tại thời điểm hiện tại.
+     * Có thể gọi hàm này thông qua một API riêng hoặc thông qua Laravel Scheduler (Cron job).
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkAndNotifyOngoingEvents()
+    {
+        $currentUser = Auth::user();
+        $now = Carbon::now()->toDateTimeString();
+
+        // Lấy tất cả các sự kiện đã chốt (CONFIRMED) và đang trong khoảng thời gian diễn ra
+        $ongoingEvents = Event::where('status', 'CONFIRMED')
+            ->where('start_time', '<=', $now)
+            ->where('end_time', '>=', $now)
+            ->get();
+
+        if ($ongoingEvents->isEmpty()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Hiện tại không có sự kiện nào đang diễn ra.'
+            ]);
+        }
+
+        $notifiedCount = 0;
+
+        foreach ($ongoingEvents as $event) {
+            // Kiểm tra xem sự kiện có danh sách thành viên mục tiêu hay không
+            if (!empty($event->target_member_ids) && function_exists('send_system_notification')) {
+                foreach ($event->target_member_ids as $memberId) {
+                    // Gửi thông báo chi tiết sự kiện đang diễn ra đến từng thành viên
+                    send_system_notification([
+                        'type' => 'personal',
+                        'recipient_id' => $memberId,
+                        'sender_id' => $currentUser ? (string) $currentUser->_id : 'system',
+                        'title' => 'Sự kiện đang diễn ra: ' . $event->title,
+                        'message' => 'Sự kiện "' . $event->title . '" đang diễn ra từ ' . $event->start_time . ' đến ' . $event->end_time . '.',
+                    ]);
+                    $notifiedCount++;
+                }
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Đã gửi thông báo cho {$ongoingEvents->count()} sự kiện đang diễn ra.",
+            'ongoing_events' => $ongoingEvents
+        ]);
+    }
 }

@@ -74,10 +74,9 @@
     max-width: 1100px;
     margin: 0 auto;
     padding-top: 20px;
-    padding-right: 30px;
+    padding-y: 10px;
     height: 100%;
     overflow-y: auto;
-    /* Cho phép vùng nội dung bên phải cuộn độc lập */
 }
 
 .content-header {
@@ -112,8 +111,8 @@
    TABLE & CARD STYLES
    ========================================== */
 .content-card {
-    background-color: #ffffff;
     border: 1px solid #e2e8f0;
+    display: flex;
     border-radius: 16px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
     overflow: hidden;

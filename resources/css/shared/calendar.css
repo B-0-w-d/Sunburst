@@ -40,6 +40,27 @@
     font-size: 14px;
 }
 
+/* Hiệu ứng hover cho ô ma trận khảo sát / lịch rảnh */
+.time-slot-cell {
+    cursor: pointer;
+    transition: background-color 0.15s ease, filter 0.15s ease;
+}
+
+.time-slot-cell:hover {
+    filter: brightness(0.92);
+}
+
+/* Kiểu riêng cho ô đang được chọn/chỉnh sửa */
+.time-slot-cell.selected {
+    background-color: #007bff !important;
+    color: #ffffff !important;
+}
+
+.time-slot-cell.selected-final-slot {
+    background-color: #28a745 !important;
+    color: #ffffff !important;
+}
+
 
 /* ==========================================================================
    2. SIDEBAR BÊN TRÁI & MINI CALENDAR & PROMO CARD

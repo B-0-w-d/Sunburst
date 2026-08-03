@@ -1,5 +1,44 @@
 // =========================================================================
-// DỰNG BẢNG MA TRẬN KHẢO SÁT, HEATMAP VÀ CHỐT LỊCH
+// HÀM TÍNH TOÁN DEADLINE TỪ SỐ NGÀY THỜI HẠN (ĐẦU GIỜ NGÀY HÔM SAU)
+// =========================================================================
+
+/**
+ * Tính toán mốc thời gian deadline là 00:00:00 của ngày hôm sau tính từ ngày kết thúc + số ngày thời hạn
+ * @param {string} endDateStr - Ngày kết thúc khảo sát (YYYY-MM-DD)
+ * @param {number|string} durationDays - Số ngày cho phép điền lịch hoặc 'unlimited'
+ * @returns {string|null} - Chuỗi định dạng chuẩn gửi lên backend hoặc null nếu không thời hạn
+ */
+export function calculatePollDeadline(endDateStr, durationDays) {
+    if (durationDays === 'unlimited' || durationDays === null) {
+        return null;
+    }
+
+    const parseLocalDate = (dateStr) => {
+        if (!dateStr) return new Date();
+        const cleanStr = dateStr.split('T')[0];
+        const [y, m, d] = cleanStr.split('-').map(Number);
+        return new Date(y || new Date().getFullYear(), (m || 1) - 1, d || 1);
+    };
+
+    let baseDate = endDateStr ? parseLocalDate(endDateStr) : new Date();
+    const days = parseInt(durationDays || 7, 10);
+    baseDate.setDate(baseDate.getDate() + days);
+    baseDate.setDate(baseDate.getDate() + 1);
+    baseDate.setHours(0, 0, 0, 0);
+
+    const pad = (n) => String(n).padStart(2, '0');
+    const yyyy = baseDate.getFullYear();
+    const mm = pad(baseDate.getMonth() + 1);
+    const dd = pad(baseDate.getDate());
+    const hh = pad(baseDate.getHours());
+    const min = pad(baseDate.getMinutes());
+    const ss = pad(baseDate.getSeconds());
+
+    return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+}
+
+// =========================================================================
+// DỰNG BẢNG MA TRẬN KHẢO SÁT, HEATMAP VÀ CHỐT LỊCH (CÓ TÍCH HỢP HOVER & CLICK)
 // =========================================================================
 
 /**
@@ -95,16 +134,16 @@ export function buildPollMatrix(config, tableId, isReadonly = false, slotStats =
             let slotISO = `${dateStr}T${time === "24:00" ? "00:00" : time}:00`;
 
             if (isReadonly) {
-                // Chế độ xem báo cáo (Heatmap): Tính toán màu sắc dựa trên số lượng người rảnh
+                // Chế độ xem báo cáo (Heatmap): Thêm hiệu ứng hover và con trỏ pointer
                 let count = slotStats ? (slotStats[slotISO] || 0) : 0;
                 let heatmapClass = count > 0 ? (count >= 3 ? 'heatmap-high' : 'heatmap-mid') : 'heatmap-low';
-                row += `<td class="time-slot-cell ${heatmapClass} selectable-slot" data-slot="${slotISO}">
+                row += `<td class="time-slot-cell ${heatmapClass} selectable-slot" data-slot="${slotISO}" title="Khung giờ này có ${count} người rảnh. Nhấn hoặc kéo để chọn chốt lịch." style="cursor: pointer;">
                             <span style="pointer-events: none; display: block; width: 100%; height: 100%;">${count}</span>
                         </td>`;
             } else {
-                // Chế độ điền lịch rảnh cá nhân: Thêm các class phân chia giờ chẵn/lẻ
+                // Chế độ điền lịch rảnh cá nhân: Thêm hiệu ứng hover, con trỏ pointer và class phân chia giờ
                 let borderClass = (time !== "24:00" && time.endsWith('30')) ? 'slot-half-hour' : 'slot-full-hour';
-                row += `<td class="time-slot-cell ${borderClass}" data-col-index="${index}" data-slot="${slotISO}"></td>`;
+                row += `<td class="time-slot-cell ${borderClass}" data-col-index="${index}" data-slot="${slotISO}" title="Nhấn hoặc kéo để chọn khung giờ ${slotISO}" style="cursor: pointer;"></td>`;
             }
         });
 
@@ -133,11 +172,13 @@ export function buildPollMatrix(config, tableId, isReadonly = false, slotStats =
             });
         });
 
-        // Kích hoạt tính năng kéo chuột bôi đen chọn ô cho bảng điền lịch thông thường
+        // Kích hoạt tính năng kéo chuột bôi đen & click chọn nhanh
         initTableDragSelection(table, false);
+        initTableClickSelection(table);
     } else {
-        // Kích hoạt tính năng kéo chuột bôi đen cho bảng báo cáo / chốt lịch
+        // Kích hoạt tính năng kéo chuột bôi đen & click chọn nhanh cho báo cáo
         initTableDragSelection(table, true);
+        initTableClickSelection(table);
     }
 }
 
@@ -191,6 +232,27 @@ function initTableDragSelection(table, isReportMode = false) {
             cell.classList.toggle('selected-final-slot', isSelecting);
         } else {
             cell.classList.toggle('selected', isSelecting);
+        }
+    });
+}
+
+/**
+ * Lắng nghe sự kiện click đơn trên các ô thời gian để bật/tắt chọn nhanh
+ * @param {HTMLElement} table - Thẻ table áp dụng sự kiện
+ */
+export function initTableClickSelection(table) {
+    table.addEventListener('click', (e) => {
+        const cell = e.target.closest('.time-slot-cell');
+        if (!cell) return;
+
+        // Kiểm tra xem đang ở chế độ nào để toggle class phù hợp
+        const isReportMode = cell.classList.contains('selectable-slot') || cell.classList.contains('selected-final-slot');
+
+        if (isReportMode) {
+            cell.classList.toggle('selected-final-slot');
+            cell.classList.toggle('selected');
+        } else {
+            cell.classList.toggle('selected');
         }
     });
 }

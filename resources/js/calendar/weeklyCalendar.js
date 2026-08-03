@@ -3,6 +3,7 @@
 // =========================================================================
 
 import { formatEventDateTime } from './utils.js';
+import { typeColors } from './calendar.js';
 
 /**
  * Biến lưu trữ ngày bắt đầu của tuần hiện tại (mặc định tính từ Thứ Hai).
@@ -22,8 +23,9 @@ export let currentWeekStartDate = (() => {
  * Hàm vẽ lưới lịch tuần, hiển thị các mốc giờ từ 00:00 đến 24:00
  * và định vị các sự kiện đã chốt lên đúng ô thời gian tương ứng.
  * @param {Array} cachedConfirmedEvents - Mảng chứa danh sách các sự kiện đã được chốt lịch
+ * @param {Function} [onEventClick] - (Tùy chọn) Hàm callback khi người dùng click vào sự kiện để chỉnh sửa
  */
-export function renderWeeklyCalendar(cachedConfirmedEvents) {
+export function renderWeeklyCalendar(cachedConfirmedEvents, onEventClick = null) {
     const grid = document.getElementById('weeklyCalendarGrid');
     const titleLabel = document.getElementById('currentWeekTitle');
     if (!grid) return;
@@ -51,6 +53,7 @@ export function renderWeeklyCalendar(cachedConfirmedEvents) {
     for (let h = 0; h < 24; h++) hours.push(h);
 
     const rowHeight = 34; // Chiều cao (px) tính cho mỗi dòng giờ trên lưới
+
     grid.style.display = 'grid';
     grid.style.gridTemplateColumns = '60px repeat(7, 1fr)'; // Cột 1 chứa nhãn giờ, 7 cột tiếp theo cho 7 ngày trong tuần
     grid.style.gridTemplateRows = `45px repeat(24, ${rowHeight}px) 20px`; // Hàng 1 cho tiêu đề ngày, 24 hàng cho các giờ, hàng cuối cho mốc 24:00
@@ -120,7 +123,6 @@ export function renderWeeklyCalendar(cachedConfirmedEvents) {
         const parts = cleanStr.split(' ');
         const datePart = parts[0];
         const timePart = parts[1] || '00:00:00';
-
         const [y, m, d] = datePart.split('-').map(Number);
         const [h, min, s] = timePart.split(':').map(Number);
         return new Date(y, m - 1, d, h || 0, min || 0, s || 0);
@@ -133,6 +135,12 @@ export function renderWeeklyCalendar(cachedConfirmedEvents) {
         let evEnd = ev.end_time ? parseLocalDateTime(ev.end_time) : new Date(evStart.getTime() + 60 * 60 * 1000);
         let timeTextDisplay = formatEventDateTime(ev.start_time, ev.end_time);
 
+        // Lấy mã màu trực tiếp từ typeColors (VD: '#10b981')
+        let eventTypeKey = ev.type || ev.event_type;
+        let colorCode = (typeColors && eventTypeKey && typeColors[eventTypeKey])
+            ? typeColors[eventTypeKey]
+            : '#0284c7'; // Màu mặc định nếu không khớp type nào
+
         // Kiểm tra xem sự kiện có rơi vào ngày hiện tại đang xét trên cột không
         weekDays.forEach((d, colIndex) => {
             let dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -143,15 +151,15 @@ export function renderWeeklyCalendar(cachedConfirmedEvents) {
             if (evEnd >= dayStart && evStart <= dayEnd) {
                 let actualStart = evStart < dayStart ? dayStart : evStart;
                 let actualEnd = evEnd > dayEnd ? dayEnd : evEnd;
-
                 let startHour = actualStart.getHours();
                 let startMinute = actualStart.getMinutes();
                 let endTotalMinutes = actualEnd.getHours() * 60 + actualEnd.getMinutes();
-
                 let evStartDateStr = `${evStart.getFullYear()}-${String(evStart.getMonth() + 1).padStart(2, '0')}-${String(evStart.getDate()).padStart(2, '0')}`;
+
                 if (evEnd > dayEnd && dateStr === evStartDateStr) {
                     endTotalMinutes = 24 * 60; // Kéo dài đến hết ngày nếu sự kiện kéo sang ngày hôm sau
                 }
+
                 let startTotalMinutes = startHour * 60 + startMinute;
                 let durationMinutes = endTotalMinutes - startTotalMinutes;
                 if (durationMinutes < 15) durationMinutes = 15; // Đảm bảo chiều cao tối thiểu cho dễ nhìn
@@ -164,13 +172,35 @@ export function renderWeeklyCalendar(cachedConfirmedEvents) {
                 let topPx = (startMinute / 60) * rowHeight;
                 let heightPx = (durationMinutes / 60) * rowHeight - 2;
 
-                // Tạo thẻ hiển thị sự kiện trên lịch
+                // Tạo thẻ hiển thị sự kiện trên lịch (Có bổ sung cursor: pointer và hiệu ứng hover)
                 let eventCard = document.createElement('div');
-                eventCard.style.cssText = `position: absolute; top: ${topPx}px; left: 2px; right: 2px; height: ${heightPx}px; background: #e0f2fe; border-left: 3px solid #0284c7; padding: 4px 6px; border-radius: 4px; font-size: 11px; overflow: hidden; z-index: 5; box-shadow: 0 1px 2px rgba(0,0,0,0.05); box-sizing: border-box;`;
+                eventCard.style.cssText = `position: absolute; top: ${topPx}px; left: 2px; right: 2px; height: ${heightPx}px; background: ${colorCode}20; border-left: 3px solid ${colorCode}; padding: 4px 6px; border-radius: 4px; font-size: 11px; overflow: hidden; z-index: 5; box-shadow: 0 1px 2px rgba(0,0,0,0.05); box-sizing: border-box; cursor: pointer; transition: filter 0.15s ease, transform 0.15s ease;`;
+
                 eventCard.innerHTML = `
-                    <strong style="color: #0369a1; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${ev.title}</strong>
-                    <span style="color: #64748b; font-size: 10px;">${timeTextDisplay}</span>
+                    <strong style="color: ${colorCode}; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none;">${ev.title}</strong>
+                    <span style="color: #64748b; font-size: 10px; pointer-events: none;">${timeTextDisplay}</span>
                 `;
+
+                // Thêm hiệu ứng hover sáng lên khi rê chuột vào sự kiện
+                eventCard.addEventListener('mouseenter', () => {
+                    eventCard.style.filter = 'brightness(0.92)';
+                    eventCard.style.transform = 'translateY(-1px)';
+                });
+                eventCard.addEventListener('mouseleave', () => {
+                    eventCard.style.filter = 'none';
+                    eventCard.style.transform = 'translateY(0)';
+                });
+
+                // Gắn sự kiện click để mở form chỉnh sửa hoặc xử lý tương tác
+                eventCard.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Ngăn sự kiện nổi bọt lên cell nền
+                    if (typeof onEventClick === 'function') {
+                        onEventClick(ev); // Gọi hàm callback chỉnh sửa sự kiện truyền vào
+                    } else {
+                        console.log('Đã nhấn vào sự kiện:', ev);
+                    }
+                });
+
                 targetCell.appendChild(eventCard);
             }
         });

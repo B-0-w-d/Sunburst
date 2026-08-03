@@ -5,8 +5,16 @@
 import { headers, formatEventDateTime, parseLocalDateTime } from './utils.js';
 import { buildPollMatrix, buildHeatmapMatrix } from './poll.js';
 import { removeMemberChip } from './addMember.js';
-import { renderMiniCalendar, initMiniCalendarNav, currentMiniMonthDate, typeColors } from './miniCalendar.js';
+import { renderMiniCalendar, initMiniCalendarNav, currentMiniMonthDate } from './miniCalendar.js';
 import { renderWeeklyCalendar, initWeeklyCalendarNav, currentWeekStartDate } from './weeklyCalendar.js';
+
+// Đồng bộ bảng màu chung cho các loại sự kiện
+export const typeColors = {
+    'PRACTICE': '#0369a1',
+    'SHOW': '#d97706',
+    'MEETING': '#dc2626',
+    'EVENT': '#7e22ce',
+};
 
 document.addEventListener('DOMContentLoaded', function () {
     const confirmedContainer = document.getElementById('confirmedEventList');
@@ -20,7 +28,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Khởi tạo điều hướng cho lịch tháng mini và lịch tuần
     initMiniCalendarNav(() => renderMiniCalendar(cachedConfirmedEvents, handleMiniDateClick));
-    initWeeklyCalendarNav(() => renderWeeklyCalendar(cachedConfirmedEvents));
+
+    // Tích hợp callback mở modal chỉnh sửa sự kiện khi click vào lịch tuần
+    initWeeklyCalendarNav(() => renderWeeklyCalendar(cachedConfirmedEvents, handleWeeklyEventClick));
 
     // Xử lý khi click vào một ngày trên lịch mini để nhảy lịch tuần sang tuần đó
     function handleMiniDateClick(dateStr) {
@@ -28,7 +38,27 @@ document.addEventListener('DOMContentLoaded', function () {
         let day = clickedDate.getDay();
         let diff = clickedDate.getDate() - day + (day === 0 ? -6 : 1);
         currentWeekStartDate.setTime(new Date(clickedDate.setDate(diff)).setHours(0, 0, 0, 0));
-        renderWeeklyCalendar(cachedConfirmedEvents);
+        renderWeeklyCalendar(cachedConfirmedEvents, handleWeeklyEventClick);
+    }
+
+    // Hàm callback xử lý khi click vào một thẻ sự kiện trên lịch tuần
+    function handleWeeklyEventClick(ev) {
+        console.log("Đã click vào sự kiện trên lịch tuần để sửa:", ev);
+
+        // Gán ID sự kiện đang thao tác
+        activeEventId = ev._id || ev.id || (ev._id && ev._id.$oid);
+
+        // Gọi mở modal chỉnh sửa sự kiện (kiểm tra hàm openModal nếu có sẵn trong dự án)
+        if (typeof window.openModal === 'function') {
+            // Nếu bạn có modal chỉnh sửa riêng, hãy thay 'createEventModal' hoặc gọi modal chỉnh sửa tương ứng
+            // Ví dụ nạp dữ liệu vào form (nếu có):
+            const titleInput = document.getElementById('eventTitle');
+            if (titleInput) titleInput.value = ev.title || '';
+
+            window.openModal('createEventModal');
+        } else {
+            alert(`Sự kiện được chọn: ${ev.title}`);
+        }
     }
 
     // Nút mở modal tạo sự kiện
@@ -134,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             cachedConfirmedEvents = resultConfirmed.data || [];
             renderUpcomingEvents(cachedConfirmedEvents);
-            renderWeeklyCalendar(cachedConfirmedEvents);
+            renderWeeklyCalendar(cachedConfirmedEvents, handleWeeklyEventClick);
             renderMiniCalendar(cachedConfirmedEvents, handleMiniDateClick);
             bindEventListeners();
             bindDeleteEventListeners();
@@ -144,84 +174,80 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Render danh sách thẻ sự kiện ở sidebar/tab quản lý
-    // Render danh sách thẻ sự kiện ở sidebar/tab quản lý
-        function renderEventList(targetContainer, data, type) {
-            targetContainer.innerHTML = '';
-            if (!data || data.length === 0) {
-                targetContainer.innerHTML = `<p class="subtitle" style="color: #6c757d; font-style: italic;">Không có ${type === 'confirmed' ? 'lịch đã chốt' : 'khảo sát'} nào.</p>`;
-                return;
+    function renderEventList(targetContainer, data, type) {
+        targetContainer.innerHTML = '';
+        if (!data || data.length === 0) {
+            targetContainer.innerHTML = `<p class="subtitle" style="color: #6c757d; font-style: italic;">Không có ${type === 'confirmed' ? 'lịch đã chốt' : 'khảo sát'} nào.</p>`;
+            return;
+        }
+
+        data.forEach(ev => {
+            const card = document.createElement('div');
+            card.className = 'event-card';
+            card.style.position = 'relative';
+
+            let eventId = ev._id || ev.id || (ev._id && ev._id.$oid);
+            let actionBtn = '';
+            let pollConfigStr = ev.poll_config ? JSON.stringify(ev.poll_config).replace(/'/g, "&apos;") : '{}';
+
+            if (ev.status === 'POLL') {
+                if (ev.is_manager) {
+                    actionBtn = `<button class="btn btn-primary w-100 fill-poll-btn" data-id="${eventId}" data-config='${pollConfigStr}'>Điền Lịch Rảnh</button>`;
+                    actionBtn += `<button class="btn btn-outline w-100 mt-2 view-report-btn" data-id="${eventId}" data-title="${ev.title}" data-config='${pollConfigStr}'>Xem Báo Cáo & Chốt Lịch</button>`;
+                } else {
+                    if (ev.has_submitted_availability) {
+                        actionBtn = `
+                            <button class="btn w-100 fill-poll-btn" data-id="${eventId}" data-config='${pollConfigStr}' style="background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 12px; padding: 6px 10px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 4px; border-radius: 4px;">
+                                <span style="font-size: 13px;">✓</span> Đã điền lịch rảnh <span style="font-size: 11px; opacity: 0.75; font-weight: normal;">(Sửa)</span>
+                            </button>
+                        `;
+                    } else {
+                        actionBtn = `<button class="btn btn-primary w-100 fill-poll-btn" data-id="${eventId}" data-config='${pollConfigStr}'>Điền Lịch Rảnh</button>`;
+                    }
+                }
             }
 
-            data.forEach(ev => {
-                const card = document.createElement('div');
-                card.className = 'event-card';
-                card.style.position = 'relative';
+            let deleteBtnHtml = ev.is_manager ? `<button class="delete-event-btn" data-id="${eventId}" title="Xóa sự kiện" style="position: absolute; top: 12px; right: 12px; background: transparent; border: none; font-size: 20px; font-weight: bold; color: #dc3545; cursor: pointer; line-height: 1; padding: 0 5px;">&times;</button>` : '';
 
-                let eventId = ev._id || ev.id || (ev._id && ev._id.$oid);
-                let actionBtn = '';
-                let pollConfigStr = ev.poll_config ? JSON.stringify(ev.poll_config).replace(/'/g, "&apos;") : '{}';
+            let timeDisplayHtml = '';
+            if (ev.status === 'POLL' && ev.poll_config) {
+                const formatDate = (dateStr) => {
+                    if (!dateStr) return '';
+                    const [y, m, d] = dateStr.split('-');
+                    return `${d}/${m}/${y}`;
+                };
+                const startDateFormatted = formatDate(ev.poll_config.start_date);
+                const endDateFormatted = formatDate(ev.poll_config.end_date);
 
-                if (ev.status === 'POLL') {
-                    if (ev.is_manager) {
-                        actionBtn = `<button class="btn btn-primary w-100 fill-poll-btn" data-id="${eventId}" data-config='${pollConfigStr}'>Điền Lịch Rảnh</button>`;
-                        actionBtn += `<button class="btn btn-outline w-100 mt-2 view-report-btn" data-id="${eventId}" data-title="${ev.title}" data-config='${pollConfigStr}'>Xem Báo Cáo & Chốt Lịch</button>`;
-                    } else {
-                        if (ev.has_submitted_availability) {
-                            actionBtn = `
-                                <button class="btn w-100 fill-poll-btn" data-id="${eventId}" data-config='${pollConfigStr}' style="background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 12px; padding: 6px 10px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 4px; border-radius: 4px;">
-                                    <span style="font-size: 13px;">✓</span> Đã điền lịch rảnh <span style="font-size: 11px; opacity: 0.75; font-weight: normal;">(Sửa)</span>
-                                </button>
-                            `;
-                        } else {
-                            actionBtn = `<button class="btn btn-primary w-100 fill-poll-btn" data-id="${eventId}" data-config='${pollConfigStr}'>Điền Lịch Rảnh</button>`;
-                        }
-                    }
+                if (startDateFormatted && endDateFormatted) {
+                    timeDisplayHtml += `<p style="margin: 4px 0; font-size: 13px; color: #4b5563;">📅 <strong>Thời gian:</strong> ${startDateFormatted} - ${endDateFormatted}</p>`;
                 }
 
-                let deleteBtnHtml = ev.is_manager ? `<button class="delete-event-btn" data-id="${eventId}" title="Xóa sự kiện" style="position: absolute; top: 12px; right: 12px; background: transparent; border: none; font-size: 20px; font-weight: bold; color: #dc3545; cursor: pointer; line-height: 1; padding: 0 5px;">&times;</button>` : '';
-
-                // Xử lý hiển thị thông tin thời gian tùy thuộc vào loại sự kiện (Đã chốt hay Khảo sát)
-                let timeDisplayHtml = '';
-                if (ev.status === 'POLL' && ev.poll_config) {
-                    // Format ngày bắt đầu - kết thúc khảo sát (YYYY-MM-DD -> DD/MM/YYYY)
-                    const formatDate = (dateStr) => {
-                        if (!dateStr) return '';
-                        const [y, m, d] = dateStr.split('-');
-                        return `${d}/${m}/${y}`;
-                    };
-                    const startDateFormatted = formatDate(ev.poll_config.start_date);
-                    const endDateFormatted = formatDate(ev.poll_config.end_date);
-
-                    if (startDateFormatted && endDateFormatted) {
-                        timeDisplayHtml += `<p style="margin: 4px 0; font-size: 13px; color: #4b5563;">📅 <strong>Thời gian:</strong> ${startDateFormatted} - ${endDateFormatted}</p>`;
-                    }
-
-                    // Format hạn chót (deadline)
-                    if (ev.poll_config.deadline) {
-                        const deadlineFormatted = formatDate(ev.poll_config.deadline);
-                        timeDisplayHtml += `<p style="margin: 4px 0; font-size: 13px; color: #dc2626;">⏰ <strong>Hạn chót:</strong> ${deadlineFormatted}</p>`;
-                    } else {
-                        timeDisplayHtml += `<p style="margin: 4px 0; font-size: 13px; color: #059669;">⏰ <strong>Hạn chót:</strong> Không giới hạn</p>`;
-                    }
-                } else if (ev.start_time) {
-                    timeDisplayHtml = `<p><strong>Thời gian:</strong> ${formatEventDateTime(ev.start_time, ev.end_time)}</p>`;
+                if (ev.poll_config.deadline) {
+                    const deadlineFormatted = formatDate(ev.poll_config.deadline);
+                    timeDisplayHtml += `<p style="margin: 4px 0; font-size: 13px; color: #dc2626;">⏰ <strong>Hạn chót:</strong> ${deadlineFormatted}</p>`;
+                } else {
+                    timeDisplayHtml += `<p style="margin: 4px 0; font-size: 13px; color: #059669;">⏰ <strong>Hạn chót:</strong> Không giới hạn</p>`;
                 }
+            } else if (ev.start_time) {
+                timeDisplayHtml = `<p><strong>Thời gian:</strong> ${formatEventDateTime(ev.start_time, ev.end_time)}</p>`;
+            }
 
-                card.innerHTML = `
-                    ${deleteBtnHtml}
-                    <div>
-                        <span class="badge badge-${(ev.type || '').toLowerCase()}">${ev.type || 'N/A'}</span>
-                        <h4>${ev.title}</h4>
-                        <div class="event-info">
-                            <p style="margin: 4px 0; font-size: 13px; color: #4b5563;"><strong>Trạng thái:</strong> ${ev.status}</p>
-                            ${timeDisplayHtml}
-                        </div>
+            card.innerHTML = `
+                ${deleteBtnHtml}
+                <div>
+                    <span class="badge badge-${(ev.type || '').toLowerCase()}">${ev.type || 'N/A'}</span>
+                    <h4>${ev.title}</h4>
+                    <div class="event-info">
+                        <p style="margin: 4px 0; font-size: 13px; color: #4b5563;"><strong>Trạng thái:</strong> ${ev.status}</p>
+                        ${timeDisplayHtml}
                     </div>
-                    <div style="margin-top: 15px;">${actionBtn}</div>
-                `;
-                targetContainer.appendChild(card);
-            });
-        }
+                </div>
+                <div style="margin-top: 15px;">${actionBtn}</div>
+            `;
+            targetContainer.appendChild(card);
+        });
+    }
 
     // Gắn sự kiện cho các nút điền lịch rảnh và xem báo cáo khảo sát
     function bindEventListeners() {
@@ -372,31 +398,34 @@ document.addEventListener('DOMContentLoaded', function () {
             };
 
             if (statusVal === 'POLL') {
-                            // Tự động tính ngày deadline dựa trên số ngày admin chọn
-                            const daysToAdd = parseInt(document.getElementById('pollDurationDays').value || 7, 10);
-                            const deadlineDate = new Date();
-                            deadlineDate.setDate(deadlineDate.getDate() + daysToAdd);
+                const noDeadlineCheckbox = document.getElementById('noDeadlineCheckbox');
+                let deadlineStr = null;
 
-                            // Định dạng thành chuỗi YYYY-MM-DD
-                            const pad = (n) => String(n).padStart(2, '0');
-                            const deadlineStr = `${deadlineDate.getFullYear()}-${pad(deadlineDate.getMonth() + 1)}-${pad(deadlineDate.getDate())}`;
+                if (!noDeadlineCheckbox || !noDeadlineCheckbox.checked) {
+                    const daysToAdd = parseInt(document.getElementById('pollDurationDays').value || 7, 10);
+                    const deadlineDate = new Date();
+                    deadlineDate.setDate(deadlineDate.getDate() + daysToAdd);
 
-                            payload.poll_config = {
-                                start_date: document.getElementById('pollStartDate').value,
-                                end_date: document.getElementById('pollEndDate').value,
-                                deadline: deadlineStr, // Tự động gắn hạn chót tính theo khoảng thời gian
-                                daily_start_time: document.getElementById('dailyStartTime').value,
-                                daily_end_time: document.getElementById('dailyEndTime').value,
-                                step_minutes: 30
-                            };
-                        } else {
-                            let startVal = startTimeInput.value;
-                            let endVal = endTimeInput.value;
+                    const pad = (n) => String(n).padStart(2, '0');
+                    deadlineStr = `${deadlineDate.getFullYear()}-${pad(deadlineDate.getMonth() + 1)}-${pad(deadlineDate.getDate())}`;
+                }
 
-                            if (allDayCheckbox && allDayCheckbox.checked) {
-                                if (!endVal || endVal < startVal) {
-                                    endVal = startVal;
-                                }
+                payload.poll_config = {
+                    start_date: document.getElementById('pollStartDate').value,
+                    end_date: document.getElementById('pollEndDate').value,
+                    deadline: deadlineStr,
+                    daily_start_time: document.getElementById('dailyStartTime').value,
+                    daily_end_time: document.getElementById('dailyEndTime').value,
+                    step_minutes: 30
+                };
+            } else {
+                let startVal = startTimeInput.value;
+                let endVal = endTimeInput.value;
+
+                if (allDayCheckbox && allDayCheckbox.checked) {
+                    if (!endVal || endVal < startVal) {
+                        endVal = startVal;
+                    }
                     startVal = `${startVal} 00:00:00`;
                     endVal = `${endVal} 23:59:59`;
                 }
@@ -484,10 +513,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Render danh sách sự kiện sắp diễn ra ở sidebar
+    // Render danh sách sự kiện sắp diễn ra ở sidebar (Đã đồng bộ màu typeColors)
     function renderUpcomingEvents(allEvents) {
         const container = document.getElementById('upcomingEventsList');
-        if (!container) return;
+        if (!container && !document.getElementById('widgetEventContent')) return;
 
         const now = new Date();
 
@@ -512,6 +541,81 @@ document.addEventListener('DOMContentLoaded', function () {
             return a.startDate - b.startDate;
         });
 
+        // -------------------------------------------------------------
+        // GIAO DIỆN Ô SỐ 8 (WIDGET SỰ KIỆN) - TINH CHỈNH ĐẸP MẮT
+        // -------------------------------------------------------------
+        const widgetContent = document.getElementById('widgetEventContent');
+        const widgetBadge = document.getElementById('widgetStatusBadge');
+        const widgetTitleElem = document.querySelector('.widget-title, #widgetEventTitle, .event-widget h3') || widgetBadge?.parentElement?.querySelector('h3, h2');
+
+        if (widgetContent) {
+            const ongoingOrNext = relevantEvents.find(e => e.statusType === 'ongoing') || relevantEvents[0];
+
+            if (!ongoingOrNext) {
+                if (widgetBadge) widgetBadge.style.display = 'none';
+                if (widgetTitleElem) widgetTitleElem.innerText = 'Sự Kiện Sắp Tới';
+                widgetContent.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 0; color: #94a3b8;">
+                        <span style="font-size: 24px; margin-bottom: 6px;">📅</span>
+                        <p style="font-size: 13px; font-style: italic; margin: 0;">Không có sự kiện nào sắp diễn ra.</p>
+                    </div>`;
+            } else {
+                const isOngoing = ongoingOrNext.statusType === 'ongoing';
+                const eventTypeKey = (ongoingOrNext.type || '').toUpperCase();
+                const dotColor = (typeColors && typeColors[eventTypeKey]) ? typeColors[eventTypeKey] : '#6366f1';
+
+                if (widgetTitleElem) {
+                    widgetTitleElem.innerText = isOngoing ? 'Sự Kiện Đang Diễn Ra' : 'Sự Kiện Sắp Tới';
+                }
+
+                if (widgetBadge) {
+                    widgetBadge.style.display = 'inline-flex';
+                    widgetBadge.style.alignItems = 'center';
+                    widgetBadge.style.gap = '4px';
+                    widgetBadge.style.padding = '4px 10px';
+                    widgetBadge.style.borderRadius = '20px';
+                    widgetBadge.style.fontSize = '12px';
+                    widgetBadge.style.fontWeight = '600';
+                    widgetBadge.style.letterSpacing = '-0.2px';
+
+                    if (isOngoing) {
+                        widgetBadge.innerHTML = `<span style="width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite;"></span> Đang diễn ra`;
+                        widgetBadge.style.background = '#fef2f2';
+                        widgetBadge.style.color = '#dc2626';
+                    } else {
+                        widgetBadge.innerHTML = `Sắp tới`;
+                        widgetBadge.style.background = '#f0f9ff';
+                        widgetBadge.style.color = '#0284c7';
+                    }
+                }
+
+                const d = ongoingOrNext.startDate;
+                const formattedTime = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} - ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+
+                widgetContent.innerHTML = `
+                    <div style="background: ${isOngoing ? '#fff9f9' : '#f8fafc'}; border: 1px solid ${isOngoing ? '#fee2e2' : '#e2e8f0'}; border-radius: 12px; padding: 14px 16px; transition: all 0.2s;">
+                        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px;">
+                            <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+                                <span style="background-color: ${dotColor}; width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 3px ${dotColor}20;"></span>
+                                <h4 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${ongoingOrNext.title}">${ongoingOrNext.title}</h4>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
+                            <span style="font-size: 12px; color: #475569; font-weight: 500; display: flex; align-items: center; gap: 5px;">
+                                📅 ${formattedTime}
+                            </span>
+                            <span style="font-size: 11px; font-weight: 600; color: ${dotColor}; background: ${dotColor}15; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                ${ongoingOrNext.type || 'Sự kiện'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        // -------------------------------------------------------------
+
+        if (!container) return;
+
         if (relevantEvents.length === 0) {
             container.innerHTML = `<p style="font-size: 12px; color: #888; padding: 4px 8px;">Không có sự kiện nào.</p>`;
             return;
@@ -526,28 +630,25 @@ document.addEventListener('DOMContentLoaded', function () {
             const year = d.getFullYear();
             const formattedDate = `${hours}:${minutes} - ${day}/${month}/${year}`;
 
-            let dotColor = '#3b82f6';
-            if (event.type === 'PRACTICE') dotColor = '#10b981';
-            else if (event.type === 'SHOW') dotColor = '#ef4444';
-            else if (event.type === 'MEETING') dotColor = '#f59e0b';
-
+            const eventTypeKey = (event.type || '').toUpperCase();
+            const dotColor = (typeColors && typeColors[eventTypeKey]) ? typeColors[eventTypeKey] : '#6366f1';
             const eventId = event.id || event.event_id || event._id;
 
             const badgeHtml = event.statusType === 'ongoing'
-                ? `<span style="font-size: 10px; background: #fee2e2; color: #dc2626; padding: 1px 6px; border-radius: 4px; font-weight: 600; margin-bottom: 2px;">Đang diễn ra</span>`
+                ? `<span style="font-size: 10px; background: #fee2e2; color: #dc2626; padding: 2px 6px; border-radius: 4px; font-weight: 600; width: fit-content; margin-bottom: 4px;">Đang diễn ra</span>`
                 : '';
 
             return `
-                <div class="sidebar-nav-item" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: ${event.statusType === 'ongoing' ? '#fff5f5' : '#f9fafb'}; border: ${event.statusType === 'ongoing' ? '1px solid #fecaca' : 'none'}; border-radius: 6px; text-decoration: none; color: inherit; position: relative;">
+                <div class="sidebar-nav-item" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: ${event.statusType === 'ongoing' ? '#fff5f5' : '#ffffff'}; border: 1px solid ${event.statusType === 'ongoing' ? '#fecaca' : '#f1f5f9'}; border-radius: 8px; text-decoration: none; color: inherit; margin-bottom: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
                     <a href="#" style="display: flex; flex-direction: column; align-items: flex-start; text-decoration: none; color: inherit; flex-grow: 1; overflow: hidden; margin-right: 8px;">
                         ${badgeHtml}
-                        <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
+                        <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
                             <span class="nav-dot" style="background-color: ${dotColor}; flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%;"></span>
-                            <span style="font-weight: 500; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${event.title}</span>
+                            <span style="font-weight: 600; font-size: 13px; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${event.title}</span>
                         </div>
-                        <span style="font-size: 11px; color: #6b7280; margin-left: 14px; margin-top: 2px;">${formattedDate}</span>
+                        <span style="font-size: 11px; color: #64748b; margin-left: 16px; margin-top: 3px;">${formattedDate}</span>
                     </a>
-                    <button class="delete-event-btn" data-id="${eventId}" title="Xóa sự kiện" style="background: none; border: none; color: #9ca3af; font-size: 16px; cursor: pointer; padding: 0 4px; line-height: 1; border-radius: 4px;" onmouseover="this.style.color='#ef4444'; this.style.backgroundColor='#fee2e2';" onmouseout="this.style.color='#9ca3af'; this.style.backgroundColor='transparent';">&times;</button>
+                    <button class="delete-event-btn" data-id="${eventId}" title="Xóa sự kiện" style="background: none; border: none; color: #9ca3af; font-size: 16px; cursor: pointer; padding: 4px; line-height: 1; border-radius: 4px; transition: all 0.2s;" onmouseover="this.style.color='#ef4444'; this.style.backgroundColor='#fee2e2';" onmouseout="this.style.color='#9ca3af'; this.style.backgroundColor='transparent';">&times;</button>
                 </div>
             `;
         }).join('');
