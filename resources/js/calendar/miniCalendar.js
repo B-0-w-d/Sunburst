@@ -2,7 +2,7 @@
 // QUẢN LÝ LỊCH THÁNG MINI (SIDEBAR)
 // =========================================================================
 
-import { typeColors } from './calendar.js';
+import { typeColors } from './eventRenderer.js';
 export let currentMiniMonthDate = new Date();
 
 export function renderMiniCalendar(cachedConfirmedEvents, onDateClick) {

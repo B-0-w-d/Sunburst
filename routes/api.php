@@ -80,6 +80,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{eventId}/poll-report', [CalendarController::class, 'getPollReport']); // Admin xem báo cáo tổng hợp rảnh/bận
         Route::post('/{eventId}/confirm-poll', [CalendarController::class, 'confirmPoll']); // Admin chốt lịch từ khảo sát
         Route::delete('/{id}', [CalendarController::class, 'destroy']);                             // Xóa lịch / khảo sát
+        Route::match(['put', 'patch'], '/{id}', [CalendarController::class, 'update']);
     });
 
     // Notifications

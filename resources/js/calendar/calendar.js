@@ -2,19 +2,20 @@
 // FILE CHÍNH: ĐIỀU PHỐI SỰ KIỆN & QUẢN LÝ GIAO DIỆN LỊCH
 // =========================================================================
 
-import { headers, formatEventDateTime, parseLocalDateTime } from './utils.js';
 import { buildPollMatrix, buildHeatmapMatrix } from './poll.js';
-import { removeMemberChip } from './addMember.js';
 import { renderMiniCalendar, initMiniCalendarNav, currentMiniMonthDate } from './miniCalendar.js';
 import { renderWeeklyCalendar, initWeeklyCalendarNav, currentWeekStartDate } from './weeklyCalendar.js';
+import { renderEventList, renderUpcomingEvents } from './eventRenderer.js';
+import { initCreateEventModalLogic, actionBindWeeklyEventClickForCreate } from './createEventModal.js';
+import './editEventModal.js'; // Module xử lý modal chỉnh sửa
 
-// Đồng bộ bảng màu chung cho các loại sự kiện
-export const typeColors = {
-    'PRACTICE': '#0369a1',
-    'SHOW': '#d97706',
-    'MEETING': '#dc2626',
-    'EVENT': '#7e22ce',
-};
+import {
+    fetchAllEventsApi,
+    saveAvailabilityApi,
+    fetchMyLatestAvailabilityApi,
+    fetchPollReportApi,
+    confirmPollApi
+} from './eventApi.js';
 
 document.addEventListener('DOMContentLoaded', function () {
     const confirmedContainer = document.getElementById('confirmedEventList');
@@ -23,19 +24,38 @@ document.addEventListener('DOMContentLoaded', function () {
     let activeEventId = null;
     let cachedConfirmedEvents = [];
 
-    // Tải toàn bộ danh sách sự kiện khi khởi động
-    fetchAllEvents();
+    // Gán hàm global để các module con gọi lại khi cần reload dữ liệu
+    window.loadAllEvents = loadAllEvents;
 
-    // Khởi tạo điều hướng cho lịch tháng mini và lịch tuần
+    // Khởi chạy hệ thống
+    loadAllEvents();
+    initCreateEventModalLogic();
+
+    // Khởi tạo điều hướng lịch
     initMiniCalendarNav(() => renderMiniCalendar(cachedConfirmedEvents, handleMiniDateClick));
-
-    // Tích hợp callback mở modal chỉnh sửa sự kiện khi click vào lịch tuần
     initWeeklyCalendarNav(() => renderWeeklyCalendar(cachedConfirmedEvents, handleWeeklyEventClick));
 
-    // Tự động tạo option lọc dựa trên các nhạc cụ đang có sẵn
-    initInstrumentFilterOptions('filterInstrumentSelector');
+    if (typeof initInstrumentFilterOptions === 'function') {
+        initInstrumentFilterOptions('filterInstrumentSelector');
+    }
 
-    // Xử lý khi click vào một ngày trên lịch mini để nhảy lịch tuần sang tuần đó
+    async function loadAllEvents() {
+        try {
+            const { confirmedEvents, pollEvents } = await fetchAllEventsApi();
+
+            if (confirmedContainer) renderEventList(confirmedContainer, confirmedEvents, 'confirmed');
+            if (pollContainer) renderEventList(pollContainer, pollEvents, 'poll');
+
+            cachedConfirmedEvents = confirmedEvents;
+            renderUpcomingEvents(cachedConfirmedEvents, loadAllEvents);
+            renderWeeklyCalendar(cachedConfirmedEvents, handleWeeklyEventClick);
+            renderMiniCalendar(cachedConfirmedEvents, handleMiniDateClick);
+            bindPollActionListeners();
+        } catch (err) {
+            console.error('Lỗi tải danh sách lịch:', err);
+        }
+    }
+
     function handleMiniDateClick(dateStr) {
         let clickedDate = new Date(dateStr);
         let day = clickedDate.getDay();
@@ -44,216 +64,16 @@ document.addEventListener('DOMContentLoaded', function () {
         renderWeeklyCalendar(cachedConfirmedEvents, handleWeeklyEventClick);
     }
 
-    // Hàm callback xử lý khi click vào một thẻ sự kiện trên lịch tuần
     function handleWeeklyEventClick(ev) {
-        console.log("Đã click vào sự kiện trên lịch tuần để sửa:", ev);
-
-        // Gán ID sự kiện đang thao tác
-        activeEventId = ev._id || ev.id || (ev._id && ev._id.$oid);
-
-        // Gọi mở modal chỉnh sửa sự kiện (kiểm tra hàm openModal nếu có sẵn trong dự án)
-        if (typeof window.openModal === 'function') {
-            // Nếu bạn có modal chỉnh sửa riêng, hãy thay 'createEventModal' hoặc gọi modal chỉnh sửa tương ứng
-            // Ví dụ nạp dữ liệu vào form (nếu có):
-            const titleInput = document.getElementById('eventTitle');
-            if (titleInput) titleInput.value = ev.title || '';
-
-            window.openModal('createEventModal');
-        } else {
-            alert(`Sự kiện được chọn: ${ev.title}`);
-        }
+        actionBindWeeklyEventClickForCreate(
+            ev,
+            (id) => { activeEventId = id; },
+            loadAllEvents
+        );
     }
 
-    // Nút mở modal tạo sự kiện
-    document.getElementById('openCreateModalBtn')?.addEventListener('click', () => window.openModal('createEventModal'));
-
-    // Nút chọn tất cả thành viên trong form tạo sự kiện
-    document.getElementById('selectAllMembersBtn')?.addEventListener('click', function () {
-        const availableZone = document.getElementById('availableMembersZone');
-        const selectedZone = document.getElementById('selectedMembersZone');
-
-        if (!availableZone || !selectedZone) return;
-
-        const availableChips = availableZone.querySelectorAll('.member-chip');
-        availableChips.forEach(chip => {
-            if (!chip.querySelector('.btn-remove-chip')) {
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.className = 'btn-remove-chip';
-                removeBtn.innerHTML = '&times;';
-                removeBtn.onclick = function() { removeMemberChip(this); };
-                chip.appendChild(removeBtn);
-            }
-            selectedZone.appendChild(chip);
-        });
-
-        const selectedZoneChips = selectedZone.querySelectorAll('.member-chip');
-        const ids = Array.from(selectedZoneChips).map(c => c.dataset.id);
-        const hiddenInput = document.getElementById('targetMemberIds');
-        if (hiddenInput) hiddenInput.value = ids.join(',');
-    });
-
-    // Thay đổi giao diện form theo loại trạng thái (Khảo sát hay Đã chốt)
-    const eventStatusSelect = document.getElementById('eventStatus');
-    if (eventStatusSelect) {
-        eventStatusSelect.addEventListener('change', function () {
-            const isPoll = this.value === 'POLL';
-            const pollSec = document.getElementById('pollConfigSection');
-            const confSec = document.getElementById('confirmedConfigSection');
-            if (pollSec) pollSec.style.display = isPoll ? 'block' : 'none';
-            if (confSec) confSec.style.display = isPoll ? 'none' : 'block';
-        });
-    }
-
-    // Xử lý checkbox sự kiện "Cả ngày"
-    const allDayCheckbox = document.getElementById('allDayEventCheckbox');
-    const startTimeInput = document.getElementById('startTime');
-    const endTimeInput = document.getElementById('endTime');
-
-    if (allDayCheckbox && startTimeInput && endTimeInput) {
-        allDayCheckbox.addEventListener('change', function () {
-            if (this.checked) {
-                startTimeInput.type = 'date';
-                endTimeInput.type = 'date';
-                const today = new Date().toISOString().split('T')[0];
-                startTimeInput.value = startTimeInput.value ? startTimeInput.value.split('T')[0] : today;
-                endTimeInput.value = startTimeInput.value;
-            } else {
-                startTimeInput.type = 'datetime-local';
-                endTimeInput.type = 'datetime-local';
-                startTimeInput.value = '';
-                endTimeInput.value = '';
-            }
-        });
-
-        startTimeInput.addEventListener('change', function () {
-            if (!this.value) return;
-            if (!endTimeInput.value || endTimeInput.value < this.value) {
-                endTimeInput.value = this.value;
-            }
-        });
-
-        endTimeInput.addEventListener('change', function () {
-            if (!this.value) return;
-            if (startTimeInput.value && this.value < startTimeInput.value) {
-                alert('Thời gian kết thúc không được sớm hơn thời gian bắt đầu. Hệ thống đã tự động điều chỉnh lại.');
-                endTimeInput.value = startTimeInput.value;
-            }
-        });
-    }
-
-    // Bật/tắt cài đặt thông báo
-    const enableNotificationCheckbox = document.getElementById('enableNotification');
-    const notifSettingsGroup = document.getElementById('notificationSettingsGroup');
-    if (enableNotificationCheckbox && notifSettingsGroup) {
-        enableNotificationCheckbox.addEventListener('change', function() {
-            notifSettingsGroup.style.display = this.checked ? 'block' : 'none';
-        });
-    }
-
-    // Lấy toàn bộ sự kiện từ API
-    async function fetchAllEvents() {
-        try {
-            const [resConfirmed, resPoll] = await Promise.all([
-                fetch('/api/calendar?status=CONFIRMED', { headers: headers }),
-                fetch('/api/calendar?status=POLL', { headers: headers })
-            ]);
-
-            const resultConfirmed = await resConfirmed.json();
-            const resultPoll = await resPoll.json();
-
-            if (confirmedContainer) renderEventList(confirmedContainer, resultConfirmed.data || [], 'confirmed');
-            if (pollContainer) renderEventList(pollContainer, resultPoll.data || [], 'poll');
-
-            cachedConfirmedEvents = resultConfirmed.data || [];
-            renderUpcomingEvents(cachedConfirmedEvents);
-            renderWeeklyCalendar(cachedConfirmedEvents, handleWeeklyEventClick);
-            renderMiniCalendar(cachedConfirmedEvents, handleMiniDateClick);
-            bindEventListeners();
-            bindDeleteEventListeners();
-        } catch (err) {
-            console.error('Lỗi tải danh sách lịch:', err);
-        }
-    }
-
-    // Render danh sách thẻ sự kiện ở sidebar/tab quản lý
-    function renderEventList(targetContainer, data, type) {
-        targetContainer.innerHTML = '';
-        if (!data || data.length === 0) {
-            targetContainer.innerHTML = `<p class="subtitle" style="color: #6c757d; font-style: italic;">Không có ${type === 'confirmed' ? 'lịch đã chốt' : 'khảo sát'} nào.</p>`;
-            return;
-        }
-
-        data.forEach(ev => {
-            const card = document.createElement('div');
-            card.className = 'event-card';
-            card.style.position = 'relative';
-
-            let eventId = ev._id || ev.id || (ev._id && ev._id.$oid);
-            let actionBtn = '';
-            let pollConfigStr = ev.poll_config ? JSON.stringify(ev.poll_config).replace(/'/g, "&apos;") : '{}';
-
-            if (ev.status === 'POLL') {
-                if (ev.is_manager) {
-                    actionBtn = `<button class="btn btn-primary w-100 fill-poll-btn" data-id="${eventId}" data-config='${pollConfigStr}'>Điền Lịch Rảnh</button>`;
-                    actionBtn += `<button class="btn btn-outline w-100 mt-2 view-report-btn" data-id="${eventId}" data-title="${ev.title}" data-config='${pollConfigStr}'>Xem Báo Cáo & Chốt Lịch</button>`;
-                } else {
-                    if (ev.has_submitted_availability) {
-                        actionBtn = `
-                            <button class="btn w-100 fill-poll-btn" data-id="${eventId}" data-config='${pollConfigStr}' style="background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 12px; padding: 6px 10px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 4px; border-radius: 4px;">
-                                <span style="font-size: 13px;">✓</span> Đã điền lịch rảnh <span style="font-size: 11px; opacity: 0.75; font-weight: normal;">(Sửa)</span>
-                            </button>
-                        `;
-                    } else {
-                        actionBtn = `<button class="btn btn-primary w-100 fill-poll-btn" data-id="${eventId}" data-config='${pollConfigStr}'>Điền Lịch Rảnh</button>`;
-                    }
-                }
-            }
-
-            let deleteBtnHtml = ev.is_manager ? `<button class="delete-event-btn" data-id="${eventId}" title="Xóa sự kiện" style="position: absolute; top: 12px; right: 12px; background: transparent; border: none; font-size: 20px; font-weight: bold; color: #dc3545; cursor: pointer; line-height: 1; padding: 0 5px;">&times;</button>` : '';
-
-            let timeDisplayHtml = '';
-            if (ev.status === 'POLL' && ev.poll_config) {
-                const formatDate = (dateStr) => {
-                    if (!dateStr) return '';
-                    const [y, m, d] = dateStr.split('-');
-                    return `${d}/${m}/${y}`;
-                };
-                const startDateFormatted = formatDate(ev.poll_config.start_date);
-                const endDateFormatted = formatDate(ev.poll_config.end_date);
-
-                if (startDateFormatted && endDateFormatted) {
-                    timeDisplayHtml += `<p style="margin: 4px 0; font-size: 13px; color: #4b5563;">📅 <strong>Thời gian:</strong> ${startDateFormatted} - ${endDateFormatted}</p>`;
-                }
-
-                if (ev.poll_config.deadline) {
-                    const deadlineFormatted = formatDate(ev.poll_config.deadline);
-                    timeDisplayHtml += `<p style="margin: 4px 0; font-size: 13px; color: #dc2626;">⏰ <strong>Hạn chót:</strong> ${deadlineFormatted}</p>`;
-                } else {
-                    timeDisplayHtml += `<p style="margin: 4px 0; font-size: 13px; color: #059669;">⏰ <strong>Hạn chót:</strong> Không giới hạn</p>`;
-                }
-            } else if (ev.start_time) {
-                timeDisplayHtml = `<p><strong>Thời gian:</strong> ${formatEventDateTime(ev.start_time, ev.end_time)}</p>`;
-            }
-
-            card.innerHTML = `
-                ${deleteBtnHtml}
-                <div>
-                    <span class="badge badge-${(ev.type || '').toLowerCase()}">${ev.type || 'N/A'}</span>
-                    <h4>${ev.title}</h4>
-                    <div class="event-info">
-                        <p style="margin: 4px 0; font-size: 13px; color: #4b5563;"><strong>Trạng thái:</strong> ${ev.status}</p>
-                        ${timeDisplayHtml}
-                    </div>
-                </div>
-                <div style="margin-top: 15px;">${actionBtn}</div>
-            `;
-            targetContainer.appendChild(card);
-        });
-    }
-
-    // Gắn sự kiện cho các nút điền lịch rảnh và xem báo cáo khảo sát
-    function bindEventListeners() {
+    // Gắn sự kiện nút điền lịch & báo cáo khảo sát
+    function bindPollActionListeners() {
         document.querySelectorAll('.fill-poll-btn').forEach(btn => {
             btn.addEventListener('click', async function () {
                 activeEventId = this.getAttribute('data-id');
@@ -267,17 +87,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 buildPollMatrix(config, 'w2mMatrixTable', false);
 
                 try {
-                    const res = await fetch(`/api/calendar/my-latest-availability`, { headers: headers });
-                    if (res.ok) {
-                        const data = await res.json();
-                        const savedSlots = data.available_slots || [];
-                        if (savedSlots.length > 0) {
-                            const table = document.getElementById('w2mMatrixTable');
-                            savedSlots.forEach(slotISO => {
-                                const cell = table.querySelector(`.time-slot-cell[data-slot="${slotISO}"]`);
-                                if (cell) cell.classList.add('selected');
-                            });
-                        }
+                    const data = await fetchMyLatestAvailabilityApi();
+                    const savedSlots = data.available_slots || [];
+                    if (savedSlots.length > 0) {
+                        const table = document.getElementById('w2mMatrixTable');
+                        savedSlots.forEach(slotISO => {
+                            const cell = table.querySelector(`.time-slot-cell[data-slot="${slotISO}"]`);
+                            if (cell) cell.classList.add('selected');
+                        });
                     }
                 } catch (e) {
                     console.log('Không thể tải lịch rảnh cũ.', e);
@@ -302,9 +119,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (reportTitle) reportTitle.innerText = `Báo Cáo: ${title}`;
 
                 try {
-                    const res = await fetch(`/api/calendar/${activeEventId}/poll-report`, { headers: headers });
-                    const json = await res.json();
-
+                    const json = await fetchPollReportApi(activeEventId);
                     document.getElementById('statTargetCount').innerText = `Tổng mục tiêu: ${json.target_count || 0}`;
                     document.getElementById('statSubmittedCount').innerText = `Đã phản hồi: ${json.submitted_count || 0}`;
 
@@ -318,151 +133,23 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Gắn sự kiện xóa sự kiện
-    function bindDeleteEventListeners() {
-        document.querySelectorAll('.delete-event-btn').forEach(btn => {
-            if (btn.dataset.deleteListenerAttached) return;
-            btn.dataset.deleteListenerAttached = "true";
-
-            btn.addEventListener('click', async function () {
-                const eventId = this.getAttribute('data-id');
-                if (!confirm('Bạn có chắc chắn muốn xóa mục này không?')) return;
-
-                try {
-                    const res = await fetch(`/api/calendar/${eventId}`, { method: 'DELETE', headers: headers });
-                    const result = await res.json();
-                    if (res.ok) {
-                        alert('Đã xóa thành công!');
-                        fetchAllEvents();
-                    } else {
-                        alert(result.message || 'Không thể xóa.');
-                    }
-                } catch (e) {
-                    console.error(e);
-                    alert('Lỗi kết nối máy chủ.');
-                }
-            });
-        });
-    }
-
-    // Lưu lịch rảnh cá nhân khi người dùng submit form khảo sát
+    // Submit lưu lịch rảnh cá nhân
     document.getElementById('saveAvailabilityBtn')?.addEventListener('click', async function () {
         const selectedCells = document.querySelectorAll('#w2mMatrixTable .time-slot-cell.selected');
         const availableSlots = Array.from(selectedCells).map(c => c.getAttribute('data-slot'));
 
         try {
-            const res = await fetch(`/api/calendar/${activeEventId}/availability`, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify({ available_slots: availableSlots })
-            });
-            const result = await res.json();
-            if (res.ok) {
-                alert('Đã gửi lịch rảnh thành công!');
-                window.closeModal('pollMatrixModal');
-                fetchAllEvents();
-            } else {
-                alert(result.message || 'Lỗi gửi lịch rảnh.');
-            }
+            await saveAvailabilityApi(activeEventId, availableSlots);
+            alert('Đã gửi lịch rảnh thành công!');
+            window.closeModal('pollMatrixModal');
+            loadAllEvents();
         } catch (e) {
             console.error(e);
-            alert('Lỗi kết nối máy chủ.');
+            alert(e.message || 'Lỗi kết nối máy chủ.');
         }
     });
 
-    // Xử lý submit form tạo mới sự kiện
-    const createEventForm = document.getElementById('createEventForm');
-    if (createEventForm && !createEventForm.dataset.listenerAttached) {
-        createEventForm.dataset.listenerAttached = "true";
-        let isCreating = false;
-
-        createEventForm.addEventListener('submit', async function (e) {
-            e.preventDefault();
-            if (isCreating) return;
-            isCreating = true;
-
-            const submitBtn = this.querySelector('button[type="submit"]');
-            if (submitBtn) submitBtn.disabled = true;
-
-            const statusVal = document.getElementById('eventStatus').value;
-            const targetMembersVal = document.getElementById('targetMemberIds')?.value || '';
-            const selectedRemindCheckboxes = document.querySelectorAll('input[name="remindMinutes"]:checked');
-            const remindMinutesArray = Array.from(selectedRemindCheckboxes).map(cb => parseInt(cb.value, 10));
-
-            let payload = {
-                title: document.getElementById('eventTitle').value,
-                type: document.getElementById('eventType').value,
-                status: statusVal,
-                target_member_ids: targetMembersVal.split(',').map(s => s.trim()).filter(Boolean),
-                notification_settings: {
-                    enabled: remindMinutesArray.length > 0,
-                    remind_before_minutes: remindMinutesArray
-                }
-            };
-
-            if (statusVal === 'POLL') {
-                const noDeadlineCheckbox = document.getElementById('noDeadlineCheckbox');
-                let deadlineStr = null;
-
-                if (!noDeadlineCheckbox || !noDeadlineCheckbox.checked) {
-                    const daysToAdd = parseInt(document.getElementById('pollDurationDays').value || 7, 10);
-                    const deadlineDate = new Date();
-                    deadlineDate.setDate(deadlineDate.getDate() + daysToAdd);
-
-                    const pad = (n) => String(n).padStart(2, '0');
-                    deadlineStr = `${deadlineDate.getFullYear()}-${pad(deadlineDate.getMonth() + 1)}-${pad(deadlineDate.getDate())}`;
-                }
-
-                payload.poll_config = {
-                    start_date: document.getElementById('pollStartDate').value,
-                    end_date: document.getElementById('pollEndDate').value,
-                    deadline: deadlineStr,
-                    daily_start_time: document.getElementById('dailyStartTime').value,
-                    daily_end_time: document.getElementById('dailyEndTime').value,
-                    step_minutes: 30
-                };
-            } else {
-                let startVal = startTimeInput.value;
-                let endVal = endTimeInput.value;
-
-                if (allDayCheckbox && allDayCheckbox.checked) {
-                    if (!endVal || endVal < startVal) {
-                        endVal = startVal;
-                    }
-                    startVal = `${startVal} 00:00:00`;
-                    endVal = `${endVal} 23:59:59`;
-                }
-
-                payload.start_time = startVal;
-                payload.end_time = endVal;
-            }
-
-            try {
-                const res = await fetch('/api/calendar', {
-                    method: 'POST',
-                    headers: headers,
-                    body: JSON.stringify(payload)
-                });
-                const result = await res.json();
-                if (res.ok) {
-                    alert('Tạo thành công!');
-                    window.closeModal('createEventModal');
-                    createEventForm.reset();
-                    fetchAllEvents();
-                } else {
-                    alert(result.message || 'Lỗi tạo sự kiện.');
-                }
-            } catch (ex) {
-                console.error(ex);
-                alert('Lỗi kết nối máy chủ.');
-            } finally {
-                isCreating = false;
-                if (submitBtn) submitBtn.disabled = false;
-            }
-        });
-    }
-
-    // Chốt lịch chính thức từ bảng báo cáo khảo sát
+    // Chốt lịch từ bảng báo cáo khảo sát
     document.getElementById('confirmPollBtn')?.addEventListener('click', async function () {
         if (!activeEventId) {
             alert('Không tìm thấy ID sự kiện.');
@@ -475,13 +162,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        let slots = [];
-        selectedCells.forEach(cell => {
-            let slot = cell.getAttribute('data-slot');
-            if (slot) slots.push(slot);
-        });
-
-        slots.sort();
+        let slots = Array.from(selectedCells).map(c => c.getAttribute('data-slot')).sort();
         let startSlotStr = slots[0];
         let lastSlotStr = slots[slots.length - 1];
 
@@ -489,172 +170,16 @@ document.addEventListener('DOMContentLoaded', function () {
         lastDate.setMinutes(lastDate.getMinutes() + 30);
 
         const pad = (n) => String(n).padStart(2, '0');
-        const formatDateTimeStr = (dateObj) => {
-            return `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(dateObj.getDate())} ${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}:${pad(dateObj.getSeconds())}`;
-        };
-
-        let startTimeFormatted = startSlotStr.replace('T', ' ');
-        let endTimeFormatted = formatDateTimeStr(lastDate);
+        const formatDateTimeStr = (dateObj) => `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(dateObj.getDate())} ${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}:${pad(dateObj.getSeconds())}`;
 
         try {
-            const res = await fetch(`/api/calendar/${activeEventId}/confirm-poll`, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify({ start_time: startTimeFormatted, end_time: endTimeFormatted })
-            });
-            const result = await res.json();
-            if (res.ok) {
-                alert('Đã chốt lịch thành công!');
-                window.closeModal('reportModal');
-                fetchAllEvents();
-            } else {
-                alert(result.message || 'Lỗi chốt lịch.');
-            }
+            await confirmPollApi(activeEventId, startSlotStr.replace('T', ' '), formatDateTimeStr(lastDate));
+            alert('Đã chốt lịch thành công!');
+            window.closeModal('reportModal');
+            loadAllEvents();
         } catch (e) {
             console.error(e);
-            alert('Lỗi kết nối máy chủ.');
+            alert(e.message || 'Lỗi kết nối máy chủ.');
         }
     });
-
-    // Render danh sách sự kiện sắp diễn ra ở sidebar (Đã đồng bộ màu typeColors)
-    function renderUpcomingEvents(allEvents) {
-        const container = document.getElementById('upcomingEventsList');
-        if (!container && !document.getElementById('widgetEventContent')) return;
-
-        const now = new Date();
-
-        const processedEvents = allEvents.map(event => {
-            const start = parseLocalDateTime(event.start_time || event.start);
-            const end = event.end_time ? parseLocalDateTime(event.end_time) : new Date(start.getTime() + 60 * 60 * 1000);
-
-            let statusType = 'upcoming';
-            if (now >= start && now <= end) {
-                statusType = 'ongoing';
-            } else if (now > end) {
-                statusType = 'passed';
-            }
-            return { ...event, startDate: start, endDate: end, statusType };
-        });
-
-        const relevantEvents = processedEvents.filter(event => event.statusType !== 'passed');
-
-        relevantEvents.sort((a, b) => {
-            if (a.statusType === 'ongoing' && b.statusType !== 'ongoing') return -1;
-            if (a.statusType !== 'ongoing' && b.statusType === 'ongoing') return 1;
-            return a.startDate - b.startDate;
-        });
-
-        // -------------------------------------------------------------
-        // GIAO DIỆN Ô SỐ 8 (WIDGET SỰ KIỆN) - TINH CHỈNH ĐẸP MẮT
-        // -------------------------------------------------------------
-        const widgetContent = document.getElementById('widgetEventContent');
-        const widgetBadge = document.getElementById('widgetStatusBadge');
-        const widgetTitleElem = document.querySelector('.widget-title, #widgetEventTitle, .event-widget h3') || widgetBadge?.parentElement?.querySelector('h3, h2');
-
-        if (widgetContent) {
-            const ongoingOrNext = relevantEvents.find(e => e.statusType === 'ongoing') || relevantEvents[0];
-
-            if (!ongoingOrNext) {
-                if (widgetBadge) widgetBadge.style.display = 'none';
-                if (widgetTitleElem) widgetTitleElem.innerText = 'Sự Kiện Sắp Tới';
-                widgetContent.innerHTML = `
-                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 0; color: #94a3b8;">
-                        <span style="font-size: 24px; margin-bottom: 6px;">📅</span>
-                        <p style="font-size: 13px; font-style: italic; margin: 0;">Không có sự kiện nào sắp diễn ra.</p>
-                    </div>`;
-            } else {
-                const isOngoing = ongoingOrNext.statusType === 'ongoing';
-                const eventTypeKey = (ongoingOrNext.type || '').toUpperCase();
-                const dotColor = (typeColors && typeColors[eventTypeKey]) ? typeColors[eventTypeKey] : '#6366f1';
-
-                if (widgetTitleElem) {
-                    widgetTitleElem.innerText = isOngoing ? 'Sự Kiện Đang Diễn Ra' : 'Sự Kiện Sắp Tới';
-                }
-
-                if (widgetBadge) {
-                    widgetBadge.style.display = 'inline-flex';
-                    widgetBadge.style.alignItems = 'center';
-                    widgetBadge.style.gap = '4px';
-                    widgetBadge.style.padding = '4px 10px';
-                    widgetBadge.style.borderRadius = '20px';
-                    widgetBadge.style.fontSize = '12px';
-                    widgetBadge.style.fontWeight = '600';
-                    widgetBadge.style.letterSpacing = '-0.2px';
-
-                    if (isOngoing) {
-                        widgetBadge.innerHTML = `<span style="width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite;"></span> Đang diễn ra`;
-                        widgetBadge.style.background = '#fef2f2';
-                        widgetBadge.style.color = '#dc2626';
-                    } else {
-                        widgetBadge.innerHTML = `Sắp tới`;
-                        widgetBadge.style.background = '#f0f9ff';
-                        widgetBadge.style.color = '#0284c7';
-                    }
-                }
-
-                const d = ongoingOrNext.startDate;
-                const formattedTime = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} - ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-
-                widgetContent.innerHTML = `
-                    <div style="background: ${isOngoing ? '#fff9f9' : '#f8fafc'}; border: 1px solid ${isOngoing ? '#fee2e2' : '#e2e8f0'}; border-radius: 12px; padding: 14px 16px; transition: all 0.2s;">
-                        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px;">
-                            <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
-                                <span style="background-color: ${dotColor}; width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 3px ${dotColor}20;"></span>
-                                <h4 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${ongoingOrNext.title}">${ongoingOrNext.title}</h4>
-                            </div>
-                        </div>
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
-                            <span style="font-size: 12px; color: #475569; font-weight: 500; display: flex; align-items: center; gap: 5px;">
-                                📅 ${formattedTime}
-                            </span>
-                            <span style="font-size: 11px; font-weight: 600; color: ${dotColor}; background: ${dotColor}15; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
-                                ${ongoingOrNext.type || 'Sự kiện'}
-                            </span>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-        // -------------------------------------------------------------
-
-        if (!container) return;
-
-        if (relevantEvents.length === 0) {
-            container.innerHTML = `<p style="font-size: 12px; color: #888; padding: 4px 8px;">Không có sự kiện nào.</p>`;
-            return;
-        }
-
-        container.innerHTML = relevantEvents.map(event => {
-            const d = event.startDate;
-            const hours = String(d.getHours()).padStart(2, '0');
-            const minutes = String(d.getMinutes()).padStart(2, '0');
-            const day = String(d.getDate()).padStart(2, '0');
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const year = d.getFullYear();
-            const formattedDate = `${hours}:${minutes} - ${day}/${month}/${year}`;
-
-            const eventTypeKey = (event.type || '').toUpperCase();
-            const dotColor = (typeColors && typeColors[eventTypeKey]) ? typeColors[eventTypeKey] : '#6366f1';
-            const eventId = event.id || event.event_id || event._id;
-
-            const badgeHtml = event.statusType === 'ongoing'
-                ? `<span style="font-size: 10px; background: #fee2e2; color: #dc2626; padding: 2px 6px; border-radius: 4px; font-weight: 600; width: fit-content; margin-bottom: 4px;">Đang diễn ra</span>`
-                : '';
-
-            return `
-                <div class="sidebar-nav-item" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: ${event.statusType === 'ongoing' ? '#fff5f5' : '#ffffff'}; border: 1px solid ${event.statusType === 'ongoing' ? '#fecaca' : '#f1f5f9'}; border-radius: 8px; text-decoration: none; color: inherit; margin-bottom: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
-                    <a href="#" style="display: flex; flex-direction: column; align-items: flex-start; text-decoration: none; color: inherit; flex-grow: 1; overflow: hidden; margin-right: 8px;">
-                        ${badgeHtml}
-                        <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
-                            <span class="nav-dot" style="background-color: ${dotColor}; flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%;"></span>
-                            <span style="font-weight: 600; font-size: 13px; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${event.title}</span>
-                        </div>
-                        <span style="font-size: 11px; color: #64748b; margin-left: 16px; margin-top: 3px;">${formattedDate}</span>
-                    </a>
-                    <button class="delete-event-btn" data-id="${eventId}" title="Xóa sự kiện" style="background: none; border: none; color: #9ca3af; font-size: 16px; cursor: pointer; padding: 4px; line-height: 1; border-radius: 4px; transition: all 0.2s;" onmouseover="this.style.color='#ef4444'; this.style.backgroundColor='#fee2e2';" onmouseout="this.style.color='#9ca3af'; this.style.backgroundColor='transparent';">&times;</button>
-                </div>
-            `;
-        }).join('');
-        bindDeleteEventListeners();
-    }
 });

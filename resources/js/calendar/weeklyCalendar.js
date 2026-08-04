@@ -3,7 +3,7 @@
 // =========================================================================
 
 import { formatEventDateTime } from './utils.js';
-import { typeColors } from './calendar.js';
+import { typeColors } from './eventRenderer.js';
 
 /**
  * Biến lưu trữ ngày bắt đầu của tuần hiện tại (mặc định tính từ Thứ Hai).

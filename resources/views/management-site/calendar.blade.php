@@ -35,12 +35,12 @@
             </div>
 
             <!-- Danh sách sự kiện sắp tới (Upcoming Events) -->
-                        <div class="sidebar-nav-section">
-                            <div class="sidebar-nav-label">Sự Kiện Sắp Tới & Đang Diễn Ra</div>
-                            <div id="upcomingEventsList" class="sidebar-nav-list" style="display: flex; flex-direction: column; gap: 8px;">
-                                <!-- Render danh sách sự kiện sắp tới bằng JavaScript -->
-                            </div>
-                        </div>
+            <div class="sidebar-nav-section">
+                <div class="sidebar-nav-label">Sự Kiện Sắp Tới</div>
+                <div id="upcomingEventsList" class="sidebar-nav-list" style="display: flex; flex-direction: column; gap: 8px;">
+                    <!-- Render danh sách sự kiện sắp tới bằng JavaScript -->
+                </div>
+            </div>
 
             <!-- Khối thông tin bổ sung / Tip ở chân sidebar -->
             <div class="card promo-card-sidebar">
@@ -105,13 +105,12 @@
             <div id="createEventModal" class="custom-modal">
                 <div class="modal-content modal-horizontal" id="createModalContentContainer">
                     <span class="close-btn" data-modal="createEventModal">&times;</span>
-                    <h3>Tạo Sự Kiện Hoặc Khảo Sát Mới</h3>
+                    <h3>Sự Kiện</h3>
 
                     <form id="createEventForm">
-                        <!-- Thêm class động để CSS layout tự chuyển đổi 1 cột hoặc 2 cột -->
                         <div id="modalLayoutWrapper" class="modal-grid-layout single-column-layout">
 
-                            <!-- CỘT TRÁI: Cấu hình chung (Tiêu đề, Loại, Trạng thái, Thời gian) -->
+                            <!-- CỘT TRÁI: Cấu hình chung -->
                             <div class="modal-col-left">
                                 <div class="form-group">
                                     <label>Tiêu đề sự kiện</label>
@@ -173,7 +172,7 @@
                                     </div>
                                 </div>
 
-                                <!-- Phần cấu hình thời gian diễn ra (Dành riêng cho CONFIRMED) -->
+                                <!-- Phần cấu hình thời gian diễn ra (CONFIRMED) -->
                                 <div id="confirmedConfigSection" class="config-section">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                         <h4 style="margin: 0;">Thời gian diễn ra sự kiện</h4>
@@ -188,12 +187,11 @@
                                 </div>
                             </div>
 
-                            <!-- CỘT PHẢI: Thành viên & Nhắc nhở (Sẽ tự động ẩn hoặc xếp gọn khi chuyển trạng thái) -->
+                            <!-- CỘT PHẢI: Thành viên & Nhắc nhở -->
                             <div class="modal-col-right" id="modalColRight">
                                 <div class="form-group" style="height: 100%; display: flex; flex-direction: column;">
                                     <label style="font-weight: 600; margin-bottom: 8px;">Thành viên tham gia</label>
 
-                                    <!-- Ô lọc nhạc cụ -->
                                     <div style="margin-bottom: 8px;">
                                         <select id="filterInstrumentSelector" class="form-control" style="width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;" onchange="filterAvailableMembers(this.value)">
                                             <option value="">-- Lọc theo tất cả nhạc cụ --</option>
@@ -207,7 +205,6 @@
                                     </div>
 
                                     <div style="flex: 1; min-height: 220px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; background: #fff;">
-                                        <!-- Dùng component này để nó tự render danh sách thành viên và mảng instrument -->
                                         <x-memberSelect id="eventMemberSelector" :members="$allMembers" :selected="[]" />
                                     </div>
 
@@ -229,7 +226,122 @@
 
                         </div>
 
-                        <button type="submit" class="btn btn-success w-100" style="margin-top: 20px;">Xác Nhận Tạo</button>
+                        <!-- Cụm nút bấm chung cho Modal Tạo Mới -->
+                        <div class="form-actions-group" style="display: flex; gap: 12px; margin-top: 20px; width: 100%;">
+                            <button type="submit" id="submitEventBtn" class="btn btn-primary" style="flex: 1;">Tạo sự kiện</button>
+                            <button type="button" id="deleteEventInModalBtn" class="btn btn-danger" style="flex: 1; background-color: #dc3545; color: #fff; display: none;">Xóa sự kiện</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modal: Chỉnh Sửa Hoặc Xóa Sự Kiện / Khảo Sát -->
+            <div id="editEventModal" class="custom-modal">
+                <div class="modal-content modal-horizontal" id="editModalContentContainer">
+                <span class="close-btn" data-modal="pollMatrixModal">&times;</span>                    <h3>Chỉnh Sửa Sự Kiện Hoặc Khảo Sát</h3>
+
+                    <form id="editEventForm">
+                        <div id="editModalLayoutWrapper" class="modal-grid-layout single-column-layout">
+
+                            <!-- CỘT TRÁI: Cấu hình chung -->
+                            <div class="modal-col-left">
+                                <div class="form-group">
+                                    <label>Tiêu đề sự kiện</label>
+                                    <input type="text" id="editEventTitle" required placeholder="Ví dụ: Khảo sát lịch tập band...">
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Phân loại (Type)</label>
+                                        <select id="editEventType">
+                                            <option value="PRACTICE">PRACTICE (Lịch tập)</option>
+                                            <option value="MEETING">MEETING (Lịch họp)</option>
+                                            <option value="SHOW">SHOW (Show diễn)</option>
+                                            <option value="EVENT">EVENT (Nội bộ)</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Trạng thái khởi tạo</label>
+                                        <select id="editEventStatus" onchange="handleEditEventStatusChange(this)">
+                                            <option value="POLL">POLL (Khảo sát thời gian)</option>
+                                            <option value="CONFIRMED">CONFIRMED (Chốt lịch luôn)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Cấu hình khảo sát (POLL) khi sửa -->
+                                <div id="editPollConfigSection" class="config-section" style="display: none;">
+                                    <h4>Cấu hình thời gian khảo sát</h4>
+                                    <div class="form-row">
+                                        <div class="form-group"><label>Ngày bắt đầu</label><input type="date" id="editPollStartDate"></div>
+                                        <div class="form-group"><label>Ngày kết thúc</label><input type="date" id="editPollEndDate"></div>
+                                    </div>
+
+                                    <div class="form-row" style="margin-top: 10px;">
+                                        <div class="form-group"><label>Giờ mở đầu ngày</label><input type="time" id="editDailyStartTime" value="06:00"></div>
+                                        <div class="form-group"><label>Giờ kết thúc ngày</label><input type="time" id="editDailyEndTime" value="23:59"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Cấu hình thời gian diễn ra (CONFIRMED) khi sửa -->
+                                <div id="editConfirmedConfigSection" class="config-section">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <h4 style="margin: 0;">Thời gian diễn ra sự kiện</h4>
+                                        <label style="font-size: 13px; font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                                            <input type="checkbox" id="editAllDayEventCheckbox" style="cursor: pointer;"> Cả ngày
+                                        </label>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group"><label>Bắt đầu</label><input type="datetime-local" id="editStartTime"></div>
+                                        <div class="form-group"><label>Kết thúc</label><input type="datetime-local" id="editEndTime"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CỘT PHẢI: Thành viên & Nhắc nhở -->
+                            <div class="modal-col-right" id="editModalColRight">
+                                <div class="form-group" style="height: 100%; display: flex; flex-direction: column;">
+                                    <label style="font-weight: 600; margin-bottom: 8px;">Thành viên tham gia</label>
+
+                                    <div style="margin-bottom: 8px;">
+                                        <select id="editFilterInstrumentSelector" class="form-control" style="width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;" onchange="filterEditAvailableMembers(this.value)">
+                                            <option value="">-- Lọc theo tất cả nhạc cụ --</option>
+                                            <option value="Vocal">Vocal</option>
+                                            <option value="Ukulele">Ukulele</option>
+                                            <option value="Guitar">Guitar</option>
+                                            <option value="Piano">Piano</option>
+                                            <option value="Drum">Drum</option>
+                                            <option value="Bass">Bass</option>
+                                        </select>
+                                    </div>
+
+                                    <div style="flex: 1; min-height: 220px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; background: #fff;">
+                                        <x-memberSelect id="editEventMemberSelector" :members="$allMembers" :selected="[]" />
+                                    </div>
+
+                                    <button type="button" id="editSelectAllMembersBtn" class="btn" style="margin-top: 10px; width: 100%;">Chọn tất cả</button>
+                                </div>
+
+                                <div class="form-group" style="margin-top: 15px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Thời điểm nhắc nhở trước:</label>
+                                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                                        <label class="reminder-chip-label"><input type="checkbox" name="editRemindMinutes" value="30"><span>30 phút</span></label>
+                                        <label class="reminder-chip-label"><input type="checkbox" name="editRemindMinutes" value="60"><span>1 tiếng</span></label>
+                                        <label class="reminder-chip-label"><input type="checkbox" name="editRemindMinutes" value="360"><span>6 tiếng</span></label>
+                                        <label class="reminder-chip-label"><input type="checkbox" name="editRemindMinutes" value="720"><span>12 tiếng</span></label>
+                                        <label class="reminder-chip-label"><input type="checkbox" name="editRemindMinutes" value="1440"><span>1 ngày</span></label>
+                                        <label class="reminder-chip-label"><input type="checkbox" name="editRemindMinutes" value="2880"><span>2 ngày</span></label>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Cụm nút bấm chung cho Modal Chỉnh Sửa -->
+                        <div class="form-actions-group" style="display: flex; gap: 12px; margin-top: 20px; width: 100%;">
+                            <button type="submit" id="submitEditEventBtn" class="btn btn-primary" style="flex: 1;">Cập nhật thay đổi</button>
+                            <button type="button" id="deleteEventInModalBtn" class="btn btn-danger" style="flex: 1; background-color: #dc3545; color: #fff;">Xóa sự kiện</button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -254,29 +366,19 @@
                     const confirmedSection = document.getElementById('confirmedConfigSection');
                     const layoutWrapper = document.getElementById('modalLayoutWrapper');
 
-                    // Không cần lấy colRight ra để ẩn nữa vì mình vẫn cần dùng nó
-                    // const colRight = document.getElementById('modalColRight');
-
                     if (selectElem.value === 'CONFIRMED') {
-                        // Chốt lịch luôn: Ẩn phần cấu hình khảo sát, hiện phần thời gian sự kiện
                         pollSection.style.display = 'none';
                         confirmedSection.style.display = 'block';
-
-                        // Dồn tất cả về 1 cột (Cột thành viên sẽ tự động nhảy xuống dưới cột thời gian)
                         layoutWrapper.style.gridTemplateColumns = '1fr';
-                        layoutWrapper.style.gap = '20px'; // Thêm chút khoảng cách giữa trên và dưới cho đẹp
+                        layoutWrapper.style.gap = '20px';
                     } else {
-                        // Khảo sát (POLL): Hiện cấu hình khảo sát, ẩn thời gian cố định
                         pollSection.style.display = 'block';
                         confirmedSection.style.display = 'none';
-
-                        // Trả lại giao diện 2 cột (Trái: cấu hình, Phải: thành viên)
                         layoutWrapper.style.gridTemplateColumns = '1fr 1fr';
-                        layoutWrapper.style.gap = '20px'; // Khoảng cách giữa 2 cột
+                        layoutWrapper.style.gap = '20px';
                     }
                 }
 
-                // Chạy khi vừa load trang để đồng bộ trạng thái mặc định (CONFIRMED)
                 document.addEventListener("DOMContentLoaded", function() {
                     const eventStatusSelect = document.getElementById('eventStatus');
                     if (eventStatusSelect) {

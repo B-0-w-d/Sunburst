@@ -102,6 +102,8 @@ class CalendarController extends Controller
         return response()->json(['status' => 'success', 'message' => 'Event created successfully!', 'data' => $event], 201);
     }
 
+
+
     public function submitAvailability(Request $request, $eventId)
     {
         $currentUser = Auth::user();
