@@ -26,6 +26,7 @@ window.handleFormRegister = AuthActions.handleFormRegister;
 window.initInstrumentSelector = initInstrumentSelector;
 window.getSelectedInstruments = getSelectedInstruments;
 
+
 // ==========================================================================
 // 3. GÁN CÁC HÀM XỬ LÝ QUẢN LÝ THÀNH VIÊN & LỊCH TRÌNH
 // ==========================================================================
@@ -40,6 +41,8 @@ window.applyFilters = applyFilters;
 window.handleMemberDragStart = CalendarMemberActions.handleMemberDragStart;
 window.handleMemberDrop = CalendarMemberActions.handleMemberDrop;
 window.removeMemberChip = CalendarMemberActions.removeMemberChip;
+window.filterAvailableMembers = CalendarMemberActions.filterAvailableMembers;
+window.initInstrumentFilterOptions = CalendarMemberActions.initInstrumentFilterOptions;
 
 // ==========================================================================
 // 4. HÀM LỌC DỮ LIỆU THÀNH VIÊN (FILTER)

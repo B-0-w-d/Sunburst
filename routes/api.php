@@ -7,6 +7,8 @@ use App\Http\Controllers\Auth\KeyController;
 use App\Http\Controllers\System\CalendarController;
 use App\Http\Controllers\Member\MemberController;
 use App\Http\Controllers\Member\NotificationController;
+use App\Http\Controllers\Shows\SongController;
+use App\Http\Controllers\Shows\ShowController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,6 +46,28 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}', [MemberController::class, 'destroy']);
     });
 
+    // Song Management (Kho bài hát độc lập)
+    Route::apiResource('songs', SongController::class);
+
+    // Show Management & Setlist
+    Route::prefix('shows')->group(function () {
+        Route::get('/', [ShowController::class, 'index']);                    // Lấy danh sách show
+        Route::post('/', [ShowController::class, 'store']);                   // Tạo show mới
+        Route::get('/{showId}', [ShowController::class, 'show']);             // Xem chi tiết show kèm setlist
+        Route::put('/{showId}', [ShowController::class, 'update']);           // Cập nhật thông tin show
+        Route::delete('/{showId}', [ShowController::class, 'destroy']);       // Xóa show
+
+        // Quản lý Setlist trong Show
+        Route::post('/{showId}/setlist', [ShowController::class, 'addSongsToSetlist']); // Thêm bài từ kho vào setlist
+        Route::delete('/setlist/{setlistId}', [ShowController::class, 'removeSongFromSetlist']); // Xóa bài khỏi setlist
+
+        // Cập nhật cấu hình riêng cho từng bài trong setlist (thành viên, ghi chú)
+        Route::put('/setlist/{setlistId}', [ShowController::class, 'updateSetlistSongItem']);
+
+        // Tạo lịch tập/diễn liên kết với bài hát trong setlist (Có tích hợp logic kiểm tra thời gian)
+        Route::post('/setlist/{setlistId}/rehearsal-event', [ShowController::class, 'storeRehearsalEvent']);
+    });
+
     // Calendar & Arrange Management
     Route::prefix('calendar')->group(function () {
         Route::get('/', [CalendarController::class, 'index']);                                     // Lấy danh sách lịch / khảo sát
@@ -55,7 +79,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{eventId}/availability', [CalendarController::class, 'submitAvailability']); // Thành viên điền lịch rảnh When2meet
         Route::get('/{eventId}/poll-report', [CalendarController::class, 'getPollReport']); // Admin xem báo cáo tổng hợp rảnh/bận
         Route::post('/{eventId}/confirm-poll', [CalendarController::class, 'confirmPoll']); // Admin chốt lịch từ khảo sát
-        Route::delete('/{id}', [CalendarController::class, 'destroy']);                            // Xóa lịch / khảo sát
+        Route::delete('/{id}', [CalendarController::class, 'destroy']);                             // Xóa lịch / khảo sát
     });
 
     // Notifications

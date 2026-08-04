@@ -32,6 +32,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // Tích hợp callback mở modal chỉnh sửa sự kiện khi click vào lịch tuần
     initWeeklyCalendarNav(() => renderWeeklyCalendar(cachedConfirmedEvents, handleWeeklyEventClick));
 
+    // Tự động tạo option lọc dựa trên các nhạc cụ đang có sẵn
+    initInstrumentFilterOptions('filterInstrumentSelector');
+
     // Xử lý khi click vào một ngày trên lịch mini để nhảy lịch tuần sang tuần đó
     function handleMiniDateClick(dateStr) {
         let clickedDate = new Date(dateStr);

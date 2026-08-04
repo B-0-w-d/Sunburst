@@ -45,6 +45,8 @@ export function handleMemberDrop(e, targetZoneType) {
         const filterSelect = document.getElementById('filterInstrumentSelector');
         if (filterSelect && filterSelect.value) {
             filterAvailableMembers(filterSelect.value);
+        } else {
+            draggedMemberElement.style.display = '';
         }
     }
 
@@ -109,26 +111,83 @@ export function filterAvailableMembers(selectedInstrument) {
     const chips = availableZone.querySelectorAll('.member-chip');
 
     chips.forEach(chip => {
-        // Lấy giá trị instrument từ attribute (nó có thể là chuỗi phân cách bằng dấu phẩy hoặc dạng JSON array)
-        const instrumentsRaw = chip.getAttribute('data-instruments') || '';
+        // Hỗ trợ lấy dữ liệu nhạc cụ linh hoạt từ attribute data-instruments hoặc data-instrument
+        const instrumentsRaw = chip.getAttribute('data-instruments') || chip.getAttribute('data-instrument') || '';
         let instruments = [];
 
         try {
-            // Thử parse nếu backend render ra dạng JSON array string (ví dụ: '["Vocal", "Ukulele"]')
+            // Thử parse nếu backend render ra dạng JSON array (ví dụ: '["Guitar", "Piano"]')
             instruments = JSON.parse(instrumentsRaw);
         } catch (e) {
-            // Nếu không phải JSON thì coi như chuỗi ngăn cách bằng dấu phẩy thông thường
+            // Nếu không phải JSON, cắt chuỗi theo dấu phẩy như thông thường
             instruments = instrumentsRaw.split(',').map(i => i.trim());
         }
 
-        // Chuẩn hóa tất cả về chữ thường để so sánh không phân biệt hoa thường
+        // Chuẩn hóa về chữ thường để so sánh không phân biệt hoa/thường
         const normalizedInstruments = instruments.map(i => String(i).trim().toLowerCase());
+        const query = String(selectedInstrument || '').trim().toLowerCase();
 
-        if (!selectedInstrument || selectedInstrument === '') {
+        // Nếu không chọn gì hoặc chọn rỗng -> hiện tất cả
+        if (!query) {
             chip.style.display = '';
         } else {
-            const match = normalizedInstruments.includes(selectedInstrument.trim().toLowerCase());
+            // Kiểm tra xem nhạc cụ của thành viên có chứa từ khóa lọc hay không
+            const match = normalizedInstruments.some(inst => inst.includes(query));
             chip.style.display = match ? '' : 'none';
         }
+    });
+}
+
+/**
+ * Tự động quét tất cả các thẻ chip thành viên để lấy danh sách nhạc cụ độc lập và điền vào ô select lọc
+ */
+export function initInstrumentFilterOptions(selectElementId = 'filterInstrumentSelector') {
+    const selectElement = document.getElementById(selectElementId);
+    if (!selectElement) return;
+
+    // Lưu lại giá trị đang chọn hiện tại (nếu có)
+    const currentValue = selectElement.value;
+
+    // Dùng Set để lọc các nhạc cụ không bị trùng lặp
+    const uniqueInstruments = new Set();
+
+    // Quét toàn bộ chip thành viên ở cả vùng available và selected
+    const allChips = document.querySelectorAll('.member-chip');
+
+    allChips.forEach(chip => {
+        const instrumentsRaw = chip.getAttribute('data-instruments') || chip.getAttribute('data-instrument') || '';
+        let instruments = [];
+
+        try {
+            instruments = JSON.parse(instrumentsRaw);
+        } catch (e) {
+            instruments = instrumentsRaw.split(',').map(i => i.trim());
+        }
+
+        // Thêm từng nhạc cụ vào Set (chuẩn hóa chữ hoa/thường hoặc giữ nguyên tùy ý)
+        instruments.forEach(inst => {
+            const cleaned = String(inst).trim();
+            if (cleaned) {
+                uniqueInstruments.add(cleaned);
+            }
+        });
+    });
+
+    // Giữ lại option mặc định đầu tiên (ví dụ: Tất cả nhạc cụ) và xóa các option cũ
+    const defaultOptionText = selectElement.options[0] ? selectElement.options[0].text : '-- Tất cả nhạc cụ --';
+    selectElement.innerHTML = `<option value="">${defaultOptionText}</option>`;
+
+    // Sắp xếp danh sách nhạc cụ theo bảng chữ cái A-Z và thêm vào select
+    Array.from(uniqueInstruments).sort().forEach(inst => {
+        const option = document.createElement('option');
+        option.value = inst;
+        option.textContent = inst;
+
+        // Nếu trước đó option này đang được chọn thì giữ nguyên trạng thái selected
+        if (inst.toLowerCase() === currentValue.toLowerCase()) {
+            option.selected = true;
+        }
+
+        selectElement.appendChild(option);
     });
 }
