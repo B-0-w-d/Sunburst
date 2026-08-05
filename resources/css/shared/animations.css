@@ -1,0 +1,44 @@
+/* ==========================================================================
+   ANIMATIONS & KEYFRAMES
+   Các hiệu ứng chuyển động, nhịp đập, ping trạng thái dùng chung
+   ========================================================================== */
+
+/* Hiệu ứng nhịp đập (Pulse animation) cho cảnh báo hoặc điểm nhấn trạng thái */
+@keyframes pulse-animation {
+    0% {
+        transform: scale(0.95);
+        opacity: 0.5;
+    }
+
+    50% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(0.95);
+        opacity: 0.5;
+    }
+}
+
+/* Hiệu ứng lan tỏa (Ping) cho badge thông báo hoặc trạng thái hoạt động */
+@keyframes ping {
+
+    75%,
+    100% {
+        transform: scale(2.5);
+        opacity: 0;
+    }
+}
+
+@keyframes notification-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
