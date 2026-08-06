@@ -15,17 +15,18 @@
 @endphp
 
 {{-- Khối component chọn thành viên --}}
-<div class="instruments-component member-selector-component" id="{{ $id }}" data-component="member-selector">
+<div class="drag-drop-component
+ member-selector-component" id="{{ $id }}" data-component="member-selector">
 
     <!-- KHU VỰC THÀNH VIÊN CÓ SẴN -->
-    <div class="instrument-group">
-        <span class="instrument-title text-available">Thành viên câu lạc bộ:</span>
-        <div class="instrument-zone available-zone" id="availableMembersZone" ondragover="event.preventDefault()" ondrop="window.handleMemberDrop(event, 'available')">
+    <div class="drag-drop-group">
+        <span class="drag-drop-title text-available">Thành viên câu lạc bộ:</span>
+        <div class="drag-zone available-zone" id="availableMembersZone" ondragover="event.preventDefault()" ondrop="window.handleMemberDrop(event, 'available')">
             @foreach($availableList as $member)
-                {{-- Bổ sung data-instruments để JS đọc được nhạc cụ --}}
-                <div class="instrument-chip member-chip" draggable="true"
+                {{-- Bổ sung data-drags để JS đọc được nhạc cụ --}}
+                <div class="drag-chip member-chip" draggable="true"
                      data-id="{{ $member['id'] }}"
-                     data-instruments="{{ json_encode($member['instrument'] ?? ($member['instruments'] ?? [])) }}"
+                     data-drags="{{ json_encode($member['drag'] ?? ($member['drags'] ?? [])) }}"
                      ondragstart="window.handleMemberDragStart(event)">
                     <span class="chip-label">{{ $member['name'] }}</span>
                 </div>
@@ -34,14 +35,14 @@
     </div>
 
     <!-- KHU VỰC THÀNH VIÊN THAM GIA -->
-    <div class="instrument-group">
-        <span class="instrument-title">Thành viên tham gia (Mục tiêu):</span>
-        <div class="instrument-zone selected-zone" id="selectedMembersZone" ondragover="event.preventDefault()" ondrop="window.handleMemberDrop(event, 'selected')">
+    <div class="drag-drop-group">
+        <span class="drag-drop-title">Thành viên tham gia (Mục tiêu):</span>
+        <div class="drag-zone selected-zone" id="selectedMembersZone" ondragover="event.preventDefault()" ondrop="window.handleMemberDrop(event, 'selected')">
             @foreach($selectedList as $member)
-                {{-- Bổ sung data-instruments tương tự cho các thành viên đã chọn --}}
-                <div class="instrument-chip member-chip" draggable="true"
+                {{-- Bổ sung data-drags tương tự cho các thành viên đã chọn --}}
+                <div class="drag-chip member-chip" draggable="true"
                      data-id="{{ $member['id'] }}"
-                     data-instruments="{{ json_encode($member['instrument'] ?? ($member['instruments'] ?? [])) }}"
+                     data-drags="{{ json_encode($member['drag'] ?? ($member['drags'] ?? [])) }}"
                      ondragstart="window.handleMemberDragStart(event)">
                     <span class="chip-label">{{ $member['name'] }}</span>
                     <button type="button" class="btn-remove-chip" onclick="window.removeMemberChip(this)">×</button>

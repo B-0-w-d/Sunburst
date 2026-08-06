@@ -208,22 +208,26 @@
     {{-- ===================================================================== --}}
     <x-modal id="addMemberModal" title="Add New Band Member" submitFn="submitAddForm(event)">
         <div class="form-group">
-            <label class="form-label" for="add-name">Display Name</label>
+            <label class="text-form
+                " for="add-name">Display Name</label>
             <input type="text" id="add-name" class="form-input" required placeholder="e.g. Ren Nguyen">
         </div>
 
         <div class="form-group">
-            <label class="form-label" for="add-email">Email Address</label>
+            <label class="text-form
+                " for="add-email">Email Address</label>
             <input type="email" id="add-email" class="form-input" required placeholder="e.g. Rendarapper@gmail.com">
         </div>
 
         <div class="form-group">
-            <label class="form-label" for="add-birthday">Birthday</label>
+            <label class="text-form
+                " for="add-birthday">Birthday</label>
             <input type="date" id="add-birthday" class="form-input">
         </div>
 
         <div class="form-group">
-            <label class="form-label" for="add-role">Role Hierarchy</label>
+            <label class="text-form
+                " for="add-role">Role Hierarchy</label>
             <select id="add-role" class="form-input" style="height: 42px;">
                 <option value="member" selected>Member</option>
                 <option value="manager">Manager</option>
@@ -234,7 +238,8 @@
         </div>
 
         <div class="form-group">
-            <label class="form-label" for="add-instruments">Instruments (Comma separated)</label>
+            <label class="text-form
+                " for="add-instruments">Instruments (Comma separated)</label>
             <input type="text" id="add-instruments" class="form-input" placeholder="e.g. Vocal, Bass Guitar">
         </div>
 
@@ -250,23 +255,27 @@
         <input type="hidden" id="edit-member-id">
 
         <div class="form-group">
-            <label class="form-label" for="edit-name">Display Name</label>
+            <label class="text-form
+                " for="edit-name">Display Name</label>
             <input type="text" id="edit-name" class="form-input" required placeholder="e.g. Ren Nguyen">
         </div>
 
         <div class="form-group">
-            <label class="form-label" for="edit-email">Email Address</label>
+            <label class="text-form
+                " for="edit-email">Email Address</label>
             <input type="email" id="edit-email" class="form-input" required placeholder="e.g. Rendarapper@gmail.com">
         </div>
 
         <div class="form-group">
-            <label class="form-label" for="edit-birthday">Birthday</label>
+            <label class="text-form
+                " for="edit-birthday">Birthday</label>
             <input type="date" id="edit-birthday" name="birthday" class="form-input">
         </div>
 
         @if(auth()->user()->isManagementTier())
             <div class="form-group">
-                <label class="form-label" for="edit-role">Role</label>
+                <label class="text-form
+                    " for="edit-role">Role</label>
                 <select id="edit-role" class="form-input" style="height: 42px;">
                     <option value="member">Member</option>
                     <option value="manager">Manager</option>
@@ -278,7 +287,8 @@
         @endif
 
         <div class="form-group">
-            <label class="form-label" for="edit-instruments">Instruments</label>
+            <label class="text-form
+                " for="edit-instruments">Instruments</label>
             <input type="text" id="edit-instruments" class="form-input" placeholder="e.g. Vocal, Bass Guitar, Synth">
         </div>
 

@@ -1,10 +1,4 @@
-/* ==========================================================================
-   AUTHENTICATION LAYOUTS (Login / Register)
-   Bố cục khung đăng nhập, đăng ký tài khoản với hiệu ứng mờ nền
-   ========================================================================== */
-
-.login-page-wrapper,
-.register-wrapper {
+.auth-page-wrapper {
     position: fixed;
     top: 0;
     left: 0;
@@ -13,10 +7,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px 16px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
 }
 
-.login-page-wrapper::before {
+.auth-page-wrapper::before {
     content: "";
     position: absolute;
     top: 0;
@@ -29,80 +25,79 @@
     z-index: 0;
 }
 
-.login-modal {
+.auth-modal {
     position: relative;
     z-index: 1;
     background: #ffffff;
     width: 100%;
-    max-width: 400px;
+    max-width: 500px;
     padding: 40px;
     border-radius: 24px;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
 }
 
-.login-page-wrapper {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-size: cover;
-    background-position: center;
+/* ==========================================================================
+   REGISTER CARD, PROGRESS LINE & SLIDER TRACK STYLES
+   ========================================================================== */
+
+
+
+/* FORM INPUTS */
+.form-group {
+    margin-bottom: 18px;
 }
 
-.login-modal {
-    position: relative;
-    z-index: 10;
-    background: #ffffff;
-    width: 100%;
-    max-width: 420px;
-    padding: 36px;
-    border-radius: 20px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
-    box-sizing: border-box;
+.text-form {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 6px;
 }
 
-.login-modal .form-group {
-    margin-bottom: 16px;
-}
-
-.login-modal .form-input {
+.form-input {
     width: 100%;
     padding: 12px 14px;
     border: 1.5px solid #e2e8f0;
     border-radius: 10px;
-    font-size: 14px;
     outline: none;
+    font-size: 14px;
+    transition: all 0.2s ease;
     background-color: #f8fafc;
-    color: #1e293b;
 }
 
-.login-modal .form-input:focus {
-    border-color: var(--first-color, #dc2626);
+.form-input:focus {
     background-color: #ffffff;
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
 }
 
-/* Ẩn các bước chưa tới */
-.hidden-step {
-    display: none !important;
+/* ERROR ALERT */
+#register-error-alert {
+    display: none;
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-bottom: 18px;
+    text-align: center;
 }
 
-/* Đảm bảo khung modal hiển thị đẹp mắt */
-.login-page-wrapper {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.footer-link {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 13px;
+    color: #64748b;
 }
 
-.login-modal {
-    background: #ffffff;
-    width: 100%;
-    max-width: 420px;
-    padding: 32px;
-    border-radius: 16px;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+.footer-link a {
+    color: #dc2626;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.footer-link a:hover {
+    text-decoration: underline;
 }

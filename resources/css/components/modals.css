@@ -1,15 +1,23 @@
 /* ==========================================================================
-   MODAL & DIALOG SYSTEM
-   Khung hộp thoại, hiệu ứng lớp phủ, form nhập liệu bên trong modal
+   MODAL DIALOG & FORM STYLES
    ========================================================================== */
 
-.modal-backdrop,
-.modal,
-.custom-modal {
-    display: none;
+/* Phần thân và chân modal */
+.modal-body {
+    margin-bottom: 16px;
 }
 
-.custom-modal.active,
+.modal-footer {
+    margin-top: 24px;
+}
+
+/* 1. Mặc định ẩn tất cả các modal backdrop */
+.modal-backdrop,
+.modal {
+    display: none !important;
+}
+
+/* 2. Lớp nền mờ tối khi mở modal */
 .modal-backdrop.is-open,
 .modal.is-open {
     display: flex !important;
@@ -25,7 +33,7 @@
     overflow-y: auto !important;
 }
 
-.modal-content,
+/* 3. Khung chứa nội dung chính */
 .modal-window {
     display: flex !important;
     flex-direction: column !important;
@@ -41,45 +49,10 @@
     box-sizing: border-box !important;
 }
 
+/* Các thành phần header và nút đóng */
 .modal-header {
-    display: flex;
     justify-content: space-between;
     align-items: center;
     position: relative;
     margin-bottom: 24px;
-}
-
-.modal-title {
-    font-size: 22px;
-    font-weight: 700;
-    color: #1e293b;
-    margin: 0;
-}
-
-.modal-close-btn,
-.close-btn {
-    background: transparent;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #64748b;
-    line-height: 1;
-    padding: 4px 8px;
-    border-radius: 8px;
-    transition: background-color 0.2s, color 0.2s;
-}
-
-.modal-close-btn:hover,
-.close-btn:hover {
-    background-color: #f1f5f9;
-    color: #0f172a;
-}
-
-.modal-footer {
-    padding: 16px 0 0;
-    border-top: 1px solid #f1f5f9;
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 24px;
 }

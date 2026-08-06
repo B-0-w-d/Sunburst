@@ -50,25 +50,29 @@
 
                 <!-- Nhóm trường nhập liệu Tên hiển thị (Display Name) của người dùng -->
                 <div class="form-group">
-                    <label class="form-label">DISPLAY NAME</label>
+                    <label class="text-form
+                        ">DISPLAY NAME</label>
                     <input type="text" name="name" class="form-input" value="{{ old('name', auth()->user()->name ?? '') }}" required>
                 </div>
 
                 <!-- Nhóm trường nhập liệu Địa chỉ Email tài khoản -->
                 <div class="form-group">
-                    <label class="form-label">EMAIL ADDRESS</label>
+                    <label class="text-form
+                        ">EMAIL ADDRESS</label>
                     <input type="email" name="email" class="form-input" value="{{ old('email', auth()->user()->email ?? '') }}" required>
                 </div>
 
                 <!-- Nhóm trường nhập liệu Ngày sinh (Birthday) -->
                 <div class="form-group">
-                    <label class="form-label">BIRTHDAY</label>
+                    <label class="text-form
+                        ">BIRTHDAY</label>
                     <input type="date" name="birthday" class="form-input" value="{{ old('birthday', auth()->user()->birthday ?? '') }}">
                 </div>
 
                 <!-- Nhóm trường nhập liệu Nhạc cụ sở trường (Instruments), tự động chuyển đổi mảng thành chuỗi phân tách bằng dấu phẩy -->
                 <div class="form-group">
-                    <label class="form-label">INSTRUMENTS</label>
+                    <label class="text-form
+                        ">INSTRUMENTS</label>
                     @php
                         $userInstruments = auth()->user()->instrument ?? '';
                         $instrumentValue = is_array($userInstruments) ? implode(', ', $userInstruments) : $userInstruments;
@@ -81,13 +85,15 @@
 
                 <!-- Nhóm trường nhập liệu Mật khẩu mới (New Password) -->
                 <div class="form-group">
-                    <label class="form-label">NEW PASSWORD</label>
+                    <label class="text-form
+                        ">NEW PASSWORD</label>
                     <input type="password" name="password" class="form-input" placeholder="Leave blank to keep current">
                 </div>
 
                 <!-- Nhóm trường nhập liệu Xác nhận mật khẩu mới (Confirm Password) -->
                 <div class="form-group">
-                    <label class="form-label">CONFIRM PASSWORD</label>
+                    <label class="text-form
+                        ">CONFIRM PASSWORD</label>
                     <input type="password" name="password_confirmation" class="form-input">
                 </div>
             </div>

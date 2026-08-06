@@ -7,13 +7,13 @@ export function initInstrumentSelector() {
     containers.forEach(container => {
         const availableZone = container.querySelector('.available-zone');
         const selectedZone = container.querySelector('.selected-zone');
-        const input = container.querySelector('.instrument-custom-input');
-        const addBtn = container.querySelector('.btn-add-instrument');
+        const input = container.querySelector('.drop-custom-input');
+        const addBtn = container.querySelector('.btn-add');
 
         // Hàm hỗ trợ tạo chip mới
         const createChip = (name) => {
             const chip = document.createElement('div');
-            chip.className = 'instrument-chip';
+            chip.className = 'drag-chip';
             chip.draggable = true;
             chip.setAttribute('data-value', name);
             chip.innerHTML = `
@@ -31,7 +31,7 @@ export function initInstrumentSelector() {
             if (!val) return;
 
             // Kiểm tra trùng lặp trong cả 2 vùng
-            const existingChips = container.querySelectorAll('.instrument-chip');
+            const existingChips = container.querySelectorAll('.drag-chip');
             const exists = Array.from(existingChips).some(
                 chip => chip.getAttribute('data-value').toLowerCase() === val.toLowerCase()
             );
@@ -62,13 +62,13 @@ export function initInstrumentSelector() {
         container.addEventListener('click', (e) => {
             // Click nút xóa ×
             if (e.target.classList.contains('btn-remove-chip')) {
-                const chip = e.target.closest('.instrument-chip');
+                const chip = e.target.closest('.drag-chip');
                 if (chip) chip.remove();
                 return;
             }
 
             // Click trực tiếp vào chip để chuyển vùng nhanh
-            const chip = e.target.closest('.instrument-chip');
+            const chip = e.target.closest('.drag-chip');
             if (chip && !e.target.classList.contains('btn-remove-chip')) {
                 const parentZone = chip.parentElement;
                 if (parentZone.classList.contains('available-zone')) {
@@ -103,7 +103,7 @@ export function initInstrumentSelector() {
             });
         }
 
-        container.querySelectorAll('.instrument-chip').forEach(attachChipEvents);
+        container.querySelectorAll('.drag-chip').forEach(attachChipEvents);
 
         zones.forEach(zone => {
             if (!zone) return;
@@ -146,6 +146,6 @@ export function getSelectedInstruments(containerId) {
     const selectedZone = container.querySelector('.selected-zone');
     if (!selectedZone) return [];
 
-    const chips = selectedZone.querySelectorAll('.instrument-chip');
+    const chips = selectedZone.querySelectorAll('.drag-chip');
     return Array.from(chips).map(chip => chip.getAttribute('data-value'));
 }

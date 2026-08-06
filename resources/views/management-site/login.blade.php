@@ -15,13 +15,13 @@
 
 <body>
     <!-- Khung bọc trang đăng nhập, cài đặt hình nền (background) full màn hình bằng ảnh login-background.jpg -->
-    <div class="login-page-wrapper" style="background-image: url('{{ asset('images/login-background.jpg') }}'); background-repeat: no-repeat; background-position: center; background-size: cover;">
+    <div class="auth-page-wrapper" style="background-image: url('{{ asset('images/login-background.jpg') }}');">
         <!-- Khung cửa sổ modal chứa nội dung form đăng nhập -->
-        <div class="login-modal">
+        <div class="auth-modal">
 
             <!-- Tiêu đề trang đăng nhập -->
             <div class="modal-header">
-                <h4 class="modal-title" style="text-align: center; margin-bottom: 4px;">Sunburst Manager</h4>
+                <h4 class="text-title">Sunburst Manager</h4>
                 <p style="color: #64748b; font-size: 14px; padding: 4px 8px 0 8px; text-align: center;">Đây là trang diễn đàn cho thành viên chính thức của câu lạc bộ.</p>
             </div>
 
@@ -33,7 +33,8 @@
 
                 <!-- BƯỚC 1: Nhập Email tài khoản -->
                 <div class="form-group step-section" id="step-email-group">
-                    <label class="form-label" for="login-email">Your email:</label>
+                    <label class="text-form
+                        " for="login-email">Your email:</label>
                     <div style="display: flex; gap: 8px;">
                         <!-- Ô nhập địa chỉ email -->
                         <input type="email" id="login-email" class="form-input" required placeholder="rennguyen@gmail.com" style="flex: 1;">
@@ -46,7 +47,8 @@
                 <div class="step-section hidden-step" id="step-password-group">
                     <div class="form-group">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                            <label class="form-label" for="login-password" style="margin-bottom: 0;">Your pass:</label>
+                            <label class="text-form
+                                " for="login-password" style="margin-bottom: 0;">Your pass:</label>
                             <!-- Nút bấm quay lại bước nhập email -->
                             <button type="button" onclick="backToEmail()" style="background: none; border: none; color: #3b82f6; font-size: 12px; cursor: pointer; padding: 0;">Quay lại</button>
                         </div>
