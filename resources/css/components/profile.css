@@ -1,0 +1,30 @@
+/* --- 2. User Profile Badge & Dropdown --- */
+.user-profile-container {
+    position: relative;
+    cursor: pointer;
+    padding-bottom: 12px;
+    margin-top: auto;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background-color: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    font-weight: 700;
+    color: #0f172a;
+    text-transform: uppercase;
+    font-size: 16px;
+    user-select: none;
+    transition: all 0.2s;
+}
+
+.user-profile svg {
+    width: 24px;
+    height: 24px;
+    color: #1e293b;
+}

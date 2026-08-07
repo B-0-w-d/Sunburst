@@ -1,0 +1,25 @@
+.nav-view-wrapper {
+    display: flex;
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    align-items: stretch;
+    margin: 0;
+    padding: 0;
+    justify-content: center;
+}
+
+.content-container {
+    position: relative;
+    z-index: 2;
+    padding: 24px;
+    flex: 1;
+    box-sizing: border-box;
+}
+
+.dashboard-container {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #F4F4F4;
+}

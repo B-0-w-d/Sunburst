@@ -1,0 +1,62 @@
+.parent {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(3, 240px);
+    gap: 16px;
+    width: 100%;
+}
+
+.content-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Định vị chính xác từng ô theo mẫu hình ảnh */
+
+/*Lịch tháng*/
+.div1 {
+    grid-column-start: 1;
+    grid-row-start: 1;
+}
+
+.div3 {
+    grid-column: span 2 / span 2;
+    grid-row: span 2 / span 2;
+}
+
+.div4 {
+    grid-column: span 2 / span 2;
+    grid-column-start: 2;
+    grid-row-start: 3;
+}
+
+/*Poll Sự kiện*/
+.div6 {
+    grid-row: span 2 / span 2;
+    grid-column-start: 1;
+    grid-row-start: 2;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/*Thông báo*/
+.div7 {
+    grid-row: span 2 / span 2;
+    grid-column-start: 4;
+    grid-row-start: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.div8 {
+    grid-column-start: 4;
+    grid-row-start: 3;
+}

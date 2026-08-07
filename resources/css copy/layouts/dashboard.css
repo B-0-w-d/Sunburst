@@ -1,0 +1,44 @@
+/* ==========================================================================
+   DASHBOARD & GRID LAYOUTS
+   Khung tổng thể màn hình làm việc, lưới dashboard chính
+   ========================================================================== */
+
+.dashboard-container,
+.app-layout {
+    width: 100vw;
+    height: 100vh;
+    align-items: stretch;
+}
+
+.dashboard-layout-wrapper {
+    display: flex;
+    gap: 32px;
+    width: 100%;
+    height: calc(100vh - 80px);
+    min-height: 600px;
+    align-items: flex-start;
+    overflow: hidden;
+}
+
+/* Lưới định vị các widget (Dashboard Grid 4 cột) */
+.parent {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(3, 240px);
+    gap: 16px;
+    width: 100%;
+}
+
+.content-grid-wrapper {
+    display: grid;
+    grid-template-columns: 2.5fr 1fr;
+    gap: 24px;
+    align-items: start;
+    width: 100%;
+}
+
+@media (max-width: 1200px) {
+    .content-grid-wrapper {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,35 @@
+/* --- Sidebar Panel (Middle Context) --- */
+.nav-sidebar {
+    display: flex;
+    width: 300px;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    background-color: #ffffff;
+    border-right: 1px solid #f1f5f9;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    flex-shrink: 0;
+    overflow-y: auto;
+}
+
+.sidebar-section {
+    margin-bottom: 32px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+}

@@ -1,0 +1,97 @@
+/* Khung chứa các chấm tiến trình (Step Indicator) */
+.step-progress-dots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+/* Chấm tiến trình mặc định (chưa đạt tới hoặc đã qua) */
+.step-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: rgba(220, 38, 38, 0.2);
+    /* Đổi sang tông nền nhẹ của màu đỏ cho dễ nhìn */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Trạng thái khi chấm đang ở bước hiện tại (Active) */
+.step-dot.active {
+    width: 28px;
+    border-radius: 6px;
+    background-color: #dc2626;
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.25);
+}
+
+.step-progress-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    position: relative;
+    padding: 0 10px;
+}
+
+.step-progress-line {
+    position: absolute;
+    top: 50%;
+    left: 20px;
+    right: 20px;
+    height: 3px;
+    background-color: #e2e8f0;
+    transform: translateY(-50%);
+    z-index: 1;
+}
+
+.step-progress-fill {
+    position: absolute;
+    top: 50%;
+    left: 20px;
+    height: 3px;
+    background-color: #dc2626;
+    transform: translateY(-50%);
+    z-index: 2;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 0%;
+}
+
+.step-node {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    border: 2px solid #cbd5e1;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 3;
+    transition: all 0.3s ease;
+}
+
+.step-node.active {
+    border-color: #dc2626;
+    background-color: #dc2626;
+    color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.2);
+}
+
+.step-pane {
+    width: 33.33333%;
+    padding: 4px;
+    box-sizing: border-box;
+}
+
+.step-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    width: 100%;
+}

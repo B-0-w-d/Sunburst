@@ -11,9 +11,14 @@
 @import "./components/profile.css";
 @import "./components/progress_dot.css";
 @import "./components/texts.css";
+@import "./components/calendar.css";
+@import "./components/grids.css";
+@import "./components/notifications.css";
+
 
 @import "./layouts/auth.css";
 @import "./layouts/dashboard.css";
+@import "./layouts/layout.css";
 
 
 

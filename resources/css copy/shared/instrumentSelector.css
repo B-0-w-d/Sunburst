@@ -1,0 +1,135 @@
+/* ==========================================================================
+   DRAG & DROP INSTRUMENTS COMPONENT (LIGHT MODE)
+   ========================================================================== */
+.drag-drop-component {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 20px;
+    color: #334155 !important;
+}
+
+.drag-drop-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.drag-zone {
+    min-height: 70px;
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    background-color: #f8fafc;
+    transition: all 0.2s ease;
+    align-content: flex-start;
+}
+
+.selected-zone {
+    border-color: #dc2626;
+    background-color: #fff5f5;
+}
+
+.drag-zone.drag-over {
+    border-style: solid;
+    background-color: #e2e8f0;
+    border-color: #94a3b8;
+}
+
+.drag-chip {
+    padding: 6px 14px;
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+    border-radius: 20px;
+    cursor: grab;
+    user-select: none;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.drag-chip:hover {
+    border-color: #dc2626;
+    color: #dc2626;
+    transform: translateY(-1px);
+}
+
+.drag-chip:active {
+    cursor: grabbing;
+}
+
+.drag-chip.dragging {
+    opacity: 0.4;
+}
+
+/* --- Nút xóa bên trong chip --- */
+.btn-remove-chip {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+
+.btn-remove-chip:hover {
+    color: #dc2626;
+}
+
+/* --- Custom Input & Add Button --- */
+.drop-add-box {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.drop-custom-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    font-size: 13px;
+    outline: none;
+    background-color: #ffffff;
+    color: #1e293b;
+    transition: border-color 0.2s ease;
+}
+
+.drop-custom-input::placeholder {
+    color: #94a3b8;
+}
+
+.drop-custom-input:focus {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}
+
+.btn-add {
+    background-color: #dc2626;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    width: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-add:hover {
+    background-color: #b91c1c;
+}

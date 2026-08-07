@@ -1,0 +1,101 @@
+/* ==========================================================================
+   BUTTON SYSTEM
+   Kiểu dáng chuẩn hóa cho các loại nút bấm và nhóm nút (Button group)
+   ========================================================================== */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.btn-group .btn {
+    flex: 1;
+    max-width: none;
+}
+
+/* Biến thể Nút Chính (Primary) */
+.btn--primary,
+.btn-primary,
+.btn-success {
+    background-color: var(--first-color, #dc2626);
+    color: #ffffff;
+    width: 100%;
+    max-width: none;
+}
+
+.btn--primary:hover,
+.btn-primary:hover,
+.btn-success:hover {
+    background-color: #b91c1c;
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+}
+
+/* Biến thể Nút Phụ (Secondary) */
+.btn--secondary {
+    background-color: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: inherit;
+}
+
+.btn--secondary:hover {
+    border-color: var(--white-color, #ffffff);
+}
+
+.btn-secondary {
+    background-color: #f1f5f9;
+    color: #475569;
+}
+
+.btn-secondary:hover {
+    background-color: #e2e8f0;
+}
+
+/* Nút hủy bỏ / Outline */
+.btn-cancel,
+.btn-outline {
+    background-color: #f1f5f9;
+    color: #475569;
+    border: 1px solid #d1d5db;
+}
+
+.btn-cancel:hover,
+.btn-outline:hover {
+    background-color: #e2e8f0;
+}
+
+/* Nút lưu thay đổi */
+.btn-save {
+    background-color: #c70c0c;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    width: 100%;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-save:hover {
+    background-color: #a50a0a;
+}

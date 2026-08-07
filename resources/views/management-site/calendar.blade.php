@@ -1,6 +1,6 @@
 {{-- Nhúng thành phần giao diện khung điều hướng chung (Navbar Layout) --}}
 <x-navbar>
-    <div class="app-layout">
+    <div class="nav-view-wrapper">
 
         <!-- ===================================================================== -->
         <!-- 1. SIDEBAR BÊN TRÁI: ĐIỀU HƯỚNG, TIÊU ĐỀ, NÚT TẠO VÀ LỊCH NHỎ -->

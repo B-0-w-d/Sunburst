@@ -1,0 +1,75 @@
+/* ==========================================================================
+   ANIMATIONS & KEYFRAMES
+   Các hiệu ứng chuyển động, nhịp đập, ping trạng thái dùng chung
+   ========================================================================== */
+
+/* Hiệu ứng nhịp đập (Pulse animation) cho cảnh báo hoặc điểm nhấn trạng thái */
+@keyframes pulse-animation {
+    0% {
+        transform: scale(0.95);
+        opacity: 0.5;
+    }
+
+    50% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(0.95);
+        opacity: 0.5;
+    }
+}
+
+/* Hiệu ứng lan tỏa (Ping) cho badge thông báo hoặc trạng thái hoạt động */
+@keyframes ping {
+
+    75%,
+    100% {
+        transform: scale(2.5);
+        opacity: 0;
+    }
+}
+
+@keyframes notification-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* CSS hỗ trợ hiệu ứng chuyển bước mượt mà */
+.step-section {
+    transition: all 0.35s ease-in-out;
+    max-height: 400px;
+    opacity: 1;
+    overflow: hidden;
+}
+
+.step-section.hidden-step,
+.form-group.hidden-step {
+    max-height: 0;
+    opacity: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+/* SLIDER TRACK ANIMATION */
+.slider-window {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
+.slider-track {
+    display: flex;
+    width: 300%;
+    transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+}

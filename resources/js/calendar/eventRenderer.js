@@ -152,7 +152,3 @@ export function bindDeleteEventListeners(reloadCallback) {
         });
     });
 }
-
-export function bindUpcomingEventClickEvents(allEvents) {
-    // Đã vô hiệu hóa việc bấm vào item sidebar để mở modal chỉnh sửa
-}

@@ -1,37 +1,27 @@
-<!-- Component hiển thị hệ thống thông báo sử dụng Alpine.js và tích hợp API bất đồng bộ -->
 <div class="notification-wrapper" x-data="{
-    open: false,        // Trạng thái đóng/mở của khung dropdown thông báo
-    unreadCount: 0,     // Tổng số lượng thông báo chưa đọc (dùng cho chấm đỏ)
-    notifications: [],  // Mảng chứa danh sách các thông báo lấy từ API
+    open: false,
+    unreadCount: 0,
+    notifications: [],
 
-    // Hàm khởi tạo tự động chạy khi component được Alpine load lên
     init() {
         this.fetchData();
     },
 
-    // Hàm chuyển đổi trạng thái ẩn/hiện của dropdown khi click vào icon chuông
     toggleDropdown() {
         this.open = !this.open;
     },
 
-    // Hàm gọi API lấy danh sách thông báo và số lượng chưa đọc từ server
     fetchData() {
         fetch('/api/notifications', {
             headers: {
                 'Content-Type': 'application/json',
-                // Đính kèm token xác thực lấy từ localStorage của người dùng
                 'Authorization': 'Bearer ' + localStorage.getItem('access_token')
             }
         })
         .then(res => res.json())
         .then(data => {
-            console.log('Dữ liệu API trả về:', data); // In ra console để debug cấu trúc JSON
-
-            // Hứng dữ liệu linh hoạt theo các cấu trúc trả về phổ biến của Laravel API
             const list = data.notifications || data.data || data;
             this.notifications = Array.isArray(list) ? list : [];
-
-            // Cập nhật số lượng chưa đọc từ API hoặc tự lọc từ mảng thông báo nếu API không trả về sẵn
             this.unreadCount = data.unread_count !== undefined
                 ? data.unread_count
                 : this.notifications.filter(item => !item.read_at).length;
@@ -39,7 +29,6 @@
         .catch(error => console.error('Lỗi tải thông báo:', error));
     },
 
-    // Hàm gửi yêu cầu đánh dấu 1 thông báo cụ thể là đã đọc và điều hướng sang trang /calendar
     markAsRead(id) {
         fetch(`/api/notifications/${id}/read`, {
             method: 'PATCH',
@@ -49,17 +38,13 @@
             }
         })
         .then(() => {
-            // Sau khi cập nhật thành công, điều hướng thẳng đến trang lịch
             window.location.href = '/calendar';
         })
-        .catch(error => {
-            console.error('Lỗi đánh dấu đã đọc:', error);
-            // Vẫn cho phép chuyển hướng ngay cả khi gọi API lỗi để không kẹt chân người dùng
+        .catch(() => {
             window.location.href = '/calendar';
         });
     },
 
-    // Hàm gửi yêu cầu đánh dấu tất cả thông báo là đã đọc
     markAllAsRead() {
         fetch('/api/notifications/read-all', {
             method: 'PATCH',
@@ -67,49 +52,66 @@
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + localStorage.getItem('access_token')
             }
-        }).then(() => this.fetchData()); // Làm mới lại danh sách sau khi đã đọc tất cả
+        }).then(() => this.fetchData());
     }
 }">
     <!-- 1. ICON CHUÔNG TRÊN HEADER -->
-    <button @click.stop="toggleDropdown" type="button" class="notification-bell-btn">
-        <svg class="bell-icon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <button @click.stop="toggleDropdown" type="button" class="notification-bell-btn" aria-label="Thông báo">
+        <svg class="bell-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
 
-        <!-- Hiển thị chấm đỏ thông báo chưa đọc nếu số lượng lớn hơn 0 -->
+        <!-- Chấm đỏ nhỏ trên icon chuông -->
         <template x-if="unreadCount > 0">
             <span class="unread-dot-badge"></span>
         </template>
     </button>
 
     <!-- 2. KHUNG DROPDOWN HIỂN THỊ DANH SÁCH THÔNG BÁO -->
-    <!-- x-show: ẩn hiện theo biến open | @click.outside: tự động đóng khi click ra bên ngoài khung -->
     <div x-show="open" @click.outside="open = false" x-cloak class="notification-dropdown">
         <div class="dropdown-header">
-            <span class="dropdown-title">Thông báo gần đây</span>
-            <button @click="markAllAsRead" type="button" class="text-link">Đọc tất cả</button>
+            <div class="dropdown-title-wrapper">
+                <span class="dropdown-title">Thông báo</span>
+                <template x-if="unreadCount > 0">
+                    <span class="unread-count-pill" x-text="unreadCount + ' mới'"></span>
+                </template>
+            </div>
+            <template x-if="unreadCount > 0">
+                <button @click="markAllAsRead" type="button" class="text-link">Đọc tất cả</button>
+            </template>
         </div>
+
         <div class="dropdown-list">
-            <!-- Vòng lặp hiển thị danh sách thông báo, hỗ trợ nhận diện cả _id (MongoDB) hoặc id (MySQL) -->
+            <!-- Vòng lặp hiển thị danh sách -->
             <template x-for="item in notifications" :key="item._id || item.id">
-                <div @click="markAsRead(item._id || item.id)" class="dropdown-item" :class="{ 'unread-bg': !item.read_at }" style="cursor: pointer;">
-                    <!-- Chấm nhỏ màu xanh/đỏ biểu thị thông báo chưa đọc bên trong item -->
-                    <template x-if="!item.read_at">
-                        <span class="item-unread-dot"></span>
-                    </template>
+                <div @click="markAsRead(item._id || item.id)" class="dropdown-item" :class="{ 'unread-bg': !item.read_at }">
+                    <!-- Dấu chấm xanh cho thông báo chưa đọc (đã tinh chỉnh thẳng hàng) -->
+                    <div style="width: 8px; flex-shrink: 0; display: flex; justify-content: center;">
+                        <template x-if="!item.read_at">
+                            <span class="item-unread-dot"></span>
+                        </template>
+                    </div>
+
                     <div class="item-content">
                         <p class="item-title" x-text="item.title"></p>
                         <p class="item-message" x-text="item.message"></p>
-                        <!-- Hiển thị thời gian định dạng chuẩn địa phương, an toàn với giá trị null -->
-                        <span class="item-time" x-text="item.created_at ? new Date(item.created_at).toLocaleString() : ''"></span>
+                        <!-- Chỉ hiển thị một định dạng thời gian chuẩn gọn gàng, loại bỏ việc bị lặp -->
+                        <span class="item-time">
+                            <svg style="width: 12px; height: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span x-text="item.created_at ? new Date(item.created_at).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' }) : ''"></span>
+                        </span>
                     </div>
                 </div>
             </template>
 
-            <!-- Trạng thái hiển thị khi mảng thông báo rỗng -->
+            <!-- Trạng thái khi không có thông báo -->
             <template x-if="notifications.length === 0">
-                <p class="empty-text" style="padding: 12px; text-align: center; color: #6b7280;">Không có thông báo nào.</p>
+                <div class="empty-state">
+                    <p class="empty-text">Hiện tại không có thông báo nào.</p>
+                </div>
             </template>
         </div>
     </div>

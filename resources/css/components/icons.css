@@ -1,0 +1,44 @@
+/* --- 1. Navigation Deck (Leftmost bar) --- */
+.icon-strip {
+    width: 72px;
+    background-color: #F5F5F5;
+    border-right: 1px solid #D6C6B2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 0;
+    flex-shrink: 0;
+}
+
+.icon-nav {
+    padding-top: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 20px;
+    align-items: center;
+}
+
+.icon-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    color: #94a3b8;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.icon-link:hover {
+    background-color: #D6C6B2;
+    color: #475569;
+}
+
+.icon-link.active {
+    background-color: #D6C6B2;
+    color: #f05252;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}

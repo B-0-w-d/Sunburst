@@ -1,7 +1,7 @@
 {{-- Gọi component navbar tùy chỉnh với tiêu đề --}}
 <x-navbar title="Quản Lý Show - Sunburst">
     <!-- Khung bọc giao diện trang tổng quan show -->
-    <div class="home-view-wrapper" style="position: relative; background-image: url('{{ asset('images/login-background.jpg') }}'); background-repeat: no-repeat; background-position: center; background-size: cover;">
+    <div class="nav-view-wrapper" style="position: relative; background-image: url('{{ asset('images/login-background.jpg') }}'); background-repeat: no-repeat; background-position: center; background-size: cover;">
 
         <!-- Lớp phủ tối và làm mờ (backdrop overlay) -->
         <div style="position: absolute; inset: 0; background-color: rgba(15, 23, 42, 0.75); backdrop-filter: blur(6px); z-index: 1;"></div>
