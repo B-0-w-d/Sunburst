@@ -31,7 +31,7 @@
 
     <!-- KHU VỰC NHẠC CỤ ĐÃ CHỌN (hiển thị danh sách các mục mà người dùng đã thêm/chọn) -->
     <div class="drag-drop-group">
-        <span class="drag-drop-title">Nhạc cụ đã chọn:</span>
+        <span class="text-subtitle text-available">Nhạc cụ đã chọn:</span>
         <div class="drag-zone selected-zone">
             @foreach($selectedList as $item)
                 {{-- Thẻ chip đã chọn, có kèm theo nút bấm (x) để gỡ bỏ nhạc cụ khỏi danh sách --}}
