@@ -1,10 +1,11 @@
-/* ==========================================================================
-   USER PROFILE & DROPDOWN STYLES (UPDATED)
-   ========================================================================== */
+/* ==========================================
+   USER PROFILE & DROPDOWN STYLES (COMPLETE)
+   ========================================== */
 
 .user-profile-container {
     position: relative;
     display: inline-block;
+    margin-top: auto;
 }
 
 .user-profile {
@@ -17,6 +18,7 @@
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s ease;
+    user-select: none;
 }
 
 .user-profile-container:hover .user-profile {
@@ -25,31 +27,21 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
-.profile-dropdown {
-    display: none;
-    position: absolute;
-    bottom: calc(100% + 8px);
-    left: 0;
-    width: 220px;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-    overflow: hidden;
-    padding: 6px;
-    animation: dropdown-fade-in 0.2s ease-out;
+.user-profile svg {
+    width: 20px;
+    height: 20px;
+    color: #1e293b;
 }
 
 @keyframes dropdown-fade-in {
     from {
         opacity: 0;
-        transform: translateY(6px);
+        transform: translateX(-6px);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateX(0);
     }
 }
 
@@ -76,7 +68,6 @@
     margin-bottom: 2px;
     background: transparent;
     border: 1px solid transparent;
-    /* Giữ chỗ cho border khi hover tránh giật layout */
     border-radius: 8px;
     font-size: 13px;
     font-weight: 500;
@@ -97,10 +88,36 @@
     border-color: #e2e8f0;
 }
 
-/* Biến item cuối (thường là Đăng xuất / Logout) thành màu đỏ cảnh báo nếu muốn */
 .dropdown-item.text-danger,
 .dropdown-item:hover.text-danger {
     color: #ef4444;
     background-color: #fef2f2;
     border-color: #fecaca;
+}
+
+.profile-dropdown {
+    display: none;
+    position: absolute;
+    bottom: 0;
+    left: calc(100%);
+    width: 220px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    overflow: hidden;
+    padding: 6px;
+    animation: dropdown-fade-in 0.15s ease-out;
+}
+
+/* THÊM CẦU NỐI NGANG (Pseudo-element): Lấp đầy khoảng trống ngang giữa icon A và menu */
+.profile-dropdown::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 100%;
+    width: 15px;
+    height: 100%;
+    background: transparent;
 }

@@ -1,8 +1,10 @@
 .parent {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(3, 240px);
-    gap: 16px;
+    /* Thay đổi 240px thành 180px hoặc kích thước thấp hơn tùy ý bạn */
+    grid-template-rows: repeat(3, 1fr);
+    gap: 20px;
+    /* Có thể giảm luôn khoảng cách gap cho gọn */
     width: 100%;
 }
 
@@ -10,8 +12,11 @@
     position: relative;
     z-index: 2;
     padding: 24px;
-    flex: 1;
     box-sizing: border-box;
+    overflow-y: auto;
+    height: 100vh;
+    max-height: 100vh;
+    padding-right: 4px;
 }
 
 .content-card {
@@ -19,10 +24,10 @@
     border: 1px solid #e2e8f0;
     border-radius: 16px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
-    overflow: hidden;
     display: flex;
     flex-direction: column;
     height: 100%;
+    overflow: hidden;
 }
 
 /* Định vị chính xác từng ô theo mẫu hình ảnh */
@@ -35,13 +40,13 @@
 
 .div3 {
     grid-column: span 2 / span 2;
-    grid-row: span 2 / span 2;
 }
 
 .div4 {
     grid-column: span 2 / span 2;
+    grid-row: span 2 / span 2;
     grid-column-start: 2;
-    grid-row-start: 3;
+    grid-row-start: 2;
 }
 
 /*Poll Sự kiện*/

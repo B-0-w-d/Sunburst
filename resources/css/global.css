@@ -61,7 +61,7 @@ body {
     overflow: hidden;
     font-family: "Montserrat", sans-serif;
     background: #000;
-    color: var(--white-color);
+    color: var(--grey-950);
 }
 
 /* Hiệu ứng nhịp đập (Pulse animation) dùng cho các phần tử cảnh báo hoặc điểm nhấn trạng thái */

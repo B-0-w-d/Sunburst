@@ -1,0 +1,102 @@
+:root {
+    /* --- BẢNG MÀU MỚI (Dựa trên ảnh) --- */
+    /* Hàng 1: Đỏ / Hồng (Red) */
+    --red-100: #FECAC4;
+    --red-300: #FE8D84;
+    --red-500: #FE2C38;
+    --red-700: #CB0922;
+    --red-800: #900415;
+    --red-900: #540108;
+    --red-950: #200001;
+
+    /* Hàng 2: Xám sáng đến Đen xám (Grey 1) */
+    --grey1-100: #E3E1E1;
+    --grey1-300: #BEB9B9;
+    --grey1-500: #9B9393;
+    --grey1-700: #7A7272;
+    --grey1-800: #575151;
+    --grey1-900: #332F2F;
+    --grey1-950: #131111;
+
+    /* Hàng 3: Xám rêu / Xám vàng (Grey 2 / Sage) */
+    --sage-100: #E2E1D1;
+    --sage-300: #BBBAAD;
+    --sage-500: #95958A;
+    --sage-700: #74746B;
+    --sage-800: #52524B;
+    --sage-900: #30302B;
+    --sage-950: #11100F;
+
+    /* Hàng 4: Hồng đất / Nâu hồng (Rose / Mauve) */
+    --rose-100: #F3DEE0;
+    --rose-300: #E3ADB3;
+    --rose-500: #D57886;
+    --rose-700: #B35565;
+    --rose-800: #813B47;
+    --rose-900: #4F222A;
+    --rose-950: #230B0F;
+
+    /* Hàng 5: Xám khói / Xám trung tính (Grey 3) */
+    --grey-100: #EDEFFO;
+    --grey-300: #C2C9CC;
+    --grey-500: #9BA3A8;
+    --grey-700: #7B8285;
+    --grey-800: #595F61;
+    --grey-900: #383B3D;
+    --grey-950: #191B1C;
+
+    /* --- MAPPING THEME --- */
+    /* 1. Layout & Surfaces */
+    --bg-app: var(--grey-100);
+    --bg-card: var(--sage-100);
+    --bg-modal: var(--rose-100);
+    --bg-surface: #F8F9FA;
+    --bg-sidebar: var(--sage-100);
+    --bg-header: var(--sage-100);
+
+    /* 2. Typography */
+    --text-main: var(--grey1-950);
+    --text-muted: var(--grey1-700);
+    --text-heading: var(--sage-950);
+    --text-accent: var(--rose-700);
+
+    /* 3. Buttons & Actions */
+    --btn-primary-bg: var(--red-700);
+    --btn-primary-hover: var(--red-800);
+    --btn-primary-text: var(--sage-100);
+
+    --btn-secondary-bg: var(--rose-300);
+    --btn-secondary-hover: var(--rose-500);
+    --btn-secondary-text: var(--rose-950);
+
+    --btn-ghost-hover: var(--grey-300);
+
+    /* 4. Inputs & Forms */
+    --input-bg: var(--sage-100);
+    --input-border: var(--grey-300);
+    --input-border-focus: var(--rose-700);
+    --input-text: var(--grey1-950);
+    --input-placeholder: var(--grey1-500);
+
+    /* 5. Tables & Lists */
+    --table-header-bg: var(--sage-100);
+    --table-row-hover: rgba(226, 225, 209, 0.4);
+    --table-border: var(--grey-300);
+
+    /* 6. Badges & Status */
+    --badge-success-bg: rgba(34, 197, 94, 0.1);
+    --badge-success-text: #16a34a;
+    --badge-danger-bg: rgba(203, 9, 34, 0.1);
+    --badge-danger-text: var(--red-700);
+    --badge-warning-bg: rgba(213, 120, 134, 0.1);
+    --badge-warning-text: var(--rose-700);
+
+    /* 7. Borders, Shadows & Radius */
+    --border-color: var(--grey-300);
+    --border-focus: var(--rose-700);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+}

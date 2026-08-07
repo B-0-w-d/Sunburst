@@ -15,10 +15,6 @@
     overflow-y: auto;
 }
 
-.sidebar-section {
-    margin-bottom: 32px;
-}
-
 .section-header {
     display: flex;
     justify-content: space-between;

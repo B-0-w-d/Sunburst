@@ -7,7 +7,7 @@
         <div style="position: absolute; inset: 0; background-color: rgba(15, 23, 42, 0.75); backdrop-filter: blur(6px); z-index: 1;"></div>
 
         <!-- Khối chứa nội dung bên trong trang overview -->
-        <div class="content-container" style="position: relative; z-index: 2;">
+        <div class="content-container" style="position: relative; z-index: 2; ">
             <div class="parent">
 
                 <!-- Ô số 1 -->
@@ -98,7 +98,7 @@
                         </div>
 
                         <!-- Phần danh sách có thanh cuộn dọc (Scrollable) -->
-                        <div class="widget-notif-list">
+                        <div class="dropdown-list">
                             <template x-for="item in notifications" :key="item._id || item.id">
                                 <div @click="markAsRead(item._id || item.id)"
                                      class="dropdown-item"

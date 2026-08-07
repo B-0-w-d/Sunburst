@@ -3,15 +3,15 @@
 .main-canvas {
     flex-grow: 1;
     flex-direction: column;
-    background-color: #F4F4F4;
+    background-color: var(--bg-app);
 }
 
 .canvas-header {
     display: flex;
     flex: 0 0 80px;
     height: 70px;
-    background-color: #D6C6B2;
-    border-bottom: 1px solid #333333;
+    background-color: var(--bg-header);
+    border-bottom: 1px solid var(--border-color);
     padding: 0 32px;
     justify-content: space-between;
     align-items: center;
@@ -26,10 +26,51 @@
     gap: 30px;
 }
 
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
 .canvas-content {
     flex-grow: 1;
     overflow-y: auto;
-    /* Chỉ phần nội dung bên dưới mới xuất hiện thanh cuộn */
+
     height: calc(100vh - 72px);
     box-sizing: border-box;
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--badge-success-text);
+    /* Màu xanh lá cho trạng thái Active */
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
+    animation: pulse-animation 2s infinite;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    opacity: 0.9;
+    color: #ffffff;
+    /* Tùy chỉnh màu chữ theo tông tối */
+}
+
+@keyframes pulse-animation {
+    0% {
+        box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 6px rgba(74, 222, 128, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(74, 222, 128, 0);
+    }
 }

@@ -5,25 +5,73 @@
     <x-slot name="title">Members | Sunburst</x-slot>
 
     {{-- Khung bố cục tổng thể trang dashboard quản lý thành viên --}}
-    <div class="dashboard-layout-wrapper" style="display: flex; gap: 32px; max-width: 100%; max-height: 100%; align-items: flex-start;">
+    <div class="sidebar-wrapper" style="display: flex; gap: 32px; max-width: 100%; max-height: 100%; align-items: flex-start;">
 
         {{-- Phần Sidebar bên trái chứa các điều hướng và công cụ quản lý nhanh --}}
         <aside class="nav-sidebar">
             {{-- Danh sách các dự án hoặc show diễn sắp tới --}}
             <div class="sidebar-section">
                 <div class="section-header">
-                    <span class="section-title">Upcomming shows</span>
-                </div>
-                <div class="project-list">
-                    <a href="#" class="project-item">
-                        <span class="dot dot-blue"></span> Campaigns
-                    </a>
-                    <a href="#" class="project-item active">
-                        <span class="dot dot-red"></span> Publications
-                    </a>
-                    <a href="#" class="project-item">
-                        <span class="dot dot-green"></span> Development
-                    </a>
+                    <div style="padding: 16px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; background: #ffffff; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);"
+                         x-data="{
+                            shows: [],
+                            loading: true,
+                            init() {
+                                fetch('/api/shows', {
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+                                    }
+                                })
+                                .then(res => res.json())
+                                .then(response => {
+                                    const allShows = response.data || response;
+                                    // Lọc các show có ngày diễn từ hôm nay trở về sau và sắp xếp theo thời gian gần nhất
+                                    const now = new Date();
+                                    this.shows = Array.isArray(allShows) ? allShows.filter(show => new Date(show.date) >= now) : [];
+                                    this.loading = false;
+                                })
+                                .catch(err => {
+                                    console.error('Lỗi tải danh sách show:', err);
+                                    this.loading = false;
+                                });
+                            }
+                         }">
+
+                        <!-- Hàng trên: Tiêu đề widget -->
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; flex-shrink: 0;">
+                            <span style="font-size: 14px; font-weight: 700; color: #1e293b; letter-spacing: -0.2px;">Show Sắp Tới</span>
+                            <span style="font-size: 11px; color: #64748b;" x-text="shows.length + ' show'"></span>
+                        </div>
+
+                        <!-- Khung chứa danh sách cuộn dọc -->
+                        <div style="flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; min-height: 0; padding-right: 2px;">
+
+                            <!-- Trạng thái đang tải -->
+                            <template x-if="loading">
+                                <p style="font-size: 13px; color: #94a3b8; font-style: italic; margin: auto; text-align: center;">Đang tải sự kiện...</p>
+                            </template>
+
+                            <!-- Hiển thị danh sách show -->
+                            <template x-for="show in shows" :key="show.id">
+                                <div style="padding: 10px; border-radius: 8px; border: 1px solid #f1f5f9; background: #f8fafc; transition: background 0.2s;">
+                                    <p style="font-size: 13px; font-weight: 700; color: #1e293b; margin: 0 0 4px 0;" x-text="show.title"></p>
+                                    <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: #64748b; margin-bottom: 2px;">
+                                        <span>🕒 <strong x-text="new Date(show.date).toLocaleString()"></strong></span>
+                                    </div>
+                                    <div style="font-size: 11px; color: #64748b;">
+                                        <span>📍 Địa điểm: <strong x-text="show.location"></strong></span>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- Trạng thái không có show nào -->
+                            <template x-if="!loading && shows.length === 0">
+                                <p style="font-size: 12px; color: #94a3b8; text-align: center; margin: auto;">Không có show diễn sắp tới nào.</p>
+                            </template>
+
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -32,7 +80,7 @@
                 <div class="section-header">
                     <span class="section-title">Members</span>
                     {{-- Nút mở modal thêm thành viên mới --}}
-                    <button class="add-btn" onclick="openModal('addMemberModal')">+</button>
+                    <button class="btn-add" onclick="openModal('addMemberModal')">+</button>
                 </div>
 
                 <div class="member-list">
@@ -74,20 +122,10 @@
                     </div>
                 @endif
             </div>
-
-            {{-- Thẻ tiện ích thông tin bổ sung (Promo Card) --}}
-            <div class="card">
-                <span class="promo-tag">Unobvious Tips</span>
-                <h4 class="promo-title">DEO BIET NEN LAM GI O DAY</h4>
-                <p class="promo-meta">3 min read</p>
-                <a href="#" class="promo-btn">
-                    Read post <span class="arrow">→</span>
-                </a>
-            </div>
         </aside>
 
         {{-- Khu vực nội dung chính hiển thị bảng danh sách thành viên chi tiết --}}
-        <div class="content-container">
+        <div class="member-container">
             <div class="content-header">
                 <div>
                     <h3 class="content-title">Member Lists</h3>
@@ -102,7 +140,7 @@
             {{-- Thanh lọc (Filter bar) tìm kiếm thành viên theo vai trò và nhạc cụ --}}
             <div class="filter-bar" style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center;">
                 <div>
-                    <label for="filter-role" style="font-size: 13px; font-weight: 600; margin-right: 5px;">Role:</label>
+                    <label for="filter-role" style="font-size: 13px; font-weight: 600; margin-right: 5px; color: #0f172a">Role:</label>
                     <select id="filter-role" class="form-input" style="padding: 6px 12px; height: 36px; display: inline-block; width: auto;" onchange="applyFilters()">
                         <option value="">All Roles</option>
                         <option value="member" {{ request('role') == 'member' ? 'selected' : '' }}>Member</option>
@@ -114,7 +152,7 @@
                 </div>
 
                 <div>
-                    <label for="filter-instrument" style="font-size: 13px; font-weight: 600; margin-right: 5px;">Instrument:</label>
+                    <label for="filter-instrument" style="font-size: 13px; font-weight: 600; margin-right: 5px;color: #0f172a">Instrument:</label>
                     <input type="text" id="filter-instrument" class="form-input" placeholder="e.g. Guitar" value="{{ request('instrument') }}" style="padding: 6px 12px; height: 36px; display: inline-block; width: 180px;" onkeypress="if(event.key === 'Enter') applyFilters()">
                 </div>
 
@@ -126,8 +164,8 @@
             </div>
 
             {{-- Bảng hiển thị thông tin chi tiết từng thành viên --}}
-            <div class="content-card">
-                <div class="content-table-wrapper">
+            <div class="content-card" style="height: 82%;">
+                <div class="content-table-wrapper"> <!-- Khung chứa có cuộn -->
                     <table class="content-table">
                         <thead>
                             <tr>
@@ -139,7 +177,7 @@
                                 <th style="width: 10%; text-align: right;">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="content-body">
                             @forelse ($members as $member)
                                 <tr id="member-row-{{ $member->_id }}">
                                     <td>
@@ -189,19 +227,17 @@
                                         </div>
                                     </td>
                                 </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" style="text-align: center; padding: 40px 0; color: #64748b;">
-                                        No members found.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
+                                @empty
+                                                    <tr>
+                                                        <td colspan="6" style="text-align: center; padding: 40px 0; color: #64748b;">
+                                                            No members found.
+                                                        </td>
+                                                    </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
 
     {{-- ===================================================================== --}}
     {{-- MODAL 1: THÊM THÀNH VIÊN MỚI                                           --}}

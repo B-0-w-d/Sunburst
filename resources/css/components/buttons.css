@@ -1,23 +1,22 @@
 /* ==========================================
    BUTTON BASE & GROUP
    ========================================== */
-/* Kiểu dáng cơ bản cho mọi loại nút bấm, thiết lập flexbox, kích thước, bo tròn và hiệu ứng chuyển động */
 .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 100%;
-    padding: 12px 18px;
-    border: none;
-    border-radius: 10px;
+    padding: 10px 16px;
+    border: 1px solid transparent;
+    border-radius: 8px;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
     text-decoration: none;
+    user-select: none;
 }
 
-/* Khung nhóm chứa nhiều nút bấm nằm ngang, tự động căn chỉnh khoảng cách */
 .btn-group {
     display: flex;
     gap: 10px;
@@ -26,22 +25,19 @@
     width: 100%;
 }
 
-/* Các nút bấm bên trong nhóm sẽ tự động chia đều không gian hiển thị */
 .btn-group .btn {
     flex: 1;
     max-width: none;
 }
 
-/* Căn giữa riêng cho nút đơn (như ở Bước 1) thông qua bộ chọn trạng thái */
 .btn-group:has(#btn-step1-next),
 .step-pane:not(:has(#btn-step2-prev)) .btn-group {
     justify-content: center;
 }
 
-/* Giới hạn kích thước tối đa cho nút đơn lẻ để tránh bị kéo giãn toàn bộ chiều ngang */
 .btn-group:has(#btn-step1-next) .btn,
 .step-pane:not(:has(#btn-step2-prev)) .btn-group .btn {
-    max-width: 240px;
+    max-width: 220px;
     flex: unset;
 }
 
@@ -49,84 +45,98 @@
    BUTTON VARIANTS
    ========================================== */
 
-/* Primary (Nút chính - màu đỏ thương hiệu) */
-.btn--primary,
+/* Primary (Nút chính - Đỏ tối giản) */
 .btn-primary {
-    background-color: var(--first-color, #dc2626);
+    background-color: var(--red-700);
+    /* Dùng sắc đỏ sáng và thân thiện hơn (Red 500) */
     color: #ffffff;
     width: 100%;
     max-width: none;
-    /* Cho phép nút tràn full-width theo form */
-}
-
-.btn--primary:hover {
-    transform: translateY(-4px);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    /* Bóng siêu nhẹ tạo cảm giác nổi khối tinh tế */
 }
 
 .btn-primary:hover {
-    background-color: #b91c1c;
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+    background-color: var(--red-700);
+    /* Chuyển sang đỏ đậm hơn một chút khi hover (Red 600) */
 }
 
-/* Secondary (Nút phụ - kiểu trong suốt hoặc nền xám nhạt tùy biến) */
-.btn--secondary {
-    background-color: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: inherit;
+.btn-primary:active {
+    background-color: var(--red-900);
+    /* Phản hồi khi bấm xuống */
 }
 
-.btn--secondary:hover {
-    border-color: var(--white-color, #ffffff);
-}
-
+/* Secondary (Nút phụ - Xám nhạt tinh tế) */
 .btn-secondary {
-    background-color: #f1f5f9;
-    color: #475569;
+    background-color: var(--dirt-100);
+    border: 1px solid --dirt-300;
+    /* Viền xám nhạt sắc nét */
+    color: var(--grey-800);
+    /* Chữ màu tối đậm để dễ đọc, không bị xám xịt */
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
 }
 
 .btn-secondary:hover {
-    background-color: #e2e8f0;
+    background-color: var(--dirt-100);
+    /* Nền chuyển sáng rất nhẹ */
+    border-color: var(--dirt-300);
+    /* Viền đậm hơn chút khi hover */
+    color: var(--dirt-950);
+    /* Chữ đậm rõ lên */
 }
 
-/* Cancel (Nút hủy bỏ/quay lại - sử dụng tông màu xám trung tính) */
-.btn-cancel {
+.btn-secondary:active {
     background-color: #f1f5f9;
-    color: #475569;
+}
+
+/* Cancel (Nút hủy bỏ) */
+.btn-cancel {
+    background-color: transparent;
+    border-color: #e2e8f0;
+    color: #64748b;
 }
 
 .btn-cancel:hover {
-    background-color: #e2e8f0;
+    background-color: #f8fafc;
+    color: #0f172a;
+    border-color: #cbd5e1;
 }
 
-/* Save (Nút lưu thay đổi/xác nhận chính trong các Modal quản trị) */
+/* Save (Nút lưu thay đổi trong Modal) */
 .btn-save {
-    background-color: #c70c0c;
-    color: white;
-    padding: 12px;
+    background-color: #0f172a;
+    /* Chuyển sang tone đen/xám đậm tối giản hoặc giữ nguyên màu đỏ chủ đạo */
+    color: #ffffff;
+    padding: 10px 18px;
     border: none;
-    border-radius: 10px;
+    border-radius: 8px;
     width: 100%;
-    font-size: 15px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: background-color 0.15s ease;
 }
 
 .btn-save:hover {
-    background-color: #a50a0a;
+    background-color: #1e293b;
 }
 
+/* Modal Close Button */
 .modal-close-btn {
     background: transparent;
     border: none;
-    font-size: 24px;
-    font-weight: 400;
+    font-size: 20px;
+    font-weight: 300;
     cursor: pointer;
-    color: #64748b;
+    color: #94a3b8;
     line-height: 1;
-    padding: 4px 8px;
-    border-radius: 8px;
-    transition: background-color 0.2s, color 0.2s;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .modal-close-btn:hover {
@@ -134,38 +144,44 @@
     color: #0f172a;
 }
 
+/* Button Add (Nút vuông thêm mới) */
 .btn-add {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 42px;
-    height: 42px;
+    width: 36px;
+    height: 36px;
     background-color: #dc2626;
     color: #ffffff;
     border: none;
-    border-radius: 10px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background-color 0.15s ease;
 }
 
 .btn-add:hover {
     background-color: #b91c1c;
-    transform: translateY(-1px);
 }
 
 /* --- Nút xóa × trên chip --- */
 .btn-remove-chip {
     background: none;
     border: none;
-    color: #ef4444;
-    font-size: 16px;
-    font-weight: bold;
+    color: #94a3b8;
+    font-size: 14px;
+    font-weight: 500;
     line-height: 1;
     margin-left: 6px;
     cursor: pointer;
-    padding: 0 2px;
+    padding: 2px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s ease, background-color 0.15s ease;
 }
 
 .btn-remove-chip:hover {
     color: #dc2626;
+    background-color: rgba(220, 38, 38, 0.08);
 }

@@ -1,4 +1,5 @@
 @import "global.css";
+@import "theme.css";
 
 @import "./components/animations.css";
 @import "./components/buttons.css";
@@ -14,17 +15,13 @@
 @import "./components/calendar.css";
 @import "./components/grids.css";
 @import "./components/notifications.css";
+@import "./components/members.css";
 
 
 @import "./layouts/auth.css";
 @import "./layouts/dashboard.css";
 @import "./layouts/layout.css";
 
-
-
-
-
-
-[x-cloak] {
+import [x-cloak] {
     display: none !important;
 }
